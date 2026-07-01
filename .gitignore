@@ -1,0 +1,20 @@
+# Local build & venv outputs (do NOT commit).
+build/
+build.log
+sdkconfig
+sdkconfig.old
+managed_components/
+dependencies.lock
+
+# Serial monitor logs
+logs/
+
+# Prebuilt drop folder — keep the README, ignore the binaries.
+images/*
+!images/README.md
+
+# Editor / OS cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~

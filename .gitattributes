@@ -1,0 +1,16 @@
+# Default: text auto-detect with LF normalization in repo
+* text=auto eol=lf
+
+# Windows scripts MUST stay CRLF
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+
+# Unix scripts MUST stay LF
+*.sh   text eol=lf
+
+# Binary
+*.bin  binary
+*.png  binary
+*.jpg  binary
+*.zip  binary
