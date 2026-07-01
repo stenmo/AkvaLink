@@ -100,9 +100,11 @@ above has happened.
 
 - Standalone BLE GATT (`--ble-only` build).
 - Standalone Wi-Fi (`--wifi-standalone` build, mDNS + HTTP/JSON).
-- Espressif Unified Provisioning (BLE default, SoftAP fallback for the
-  laptop-only case — no phone, no app, just a browser).
-- Nordic Wi-Fi Provisioner GATT service on ESP-IDF.
+- **Espressif Unified Provisioning — chosen provisioner** (BLE default,
+  SoftAP fallback for the laptop-only case — no phone, no app, just a
+  browser). In-tree ESP-IDF component, free published app, zero new deps.
+- Nordic Wi-Fi Provisioner GATT service on ESP-IDF — *optional, only if the
+  "provisions from both ecosystems" demo story is wanted; otherwise skip.*
 - WPS-PBC fallback (caveats: no WPA3-only; off on some enterprise APs).
 - Optional Improv-Wi-Fi.
 - Universal build with runtime mode select.

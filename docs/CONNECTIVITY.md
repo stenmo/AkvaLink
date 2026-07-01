@@ -137,9 +137,10 @@ Matter is that this just works.
 
 ### Standalone modes (3, 4) — Wi-Fi credentials over BLE
 
-Two solid open-source options. **Support both behind a Kconfig
-`CONFIG_AQUALINK_PROVISIONER` switch.** Recommend Espressif as the v1
-default (zero new dependencies); Nordic as the v1.1 add-on.
+**Chosen provisioner: Espressif Unified Provisioning** (`wifi_provisioning`)
+— it's in-tree, has a free published app, and adds zero dependencies. Nordic
+stays a Kconfig-gated *optional* extra (`CONFIG_AQUALINK_PROVISIONER`) only
+for the "provisions from both ecosystems" demo story; skip it otherwise.
 
 | Provisioner | Phone apps | Pros | Cons | Recommendation |
 |-------------|-----------|------|------|----------------|
@@ -248,8 +249,9 @@ PPK2 verification is on the TODO.
 2. Matter / Wi-Fi — *shipped, needs disconnect-mode + TWT polish*.
 3. **BLE-only standalone** + tiny GATT service + manufacturer-data beacon.
 4. **Wi-Fi standalone** + Espressif Unified Provisioning over BLE
-   + mDNS + HTTP/JSON.
-5. Nordic Wi-Fi Provisioner GATT service implementation (parallel path).
+   + mDNS + HTTP/JSON. *(Espressif is the chosen provisioner.)*
+5. Nordic Wi-Fi Provisioner GATT service — *optional*, only for the
+   dual-ecosystem demo story; skip unless that's wanted.
 6. Universal build with runtime mode select.
 7. Optional Improv-Wi-Fi for Home Assistant friendliness.
 
