@@ -48,6 +48,14 @@ set "SCRIPT_DIR_FWD=%SCRIPT_DIR:\=/%"
 for /f "usebackq delims=" %%P in (`wsl -- wslpath -a "%SCRIPT_DIR_FWD%"`) do set "DEV_DIR_WSL=%%P"
 set "LOGS_DIR=%SCRIPT_DIR%\logs"
 
+REM Prefer the cross-platform Python helpers (scripts\*.py, via pyserial) when
+REM Python is available; fall back to the Windows-only PowerShell scripts.
+set "PYEXE="
+where py >nul 2>&1 && set "PYEXE=py -3"
+if not defined PYEXE ( where python >nul 2>&1 && set "PYEXE=python" )
+REM Only use Python if pyserial is actually importable; else fall back to PS.
+if defined PYEXE ( %PYEXE% -c "import serial.tools.list_ports" >nul 2>&1 || set "PYEXE=" )
+
 call "%SCRIPT_DIR%\scripts\common\header.cmd" 2>nul
 echo   Platform: u-blox NORA-W40 (Espressif ESP32-C6) -- WSL2 build
 echo   Role:     Single-SoC Matter end-node -- Thermometer (DS18B20)
@@ -239,7 +247,11 @@ if "%DO_LOG%"=="1" (
     set "LOGFILE=%LOGS_DIR%\nora-w40-!TS!.log"
     echo === --log: monitor !PORT_LOG! → !LOGFILE! ===
     echo     ^(Ctrl+C to stop^)
-    powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\monitor-com.ps1" -Port !PORT_LOG! -LogFile "!LOGFILE!"
+    if defined PYEXE (
+        %PYEXE% "%SCRIPT_DIR%\scripts\monitor_com.py" --port !PORT_LOG! --log-file "!LOGFILE!"
+    ) else (
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\monitor-com.ps1" -Port !PORT_LOG! -LogFile "!LOGFILE!"
+    )
     exit /b !errorlevel!
 )
 
@@ -251,7 +263,13 @@ REM Sets the variable named in %1 (passed by name).
 REM ========================================================================
 :detect_port
 set "_OUT_VAR=%~1"
-for /f "usebackq tokens=*" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\detect-nora-w40-port.ps1" 2^>nul`) do set "%_OUT_VAR%=%%P"
+set "%_OUT_VAR%="
+if defined PYEXE (
+    for /f "usebackq tokens=*" %%P in (`%PYEXE% "%SCRIPT_DIR%\scripts\detect_nora_w40_port.py" 2^>nul`) do set "%_OUT_VAR%=%%P"
+)
+if not defined %_OUT_VAR% (
+    for /f "usebackq tokens=*" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\detect-nora-w40-port.ps1" 2^>nul`) do set "%_OUT_VAR%=%%P"
+)
 if defined %_OUT_VAR% (
     call echo     [autodetect] NORA-W40 EVK on %%%_OUT_VAR%%%
 ) else (
