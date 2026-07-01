@@ -129,8 +129,9 @@ def _run(cmd: list[str], dry_run: bool) -> None:
 def _build_cmd(variant: str) -> list[str]:
     if os.name == "nt":
         cmd = ["cmd", "/c", str(REPO_ROOT / "launch-aqualink-wsl.cmd")]
-        if variant == "wifi":
-            cmd.append("--wifi")
+        flag = {"wifi": "--wifi", "ble": "--ble-only"}.get(variant)
+        if flag:
+            cmd.append(flag)
         cmd.append("--rebuild")
         return cmd
     # build.sh builds the default (Thread) variant; extend when it grows a flag.
@@ -200,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--yes", action="store_true", help="do not prompt before publishing")
     p.add_argument("--allow-dirty", action="store_true", help="allow a dirty working tree")
     p.add_argument("--allow-branch", action="store_true", help="allow running off main")
-    p.add_argument("--variant", choices=["thread", "wifi"], default="thread",
+    p.add_argument("--variant", choices=["thread", "wifi", "ble"], default="thread",
                    help="firmware variant to build + name the image (default: thread)")
     args = p.parse_args(argv)
 

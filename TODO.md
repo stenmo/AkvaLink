@@ -104,17 +104,31 @@ above has happened.
 ## Connectivity / Provisioning (the four modes)
 > See [docs/CONNECTIVITY.md](docs/CONNECTIVITY.md).
 
-- **Ship two build-time variants — `thread` and `wifi` — not one dual-stack
-  image.** Both Matter stacks won't fit the 4 MB dual-OTA layout (the app slot
-  is already ~98% full at 12-bit) and two live radios would wreck battery life.
-  Pick at flash time; `release.py --variant {thread,wifi}` names each image.
-  User guidance: Apple TV / HomePod / Nest hub present → Thread, else Wi-Fi.
+- **Ship build-time variants — `thread`, `wifi`, and `ble` — not one
+  dual-stack image.** The Matter Thread/Wi-Fi stacks won't co-fit the 4 MB
+  dual-OTA layout (the app slot is already ~98% full at 12-bit) and two live
+  radios would wreck battery life. Pick at flash time;
+  `release.py --variant {thread,wifi,ble}` names each image. Guidance: Thread
+  hub (Apple TV / HomePod / Nest) → Thread; Wi-Fi network, no Thread hub →
+  Wi-Fi; **no hub or router at all → `ble`** (beacon + GATT, `--ble-only` build).
 - **BLE temperature beacon fallback** — if no Matter fabric is commissioned (or
   the network is down), advertise the temperature in BLE manufacturer data so a
-  phone app can read it with zero pairing. Very low power (advertise every N s),
-  works in *either* variant — the "minimum viable, no-hub" path the product
-  should always have.
-- Standalone BLE GATT (`--ble-only` build).
+  phone app can read it with zero pairing. Very low power (advertise every N s).
+  It's the core of the `ble` variant, and can also ride along as a *fallback*
+  inside the `thread`/`wifi` variants — the "minimum viable, no-hub" path the
+  product should always have.
+- Standalone BLE GATT (`--ble-only` build) — a small GATT server exposing
+  device info + live telemetry so a phone app (no hub, no router) can read
+  everything about the sensor:
+  - **Device Information Service (0x180A):** manufacturer (u-blox), model
+    (AquaLink NORA-W40), **firmware revision** (`version.txt` / `PROJECT_VER`),
+    hardware revision, serial (ROM ID).
+  - **Environmental Sensing (0x181A):** Temperature (0x2A6E), notify on change.
+  - **Battery Service (0x180F):** Battery Level (0x2A19).
+  - **Custom AquaLink service:** **uptime**, boot count, last-reset reason,
+    sample interval, report threshold, sensor family, RSSI — read + notify.
+  Reuses the BLE stack already present for commissioning; pairs with the beacon
+  fallback above (beacon = zero-connect glance, GATT = full detail on connect).
 - Standalone Wi-Fi (`--wifi-standalone` build, mDNS + HTTP/JSON).
 - **Espressif Unified Provisioning — chosen provisioner** (BLE default,
   SoftAP fallback for the laptop-only case — no phone, no app, just a
