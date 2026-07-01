@@ -11,6 +11,9 @@ fixes, docs, and small focused improvements especially — but the roadmap and
 scope are curated to keep the project simple. For anything large, please open
 an issue first (see below) so we can agree it fits before you invest the work.
 
+By participating you agree to abide by our
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Before you start
 
 - **Open an issue first** for anything non-trivial. A quick "here's what I want
