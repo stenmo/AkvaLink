@@ -66,3 +66,13 @@ def test_none_vid_pid_is_safe(monkeypatch, capsys):
     )
     rc = detect.main()
     assert rc == 1
+
+
+def test_pyserial_missing_returns_1(monkeypatch):
+    # If pyserial isn't importable, main() must fail cleanly (rc 1) so the
+    # launcher can fall back rather than crash.
+    import sys
+
+    monkeypatch.setitem(sys.modules, "serial.tools", None)
+    monkeypatch.setitem(sys.modules, "serial.tools.list_ports", None)
+    assert detect.main() == 1

@@ -104,6 +104,16 @@ above has happened.
 ## Connectivity / Provisioning (the four modes)
 > See [docs/CONNECTIVITY.md](docs/CONNECTIVITY.md).
 
+- **Ship two build-time variants — `thread` and `wifi` — not one dual-stack
+  image.** Both Matter stacks won't fit the 4 MB dual-OTA layout (the app slot
+  is already ~98% full at 12-bit) and two live radios would wreck battery life.
+  Pick at flash time; `release.py --variant {thread,wifi}` names each image.
+  User guidance: Apple TV / HomePod / Nest hub present → Thread, else Wi-Fi.
+- **BLE temperature beacon fallback** — if no Matter fabric is commissioned (or
+  the network is down), advertise the temperature in BLE manufacturer data so a
+  phone app can read it with zero pairing. Very low power (advertise every N s),
+  works in *either* variant — the "minimum viable, no-hub" path the product
+  should always have.
 - Standalone BLE GATT (`--ble-only` build).
 - Standalone Wi-Fi (`--wifi-standalone` build, mDNS + HTTP/JSON).
 - **Espressif Unified Provisioning — chosen provisioner** (BLE default,
@@ -113,7 +123,8 @@ above has happened.
   "provisions from both ecosystems" demo story is wanted; otherwise skip.*
 - WPS-PBC fallback (caveats: no WPA3-only; off on some enterprise APs).
 - Optional Improv-Wi-Fi.
-- Universal build with runtime mode select.
+- ~~Universal build with runtime mode select~~ — deprioritised: a dual
+  Thread+Wi-Fi image doesn't fit 4 MB + hurts battery (see two-variant note above).
 - Long-press (15 s) factory reset → wipe NVS → provisioning.
 
 ## Apps & integrations

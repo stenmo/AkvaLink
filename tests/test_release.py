@@ -1,5 +1,10 @@
 """Tests for scripts/release.py — version bump + release-note formatting."""
 
+import hashlib
+import json
+import types
+from pathlib import Path
+
 import pytest
 
 import release
@@ -90,3 +95,98 @@ def test_flash_instructions_has_command_name_and_hash():
 def test_flash_instructions_variant_wifi():
     txt = release.flash_instructions("1.2.3", "wifi", "abc")
     assert "aqualink-wifi-v1.2.3.bin" in txt
+
+
+def test_build_cmd_windows_thread(monkeypatch):
+    monkeypatch.setattr(release.os, "name", "nt")
+    cmd = release._build_cmd("thread")
+    assert cmd[:2] == ["cmd", "/c"]
+    assert "--rebuild" in cmd
+    assert "--wifi" not in cmd
+
+
+def test_build_cmd_windows_wifi(monkeypatch):
+    monkeypatch.setattr(release.os, "name", "nt")
+    cmd = release._build_cmd("wifi")
+    assert "--wifi" in cmd and "--rebuild" in cmd
+
+
+def test_build_cmd_posix(monkeypatch):
+    monkeypatch.setattr(release.os, "name", "posix")
+    cmd = release._build_cmd("thread")
+    assert cmd[0] == "bash"
+
+
+def test_sha256_file(tmp_path):
+    f = tmp_path / "x.bin"
+    f.write_bytes(b"hello world")
+    assert release.sha256_file(f) == hashlib.sha256(b"hello world").hexdigest()
+
+
+def test_merge_firmware_missing_flasher_args(monkeypatch, tmp_path):
+    monkeypatch.setattr(release, "FLASHER_ARGS", tmp_path / "nope.json")
+    assert release.merge_firmware("0.1.1", "thread", dry_run=False) is None
+
+
+def test_merge_firmware_produces_image_and_sidecar(monkeypatch, tmp_path):
+    fa = tmp_path / "flasher_args.json"
+    fa.write_text(json.dumps({
+        "flash_settings": {"flash_mode": "dio", "flash_freq": "80m", "flash_size": "4MB"},
+        "flash_files": {"0x0": "bootloader/bootloader.bin"},
+        "extra_esptool_args": {"chip": "esp32c6"},
+    }))
+    monkeypatch.setattr(release, "FLASHER_ARGS", fa)
+    monkeypatch.setattr(release, "BUILD_DIR", tmp_path)
+
+    def fake_run(cmd, dry_run):
+        out = cmd[cmd.index("-o") + 1]
+        Path(out).write_bytes(b"MERGED")
+
+    monkeypatch.setattr(release, "_run", fake_run)
+    result = release.merge_firmware("0.1.1", "thread", dry_run=False)
+    assert result is not None
+    image, sidecar, digest = result
+    assert image.name == "aqualink-thread-v0.1.1.bin"
+    assert Path(sidecar).is_file()
+    assert digest == hashlib.sha256(b"MERGED").hexdigest()
+    assert digest in Path(sidecar).read_text()
+
+
+def _args(**over):
+    base = dict(allow_dirty=False, allow_branch=False)
+    base.update(over)
+    return types.SimpleNamespace(**base)
+
+
+def test_preflight_rejects_dirty_tree(monkeypatch):
+    monkeypatch.setattr(
+        release, "_query",
+        lambda cmd: "M version.txt" if "status" in cmd else "main",
+    )
+    with pytest.raises(SystemExit):
+        release.preflight(_args())
+
+
+def test_preflight_rejects_wrong_branch(monkeypatch):
+    monkeypatch.setattr(
+        release, "_query",
+        lambda cmd: "" if "status" in cmd else "feature-x",
+    )
+    with pytest.raises(SystemExit):
+        release.preflight(_args())
+
+
+def test_preflight_passes_clean_main(monkeypatch):
+    monkeypatch.setattr(
+        release, "_query",
+        lambda cmd: "" if "status" in cmd else "main",
+    )
+    release.preflight(_args())  # must not raise
+
+
+def test_preflight_allows_overrides(monkeypatch):
+    monkeypatch.setattr(
+        release, "_query",
+        lambda cmd: "M x" if "status" in cmd else "feature-x",
+    )
+    release.preflight(_args(allow_dirty=True, allow_branch=True))  # no raise
