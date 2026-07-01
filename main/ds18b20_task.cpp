@@ -10,6 +10,7 @@
 
 #include "ds18b20_task.h"
 #include "app_priv.h"
+#include "ble_gatt.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -36,7 +37,7 @@ using namespace chip::app::Clusters;
 
 static const char * TAG = "ds18b20";
 
-static float s_last_pushed_c = -1000.0f;
+static float __attribute__((unused)) s_last_pushed_c = -1000.0f;
 
 // ============================================================================
 // Sensor abstraction: two compile-time implementations
@@ -114,7 +115,7 @@ static esp_err_t sensor_read(float *celsius)
 
 #endif // APP_USE_DS2482
 
-static void push_to_matter(float celsius)
+static void __attribute__((unused)) push_to_matter(float celsius)
 {
     if (g_temp_endpoint_id == 0) {
         return;                                 // Matter not yet up
@@ -156,7 +157,11 @@ static void sample_task(void *)
         if (sensor_read(&celsius) == ESP_OK &&
             celsius > -55.0f && celsius < 125.0f) {
             ESP_LOGD(TAG, "raw read: %.4f °C", celsius);
+#if CONFIG_AQUALINK_BLE_ONLY
+            aqualink_ble_gatt_set_temperature(celsius);
+#else
             push_to_matter(celsius);
+#endif
 
             // Adaptive rate: fast on significant change, slow when stable
             if (!isnanf(prev_celsius) &&

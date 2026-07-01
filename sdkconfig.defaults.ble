@@ -1,0 +1,30 @@
+# AquaLink BLE-only variant — standalone NimBLE GATT server, no Matter.
+#
+# Layer on top of the base defaults:
+#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.ble" reconfigure
+# or via the launcher:  launch-aqualink-wsl.cmd --ble-only --rebuild
+#
+# For homes with no Matter hub and no Wi-Fi: a phone/app connects directly over
+# BLE and reads device info + live temperature. See main/ble_gatt.cpp.
+
+# Select the BLE-only app path (main/Kconfig.projbuild).
+CONFIG_AQUALINK_BLE_ONLY=y
+
+# No Matter network stacks — BLE only.
+CONFIG_OPENTHREAD_ENABLED=n
+CONFIG_OPENTHREAD_MTD=n
+CONFIG_OPENTHREAD_SRP_CLIENT=n
+CONFIG_OPENTHREAD_DNS_CLIENT=n
+CONFIG_OPENTHREAD_JOINER=n
+CONFIG_ENABLE_WIFI_STATION=n
+
+# We own the NimBLE host directly (not via Matter's CHIPoBLE commissioning).
+CONFIG_ENABLE_CHIPOBLE=n
+
+# Keep BLE / NimBLE enabled.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+
+# NOTE: esp-matter is still compiled in (CMake requires it) but never started.
+# Slimming it out entirely (drop the esp_matter/chip requires for this variant)
+# is a follow-up once the build is validated.

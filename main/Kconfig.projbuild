@@ -1,0 +1,15 @@
+menu "AquaLink"
+
+    config AQUALINK_BLE_ONLY
+        bool "Build the standalone BLE-only variant (no Matter)"
+        default n
+        help
+            Build the --ble-only AquaLink variant: skip Matter/Thread/Wi-Fi and
+            run a standalone NimBLE GATT server (Device Information, Environmental
+            Sensing temperature, and a custom AquaLink service with uptime).
+
+            Use this for homes with no Matter hub and no Wi-Fi — a phone/app
+            connects directly over BLE. Select via the launcher's --ble-only flag
+            (which layers sdkconfig.defaults.ble on top of sdkconfig.defaults).
+
+endmenu

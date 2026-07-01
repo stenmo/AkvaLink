@@ -8,6 +8,7 @@
 
 #include "app_priv.h"
 #include "ds18b20_task.h"
+#include "ble_gatt.h"
 
 #include "esp_log.h"
 #include "nvs_flash.h"
@@ -132,6 +133,15 @@ extern "C" void app_main()
     }
     ESP_ERROR_CHECK(err);
 
+#if CONFIG_AQUALINK_BLE_ONLY
+    // --- BLE-only variant: no Matter, no Thread, no Wi-Fi. Just a standalone
+    // NimBLE GATT server + the sensor task feeding it. For homes with no hub.
+    ESP_LOGI(TAG, "\xF0\x9F\x94\xB5 BLE-only variant — standalone GATT server (no Matter)");
+    ESP_ERROR_CHECK(aqualink_ble_gatt_start());
+    ds18b20_task_start();
+    ESP_LOGI(TAG, "✨ AquaLink BLE-only up — connect to \"AquaLink\" over BLE");
+#else
+
     // --- Matter node + Temperature Sensor endpoint --------------------------
     node::config_t node_cfg;
     node_t * node = node::create(&node_cfg, on_attribute_update, on_identification);
@@ -211,4 +221,5 @@ extern "C" void app_main()
     ESP_LOGI(TAG, "✨ NORA-W40 Matter Thermometer up — DS18B20 on GPIO%d, Thread SED",
              APP_DS18B20_GPIO);
 #endif
+#endif  // !CONFIG_AQUALINK_BLE_ONLY
 }

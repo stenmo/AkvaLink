@@ -12,6 +12,12 @@ if(APP_USE_DS2482)
     list(APPEND SRCS "ds2482_onewire.cpp")
 endif()
 
+# Standalone BLE-only variant (no Matter): NimBLE GATT server.
+# Activated by CONFIG_AQUALINK_BLE_ONLY (launcher: --ble-only).
+if(CONFIG_AQUALINK_BLE_ONLY)
+    list(APPEND SRCS "ble_gatt.cpp")
+endif()
+
 idf_component_register(
     SRCS ${SRCS}
     INCLUDE_DIRS

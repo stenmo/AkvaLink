@@ -16,6 +16,7 @@ REM   --erase    [COM<N>]  Erase NVS region (commissioning data) via esptool
 REM   --flash    [COM<N>]  Flash all 4 partitions via esptool
 REM   --log      [COM<N>]  Start serial monitor → timestamped log file
 REM   --wifi               Build the Matter-over-Wi-Fi variant
+REM   --ble-only           Build the standalone BLE GATT variant (no Matter)
 REM   --help               Show this help
 REM
 REM COM port is autodetected by VID_303A&PID_1001 if not supplied.
@@ -71,6 +72,7 @@ set "DO_ERASE=0"
 set "DO_FLASH=0"
 set "DO_LOG=0"
 set "DO_WIFI=0"
+set "DO_BLE=0"
 set "DO_CLICKBOARD=0"
 set "DO_SETUP=0"
 set "DO_MENUCONFIG=0"
@@ -93,6 +95,7 @@ if /I "%A%"=="--clean"      ( set "DO_CLEAN=1"      & set "ANY_FLAG=1" & shift &
 if /I "%A%"=="clean"        ( set "DO_CLEAN=1"      & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--rebuild"    ( set "DO_CLEAN=1" & set "DO_BUILD=1" & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--wifi"       ( set "DO_WIFI=1"       & set "ANY_FLAG=1" & shift & goto parse_args )
+if /I "%A%"=="--ble-only"   ( set "DO_BLE=1"        & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--clickboard" ( set "DO_CLICKBOARD=1" & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="setup"        ( set "DO_SETUP=1"      & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="menuconfig"   ( set "DO_MENUCONFIG=1" & set "ANY_FLAG=1" & shift & goto parse_args )
@@ -158,9 +161,12 @@ REM --- Step 2: build --------------------------------------------------------
 if "%DO_BUILD%"=="1" (
     set "BUILD_ARGS="
     if "%DO_WIFI%"=="1"       set "BUILD_ARGS=!BUILD_ARGS! --wifi"
+    if "%DO_BLE%"=="1"        set "BUILD_ARGS=!BUILD_ARGS! --ble-only"
     if "%DO_CLICKBOARD%"=="1" set "BUILD_ARGS=!BUILD_ARGS! --clickboard"
     if "%DO_CLICKBOARD%"=="1" (
         echo === --build --clickboard: DS2482 Click board ^(I2C-to-1-Wire, MikroBUS 1^) ===
+    ) else if "%DO_BLE%"=="1" (
+        echo === --build --ble-only: standalone BLE GATT variant ^(no Matter^) ===
     ) else if "%DO_WIFI%"=="1" (
         echo === --build --wifi: Matter-over-Wi-Fi variant ===
     ) else (
@@ -287,6 +293,7 @@ echo   --erase    [COM^<N^>]  Erase NVS via esptool ^(autodetect if no port^)
 echo   --flash    [COM^<N^>]  Flash 4 partitions via esptool ^(autodetect if no port^)
 echo   --log      [COM^<N^>]  Serial monitor → logs/nora-w40-^<TS^>.log ^(autodetect if no port^)
 echo   --wifi               Build the Matter-over-Wi-Fi variant
+echo   --ble-only           Build the standalone BLE GATT variant ^(no Matter^)
 echo   --clickboard         Build with DS2482 Click board ^(I2C-to-1-Wire, MikroBUS 1^)
 echo   --help               Show this help
 echo.

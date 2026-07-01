@@ -90,10 +90,12 @@ case "$cmd" in
         cd "${SCRIPT_DIR}"
         # Parse build sub-options (--wifi, --clickboard, combinable)
         build_wifi=0
+        build_ble=0
         build_clickboard=0
         for arg in "${@:2}"; do
             case "$arg" in
                 --wifi)       build_wifi=1 ;;
+                --ble-only)   build_ble=1 ;;
                 --clickboard) build_clickboard=1 ;;
                 *) echo "Unknown build option: $arg"; exit 1 ;;
             esac
@@ -107,7 +109,10 @@ case "$cmd" in
             echo "=== Sensor: direct 1-Wire GPIO15 (RMT bit-bang) ==="
         fi
 
-        if [ "$build_wifi" -eq 1 ]; then
+        if [ "$build_ble" -eq 1 ]; then
+            echo "=== Network: BLE-only (standalone NimBLE GATT, no Matter) ==="
+            idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.ble" reconfigure
+        elif [ "$build_wifi" -eq 1 ]; then
             echo "=== Network: Matter-over-Wi-Fi ==="
             idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.wifi" reconfigure
         else
