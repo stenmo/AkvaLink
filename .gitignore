@@ -18,3 +18,8 @@ images/*
 Thumbs.db
 *.swp
 *~
+
+# Python / pytest cruft
+__pycache__/
+*.pyc
+.pytest_cache/

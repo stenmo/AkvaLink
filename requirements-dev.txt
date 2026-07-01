@@ -1,0 +1,5 @@
+# Development / test dependencies for AquaLink's host-side Python helpers.
+# Install with:  py -3 -m pip install -r requirements-dev.txt   (Windows)
+#           or:  python3 -m pip install -r requirements-dev.txt (Linux/macOS)
+pytest>=7.0
+pyserial>=3.5

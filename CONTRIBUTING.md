@@ -56,6 +56,17 @@ Please confirm your change **builds cleanly** and, where you can, test it on
 real hardware (EVK-NORA-W40 + a DS18B20). Note in the PR what you tested on —
 "builds only" is fine to say, it just tells reviewers what still needs a check.
 
+### Host-side tests (pytest)
+
+The Python helper scripts (`scripts/*.py`) and a few project-sanity checks have
+fast unit tests that need **no hardware and no ESP-IDF** — just Python 3 +
+pyserial. Run them before opening a PR that touches the scripts:
+
+```powershell
+py -3 -m pip install -r requirements-dev.txt   # first time only
+py -3 -m pytest                                 # (python3 on Linux/macOS)
+```
+
 ## Code conventions
 
 - Logging via ESP-IDF `ESP_LOGI/W/E(TAG, ...)`, not `printf`.
