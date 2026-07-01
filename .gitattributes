@@ -4,7 +4,6 @@
 # Windows scripts MUST stay CRLF
 *.cmd  text eol=crlf
 *.bat  text eol=crlf
-*.ps1  text eol=crlf
 
 # Unix scripts MUST stay LF
 *.sh   text eol=lf

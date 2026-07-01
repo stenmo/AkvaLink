@@ -4,7 +4,7 @@ REM AquaLink -- u-blox NORA-W40 Matter pool thermometer launcher (WSL)
 REM ========================================================================
 REM Builds via WSL2 (Espressif's officially-supported workflow:
 REM ESP-IDF v5.4.1 + esp-matter release/v1.5), but flashes / erases / logs
-REM directly from Windows using native esptool + PowerShell monitor.
+REM directly from Windows using native esptool + a Python (pyserial) monitor.
 REM This avoids usbipd-win attach gymnastics — the EVK's native USB
 REM Serial/JTAG (VID_303A^&PID_1001) is already a Windows COM port.
 REM
@@ -247,11 +247,11 @@ if "%DO_LOG%"=="1" (
     set "LOGFILE=%LOGS_DIR%\nora-w40-!TS!.log"
     echo === --log: monitor !PORT_LOG! → !LOGFILE! ===
     echo     ^(Ctrl+C to stop^)
-    if defined PYEXE (
-        %PYEXE% "%SCRIPT_DIR%\scripts\monitor_com.py" --port !PORT_LOG! --log-file "!LOGFILE!"
-    ) else (
-        powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\monitor-com.ps1" -Port !PORT_LOG! -LogFile "!LOGFILE!"
+    if not defined PYEXE (
+        echo [ERROR] --log requires Python 3 + pyserial ^(pip install pyserial^).
+        exit /b 4
     )
+    %PYEXE% "%SCRIPT_DIR%\scripts\monitor_com.py" --port !PORT_LOG! --log-file "!LOGFILE!"
     exit /b !errorlevel!
 )
 
@@ -264,12 +264,11 @@ REM ========================================================================
 :detect_port
 set "_OUT_VAR=%~1"
 set "%_OUT_VAR%="
-if defined PYEXE (
-    for /f "usebackq tokens=*" %%P in (`%PYEXE% "%SCRIPT_DIR%\scripts\detect_nora_w40_port.py" 2^>nul`) do set "%_OUT_VAR%=%%P"
+if not defined PYEXE (
+    echo     [autodetect] Python 3 + pyserial required ^(pip install pyserial^).
+    exit /b 0
 )
-if not defined %_OUT_VAR% (
-    for /f "usebackq tokens=*" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\detect-nora-w40-port.ps1" 2^>nul`) do set "%_OUT_VAR%=%%P"
-)
+for /f "usebackq tokens=*" %%P in (`%PYEXE% "%SCRIPT_DIR%\scripts\detect_nora_w40_port.py" 2^>nul`) do set "%_OUT_VAR%=%%P"
 if defined %_OUT_VAR% (
     call echo     [autodetect] NORA-W40 EVK on %%%_OUT_VAR%%%
 ) else (
