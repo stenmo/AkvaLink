@@ -127,6 +127,11 @@ above has happened.
   - **Battery Service (0x180F):** Battery Level (0x2A19).
   - **Custom AquaLink service:** **uptime**, boot count, last-reset reason,
     sample interval, report threshold, sensor family, RSSI — read + notify.
+  - **Range:** advertising rotates legacy 1M (phone-friendly, esp. iOS) + Coded
+    PHY S=8 (long range ~2-4×) so both scanner types find it; requests Coded S=8
+    on connect. C6/NORA-W40 supports S=2 and S=8 (datasheet-confirmed). Needs
+    `CONFIG_BT_NIMBLE_EXT_ADV=y`. iOS Coded-PHY support is spotty — a C6 relay
+    near the house sidesteps it.
   Reuses the BLE stack already present for commissioning; pairs with the beacon
   fallback above (beacon = zero-connect glance, GATT = full detail on connect).
 - Standalone Wi-Fi (`--wifi-standalone` build, mDNS + HTTP/JSON).

@@ -7,6 +7,10 @@
 //   - Environmental Sensing (0x181A): Temperature 0x2A6E (sint16, 0.01 °C), notify
 //   - AquaLink custom service: uptime (uint32 seconds), read + notify
 //
+// Advertising rotates between legacy 1M (broad phone compatibility, esp. iOS)
+// and extended Coded PHY S=8 (long range, ~2-4x). Coded needs CONFIG_BT_NIMBLE_
+// EXT_ADV=y (see sdkconfig.defaults.ble). On connect we request Coded S=8.
+//
 // C++ note: NimBLE's BLE_UUID16_DECLARE()/BLE_UUID128_DECLARE() macros expand
 // to C compound literals, which are NOT valid C++. So every UUID here is a
 // file-scope `static const ble_uuidNN_t` object referenced by &obj.u.
@@ -26,6 +30,7 @@
 
 #include "nimble/nimble_port.h"
 #include "nimble/nimble_port_freertos.h"
+#include "nimble/hci_common.h"
 #include "host/ble_hs.h"
 #include "host/util/util.h"
 #include "services/gap/ble_svc_gap.h"
@@ -34,6 +39,11 @@
 static const char *TAG = "ble_gatt";
 
 #define DEVICE_NAME "AquaLink"
+
+// Advertising instances: rotate between broad-compat legacy and long-range Coded.
+#define ADV_INST_LEGACY 0    // 1M legacy PDUs — best phone compatibility (esp. iOS)
+#define ADV_INST_CODED  1    // Coded PHY S=8 — long range (Android / gateway)
+#define ADV_ROTATE_MS   4000 // dwell per PHY before switching
 
 static const char *MANUFACTURER = "u-blox";
 static const char *MODEL        = "AquaLink NORA-W40";
@@ -63,7 +73,9 @@ static uint16_t s_uptime_val_handle = 0;
 static bool     s_temp_subscribed = false;
 static int16_t  s_temp_centi      = 0;   // temperature in 0.01 °C units
 
-static void start_advertising(void);
+static void adv_configure(void);
+static void adv_rotate_start(uint8_t instance);
+static int  build_adv_data(struct os_mbuf **out);
 
 // --- GATT characteristic access (reads) -------------------------------------
 static int gatt_access(uint16_t /*conn*/, uint16_t /*attr*/,
@@ -137,15 +149,21 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
             if (event->connect.status == 0) {
                 s_conn_handle = event->connect.conn_handle;
                 ESP_LOGI(TAG, "central connected (handle %u)", s_conn_handle);
+                // Prefer Coded S=8 when the peer supports it; fall back to 1M.
+                ble_gap_set_prefered_le_phy(
+                    s_conn_handle,
+                    BLE_GAP_LE_PHY_1M_MASK | BLE_GAP_LE_PHY_CODED_MASK,
+                    BLE_GAP_LE_PHY_1M_MASK | BLE_GAP_LE_PHY_CODED_MASK,
+                    BLE_GAP_LE_PHY_CODED_S8);
             } else {
-                start_advertising();  // failed → keep advertising
+                adv_rotate_start(ADV_INST_LEGACY);  // failed → resume rotation
             }
             break;
         case BLE_GAP_EVENT_DISCONNECT:
             ESP_LOGI(TAG, "central disconnected (reason %d)", event->disconnect.reason);
             s_conn_handle = BLE_HS_CONN_HANDLE_NONE;
             s_temp_subscribed = false;
-            start_advertising();
+            adv_rotate_start(ADV_INST_LEGACY);
             break;
         case BLE_GAP_EVENT_SUBSCRIBE:
             if (event->subscribe.attr_handle == s_temp_val_handle) {
@@ -153,7 +171,12 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
             }
             break;
         case BLE_GAP_EVENT_ADV_COMPLETE:
-            start_advertising();
+            // Rotation: legacy -> coded -> legacy … while unconnected.
+            if (s_conn_handle == BLE_HS_CONN_HANDLE_NONE) {
+                uint8_t next = (event->adv_complete.instance == ADV_INST_LEGACY)
+                                   ? ADV_INST_CODED : ADV_INST_LEGACY;
+                adv_rotate_start(next);
+            }
             break;
         default:
             break;
@@ -161,8 +184,8 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
     return 0;
 }
 
-// --- Advertising ------------------------------------------------------------
-static void start_advertising(void)
+// --- Advertising (rotating legacy 1M + Coded PHY S=8) -----------------------
+static int build_adv_data(struct os_mbuf **out)
 {
     struct ble_hs_adv_fields fields;
     memset(&fields, 0, sizeof(fields));
@@ -176,24 +199,73 @@ static void start_advertising(void)
     fields.num_uuids16 = 1;
     fields.uuids16_is_complete = 1;
 
-    int rc = ble_gap_adv_set_fields(&fields);
+    uint8_t buf[BLE_HS_ADV_MAX_SZ];
+    uint8_t buf_len = 0;
+    int rc = ble_hs_adv_set_fields(&fields, buf, &buf_len, sizeof(buf));
     if (rc != 0) {
-        ESP_LOGE(TAG, "adv_set_fields rc=%d", rc);
+        return rc;
+    }
+    *out = ble_hs_mbuf_from_flat(buf, buf_len);
+    return *out ? 0 : BLE_HS_ENOMEM;
+}
+
+static void adv_configure(void)
+{
+    struct ble_gap_ext_adv_params params;
+    struct os_mbuf *om;
+    int rc;
+
+    // Instance 0 — legacy connectable/scannable on 1M (phone-friendly).
+    memset(&params, 0, sizeof(params));
+    params.connectable   = 1;
+    params.scannable     = 1;
+    params.legacy_pdu    = 1;
+    params.own_addr_type = s_own_addr_type;
+    params.primary_phy   = BLE_HCI_LE_PHY_1M;
+    params.secondary_phy = BLE_HCI_LE_PHY_1M;
+    params.itvl_min      = BLE_GAP_ADV_ITVL_MS(200);
+    params.itvl_max      = BLE_GAP_ADV_ITVL_MS(250);
+    params.sid           = ADV_INST_LEGACY;
+    rc = ble_gap_ext_adv_configure(ADV_INST_LEGACY, &params, NULL, gap_event, NULL);
+    if (rc == 0 && build_adv_data(&om) == 0) {
+        ble_gap_ext_adv_set_data(ADV_INST_LEGACY, om);
+    } else if (rc != 0) {
+        ESP_LOGE(TAG, "ext_adv_configure(legacy) rc=%d", rc);
+    }
+
+    // Instance 1 — extended connectable on Coded PHY S=8 (long range).
+    // Extended connectable adv cannot be scannable — that's a spec rule.
+    memset(&params, 0, sizeof(params));
+    params.connectable   = 1;
+    params.scannable     = 0;
+    params.legacy_pdu    = 0;
+    params.own_addr_type = s_own_addr_type;
+    params.primary_phy   = BLE_HCI_LE_PHY_CODED;
+    params.secondary_phy = BLE_HCI_LE_PHY_CODED;
+    params.itvl_min      = BLE_GAP_ADV_ITVL_MS(400);
+    params.itvl_max      = BLE_GAP_ADV_ITVL_MS(500);
+    params.sid           = ADV_INST_CODED;
+    rc = ble_gap_ext_adv_configure(ADV_INST_CODED, &params, NULL, gap_event, NULL);
+    if (rc == 0 && build_adv_data(&om) == 0) {
+        ble_gap_ext_adv_set_data(ADV_INST_CODED, om);
+    } else if (rc != 0) {
+        ESP_LOGE(TAG, "ext_adv_configure(coded) rc=%d", rc);
+    }
+}
+
+static void adv_rotate_start(uint8_t instance)
+{
+    if (ble_gap_ext_adv_active(instance)) {
+        return;  // already advertising on this instance
+    }
+    // duration is in 10 ms units; stop after ADV_ROTATE_MS so we rotate.
+    int rc = ble_gap_ext_adv_start(instance, ADV_ROTATE_MS / 10, 0);
+    if (rc != 0) {
+        ESP_LOGE(TAG, "ext_adv_start(inst %u) rc=%d", instance, rc);
         return;
     }
-
-    struct ble_gap_adv_params adv_params;
-    memset(&adv_params, 0, sizeof(adv_params));
-    adv_params.conn_mode = BLE_GAP_CONN_MODE_UND;
-    adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
-
-    rc = ble_gap_adv_start(s_own_addr_type, NULL, BLE_HS_FOREVER,
-                           &adv_params, gap_event, NULL);
-    if (rc != 0) {
-        ESP_LOGE(TAG, "adv_start rc=%d", rc);
-    } else {
-        ESP_LOGI(TAG, "advertising as \"%s\"", DEVICE_NAME);
-    }
+    ESP_LOGI(TAG, "advertising: %s",
+             instance == ADV_INST_CODED ? "Coded PHY S=8 (long range)" : "1M legacy");
 }
 
 // --- Host sync / task -------------------------------------------------------
@@ -209,7 +281,8 @@ static void on_sync(void)
         ESP_LOGE(TAG, "infer_auto rc=%d", rc);
         return;
     }
-    start_advertising();
+    adv_configure();
+    adv_rotate_start(ADV_INST_LEGACY);
 }
 
 static void on_reset(int reason)

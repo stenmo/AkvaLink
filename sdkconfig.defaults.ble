@@ -25,6 +25,12 @@ CONFIG_ENABLE_CHIPOBLE=n
 CONFIG_BT_ENABLED=y
 CONFIG_BT_NIMBLE_ENABLED=y
 
+# Extended advertising — REQUIRED for Coded PHY (long range). The GATT server
+# rotates two advertising instances: legacy 1M (phone-friendly) + Coded S=8
+# (long range). Needs at least 2 instances.
+CONFIG_BT_NIMBLE_EXT_ADV=y
+CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES=2
+
 # NOTE: esp-matter is still compiled in (CMake requires it) but never started.
 # Slimming it out entirely (drop the esp_matter/chip requires for this variant)
 # is a follow-up once the build is validated.
