@@ -66,3 +66,27 @@ def test_version_file_is_valid_semver():
 
     text = (Path(release.__file__).resolve().parents[1] / "version.txt").read_text().strip()
     assert release.parse_version(text)
+
+
+def test_esptool_merge_cmd_orders_offsets_ascending():
+    settings = {"flash_mode": "dio", "flash_freq": "80m", "flash_size": "4MB"}
+    files = {"0x20000": "app.bin", "0x0": "bootloader/boot.bin", "0x8000": "pt.bin"}
+    cmd = release.esptool_merge_cmd("py", "esp32c6", settings, files, "out.bin")
+    assert "merge-bin" in cmd
+    assert cmd[cmd.index("--chip") + 1] == "esp32c6"
+    assert cmd[cmd.index("--flash-size") + 1] == "4MB"
+    # offsets must appear low -> high regardless of dict order
+    assert cmd.index("0x0") < cmd.index("0x8000") < cmd.index("0x20000")
+
+
+def test_flash_instructions_has_command_name_and_hash():
+    txt = release.flash_instructions("0.1.1", "thread", "deadbeef")
+    assert "aqualink-thread-v0.1.1.bin" in txt
+    assert "write-flash 0x0" in txt
+    assert "deadbeef" in txt
+    assert "**thread**" in txt
+
+
+def test_flash_instructions_variant_wifi():
+    txt = release.flash_instructions("1.2.3", "wifi", "abc")
+    assert "aqualink-wifi-v1.2.3.bin" in txt

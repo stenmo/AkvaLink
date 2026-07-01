@@ -28,6 +28,8 @@ repo. The build step uses the WSL launcher on Windows and build.sh elsewhere.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import os
 import re
 import subprocess
@@ -37,7 +39,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VERSION_FILE = REPO_ROOT / "version.txt"
-FIRMWARE_BIN = REPO_ROOT / "build" / "aqualink.bin"
+BUILD_DIR = REPO_ROOT / "build"
+FIRMWARE_BIN = BUILD_DIR / "aqualink.bin"
+FLASHER_ARGS = BUILD_DIR / "flasher_args.json"
 
 SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
@@ -73,6 +77,36 @@ def format_release_notes(version: str, subjects: list[str], prev_tag: str | None
     return "\n".join(lines) + "\n"
 
 
+def esptool_merge_cmd(python: str, chip: str, settings: dict, flash_files: dict, out_path) -> list[str]:
+    """Build the `esptool merge-bin` argv from flasher_args.json data.
+
+    Offsets are emitted in ascending numeric order so the merged image is laid
+    out correctly regardless of dict ordering.
+    """
+    cmd = [
+        python, "-m", "esptool", "--chip", chip, "merge-bin",
+        "-o", str(out_path),
+        "--flash-mode", settings["flash_mode"],
+        "--flash-freq", settings["flash_freq"],
+        "--flash-size", settings["flash_size"],
+    ]
+    for offset, rel in sorted(flash_files.items(), key=lambda kv: int(kv[0], 16)):
+        cmd += [offset, str(BUILD_DIR / rel)]
+    return cmd
+
+
+def flash_instructions(version: str, variant: str, sha256: str) -> str:
+    name = f"aqualink-{variant}-v{version}.bin"
+    return (
+        "## Flash it (no build needed)\n\n"
+        f"Prebuilt **{variant}** firmware for the u-blox NORA-W40 (ESP32-C6) — a\n"
+        "single merged image. Flash to offset `0x0` with esptool "
+        "(`pip install esptool`):\n\n"
+        f"```\nesptool --chip esp32c6 write-flash 0x0 {name}\n```\n\n"
+        f"**SHA256** (`{name}`):\n`{sha256}`\n"
+    )
+
+
 # ---- process helpers -------------------------------------------------------
 
 def _query(cmd: list[str]) -> str:
@@ -92,10 +126,42 @@ def _run(cmd: list[str], dry_run: bool) -> None:
         raise SystemExit(f"command failed ({result.returncode}): {' '.join(cmd)}")
 
 
-def _build_cmd() -> list[str]:
+def _build_cmd(variant: str) -> list[str]:
     if os.name == "nt":
-        return ["cmd", "/c", str(REPO_ROOT / "launch-aqualink-wsl.cmd"), "--rebuild"]
+        cmd = ["cmd", "/c", str(REPO_ROOT / "launch-aqualink-wsl.cmd")]
+        if variant == "wifi":
+            cmd.append("--wifi")
+        cmd.append("--rebuild")
+        return cmd
+    # build.sh builds the default (Thread) variant; extend when it grows a flag.
     return ["bash", str(REPO_ROOT / "build.sh")]
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def merge_firmware(version: str, variant: str, dry_run: bool):
+    """Merge bootloader + partition table + otadata + app into one image
+    flashable at 0x0. Returns (image, sha256_sidecar, sha256_hex) or None."""
+    if not FLASHER_ARGS.is_file():
+        print("    (no build/flasher_args.json — skipping merged image)")
+        return None
+    data = json.loads(FLASHER_ARGS.read_text(encoding="utf-8"))
+    chip = data.get("extra_esptool_args", {}).get("chip", "esp32c6")
+    out = BUILD_DIR / f"aqualink-{variant}-v{version}.bin"
+    _run(esptool_merge_cmd(sys.executable, chip, data["flash_settings"],
+                           data["flash_files"], out), dry_run)
+    sha_path = Path(str(out) + ".sha256")
+    if dry_run:
+        return (out, sha_path, "<sha256>")
+    digest = sha256_file(out)
+    sha_path.write_text(f"{digest}  {out.name}\n", encoding="utf-8")
+    return (out, sha_path, digest)
 
 
 def _confirm(prompt: str) -> bool:
@@ -116,6 +182,13 @@ def preflight(args) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows consoles default to cp1252 when stdout is piped, which cannot
+    # encode status glyphs (•, ✔). Force UTF-8 so a redirected run never crashes.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
     p = argparse.ArgumentParser(description="Cut an AquaLink release.")
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument("--bump", choices=["major", "minor", "patch"], help="bump part of the semver")
@@ -127,6 +200,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--yes", action="store_true", help="do not prompt before publishing")
     p.add_argument("--allow-dirty", action="store_true", help="allow a dirty working tree")
     p.add_argument("--allow-branch", action="store_true", help="allow running off main")
+    p.add_argument("--variant", choices=["thread", "wifi"], default="thread",
+                   help="firmware variant to build + name the image (default: thread)")
     args = p.parse_args(argv)
 
     current = VERSION_FILE.read_text(encoding="utf-8").strip()
@@ -157,16 +232,19 @@ def main(argv: list[str] | None = None) -> int:
         VERSION_FILE.write_text(new_version + "\n", encoding="utf-8")
 
     # 3. Build
+    merged = None
     if args.skip_build:
         print("• build: skipped")
     else:
-        print("• build: firmware")
+        print(f"• build: firmware ({args.variant})")
         try:
-            _run(_build_cmd(), args.dry_run)
+            _run(_build_cmd(args.variant), args.dry_run)
         except SystemExit:
             if not args.dry_run:  # roll back the version bump on build failure
                 _run(["git", "checkout", "--", str(VERSION_FILE)], dry_run=False)
             raise
+        print("• package: merged flashable image")
+        merged = merge_firmware(new_version, args.variant, args.dry_run)
 
     # 4. Commit + tag
     print(f"• commit + tag {tag}")
@@ -179,6 +257,8 @@ def main(argv: list[str] | None = None) -> int:
     raw = _query(["git", "log", log_range, "--no-merges", "--pretty=format:%s"])
     subjects = [s for s in raw.splitlines() if s and not s.startswith("release:")]
     notes = format_release_notes(new_version, subjects, prev_tag)
+    if merged:
+        notes += "\n" + flash_instructions(new_version, args.variant, merged[2])
     print("• release notes:\n" + "\n".join("    " + line for line in notes.splitlines()))
 
     # 6. Publish
@@ -197,9 +277,14 @@ def main(argv: list[str] | None = None) -> int:
         fh.write(notes)
         notes_path = fh.name
     gh_cmd = ["gh", "release", "create", tag, "--title", f"AquaLink {tag}", "--notes-file", notes_path]
+    assets = []
+    if merged:
+        assets += [str(merged[0]), str(merged[1])]
     if FIRMWARE_BIN.is_file():
-        gh_cmd.append(str(FIRMWARE_BIN))
-        print(f"• attaching {FIRMWARE_BIN.name}")
+        assets.append(str(FIRMWARE_BIN))
+    for asset in assets:
+        gh_cmd.append(asset)
+        print(f"• attaching {Path(asset).name}")
     try:
         _run(gh_cmd, args.dry_run)
     finally:
