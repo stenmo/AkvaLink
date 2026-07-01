@@ -23,7 +23,7 @@ at the repo root for hardware wiring, commissioning, and full usage.
 | Item | Value |
 |---|---|
 | Module | NORA-W401 / NORA-W406 (ESP32-C6, RISC-V @ 160 MHz) |
-| Sensor | DS18B20 or DS1822 (1-Wire, ±0.5 °C; **10-bit / 0.25 °C on the default GPIO build** — a deliberate power trade-off, ~4× shorter conversion; the DS2482 Click path runs at the sensor default 12-bit) |
+| Sensor | DS18B20 or DS1822 (1-Wire, ±0.5 °C; **12-bit / 0.0625 °C** on both the direct-GPIO and DS2482 paths — power is managed via adaptive modes + report threshold, not by coarsening resolution) |
 | Sensor variants | DS18B20 (0x28), DS1822 (0x22), MAX31820 (0x3B) |
 | **Direct GPIO** | EVK J15.4 = GPIO15, 4.7 kΩ pull-up to +3V3 |
 | **DS2482 Click board** | MikroE I2C 1-Wire Click on MikroBUS 1 (SDA=GPIO6, SCL=GPIO7) |
@@ -80,7 +80,7 @@ The sensor uses **adaptive sampling** for responsive UX with minimal battery dra
 | Slow period | 60 s | Used when temperature is stable |
 | Fast threshold | 0.5 °C | Delta per read that triggers fast mode |
 | Stable count | 5 | Consecutive stable reads before slowing down |
-| Report threshold | 0.1 °C | Minimum change before pushing to Matter |
+| Report threshold | 0.25 °C | Minimum change before pushing to Matter (4× the 12-bit 0.0625 °C LSB) |
 
 All parameters are compile-time configurable in `app_priv.h`. For very stable
 environments (pool, wine cellar, server room), increase thresholds to cut
@@ -88,9 +88,20 @@ reports and extend battery life dramatically:
 
 | Profile | Report threshold | Fast threshold | Slow period | Use case |
 |---------|-----------------|----------------|-------------|----------|
-| Default | 0.1 °C | 0.5 °C | 60 s | Indoor room |
-| **Pool** | **0.2 °C** | **0.5 °C** | **120 s** | Pool / spa / aquarium |
+| Default | 0.25 °C | 0.5 °C | 60 s | Indoor room |
+| **Pool** | **0.25 °C** | **0.5 °C** | **120 s** | Pool / spa / aquarium |
 | Cold storage | 0.5 °C | 1.0 °C | 300 s | Freezer, wine cellar |
+
+**Why 12-bit (0.0625 °C) resolution?** The DS18B20's *absolute accuracy is
+±0.5 °C regardless of resolution* — more bits give finer steps, not a more
+correct reading. We run the full 12-bit (0.0625 °C) so Home apps show the
+finest reading the sensor can give (the ±0.5 °C accuracy caveat still applies).
+The cost is a longer conversion (~750 ms vs ~187.5 ms at 10-bit), i.e. more
+awake time per read — **power is managed by the adaptive modes and the report
+threshold, not by coarsening the reading.** The report threshold (0.25 °C = 4×
+the 0.0625 °C LSB) gates how often we push to Matter; the fast/slow sampling
+periods gate how often we read. Both are the levers to tune against a real
+Nordic PPK2 power measurement.
 
 **Example — hot coffee to cold water:**
 ```
@@ -110,16 +121,16 @@ Total time: **~15s of live updates**, then energy-saving 60s idle.
 A heated pool in Sweden at 28–29 °C is one of the **most battery-friendly**
 scenarios: temperature barely changes, so reports are extremely rare.
 
-**Typical pool day (summer, heated, 0.2 °C report threshold):**
+**Typical pool day (summer, heated, 0.25 °C report threshold):**
 ```
-06:00  28.2°C  → heater on, stable                     (no report)
-08:00  28.4°C  → Δ=0.2°C → report                      (1)
-12:00  28.6°C  → Δ=0.2°C, solar gain                    (2)
-16:00  28.6°C  → stable                                 (no report)
-20:00  28.4°C  → Δ=0.2°C, cooling begins                (3)
-00:00  28.0°C  → Δ=0.2°C, night cooling                 (4)
-04:00  27.6°C  → Δ=0.2°C                                (5)
-06:00  27.4°C  → Δ=0.2°C, heater kicks in               (6)
+06:00  28.25°C → heater on, stable                     (no report)
+08:00  28.50°C → Δ=0.25°C → report                      (1)
+12:00  28.75°C → Δ=0.25°C, solar gain                    (2)
+16:00  28.75°C → stable                                 (no report)
+20:00  28.50°C → Δ=0.25°C, cooling begins                (3)
+00:00  28.25°C → Δ=0.25°C, night cooling                 (4)
+04:00  28.00°C → Δ=0.25°C                                (5)
+06:00  27.75°C → Δ=0.25°C, heater kicks in               (6)
 ```
 
 **~6 reports/day** in summer. Even fewer on overcast days or with pool cover.
@@ -129,7 +140,7 @@ scenarios: temperature barely changes, so reports are extremely rare.
 Slow drift ~0.5°C/day → ~2–3 reports/day
 ```
 
-**Battery calculation (Wi-Fi disconnect, 0.2 °C threshold):**
+**Battery calculation (Wi-Fi disconnect, 0.25 °C threshold):**
 
 | Season | Reports/day | Reports/hour | Energy/day |
 |--------|------------|-------------|------------|
@@ -243,7 +254,7 @@ period, so reports piggyback on the scheduled wake.
 **Strategy C — Disconnect between reports (best battery, any AP)**
 
 Wi-Fi is **completely off** between reports. The device only reconnects when
-it has something to send (temperature changed > 0.1 °C), sends the update,
+it has something to send (temperature changed ≥ 0.25 °C), sends the update,
 then disconnects. Sleep current drops to ~7 µA (deep sleep) or ~20 µA (light
 sleep with RTC).
 

@@ -29,7 +29,7 @@ AquaLink is the productised, demo-focused clean-room version.
 │                                                              │
 │  Sensor task (ds18b20_task.cpp)                             │
 │      ├─ Adaptive sampling (fast 3 s / slow 60 s)            │
-│      ├─ Threshold-gated reporting (default 0.1 °C)          │
+│      ├─ Threshold-gated reporting (default 0.25 °C)         │
 │      └─ ROM ID + power mode logging                         │
 │                                                              │
 │  Two sensor paths (compile-time):                           │
@@ -75,13 +75,13 @@ This is a **battery-powered product**. Every line of code should respect that.
 - ✅ Adaptive sampling: fast only when temperature is changing
 - ✅ Thread SED with 120 s poll period (default) OR Wi-Fi 6 TWT @ 60 s
 - ✅ Light sleep enabled, CPU + flash + peripherals power down
-- ✅ Report threshold (0.1 °C default, 0.2 °C for pool) gates Matter pushes
+- ✅ Report threshold 0.25 °C (4× the 12-bit 0.0625 °C LSB) gates Matter pushes
 - ❌ NEVER add `vTaskDelay` busy loops — use event-driven sleeps
 - ❌ NEVER leave UART/SPI/I2C powered when not in use
 - ❌ NEVER add periodic Matter sends — only on actual temperature change
 - ❌ NEVER add cloud connectivity — local Matter or local BLE only
 
-**Target battery life on 2× AA in pool monitoring (28-29 °C, 0.2 °C threshold):**
+**Target battery life on 2× AA in pool monitoring (28-29 °C, 0.25 °C threshold):**
 - Thread SED: ~12 years
 - Wi-Fi disconnect mode: ~9 years
 - Wi-Fi TWT @ 60 s: ~1.8 years (always reachable, requires Wi-Fi 6 AP)

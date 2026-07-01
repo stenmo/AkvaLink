@@ -25,7 +25,7 @@ environments where the temperature barely changes, but you want to know
 |-----------|------|-----|
 | Module | NORA-W401 / NORA-W406 | Wi-Fi 6 + Thread + BLE in one tiny module |
 | MCU | ESP32-C6 (RISC-V @ 160 MHz) | Inside NORA-W40 |
-| Sensor | DS18B20 (stainless probe) | ±0.5 °C, 10-bit (0.25 °C steps, power-tuned), 1-Wire, ~$3 |
+| Sensor | DS18B20 (stainless probe) | ±0.5 °C, 12-bit (0.0625 °C steps), 1-Wire, ~$3 |
 | Power | 2× AA alkaline (or 18650 Li) | ~12 years on 2× AA in pool conditions |
 
 **Schematic:** GPIO15 → DS18B20 DQ, 4.7 kΩ pull-up to +3V3. That's it.
@@ -54,7 +54,7 @@ printed on the serial console at first boot.
 
 ## Battery life examples
 
-For a heated pool at 28–29 °C with 0.2 °C report threshold:
+For a heated pool at 28–29 °C with 0.25 °C report threshold:
 
 | Battery | Thread SED | Wi-Fi (TWT) | Wi-Fi (disconnect) |
 |---------|-----------|-------------|--------------------|

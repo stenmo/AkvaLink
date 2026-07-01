@@ -96,19 +96,19 @@ static esp_err_t sensor_init(void)
         return ESP_ERR_NOT_FOUND;
     }
 
-    // 10-bit: 0.25 °C step, ~187.5 ms conversion. Pool/aquatic temperatures
-    // drift slowly, so the coarser step is irrelevant — and the shorter
-    // conversion draws roughly 4× less mA·s per read than 12-bit (800 ms),
-    // which is what matters on a multi-year battery budget.
-    return ds18b20_set_resolution(s_dev, DS18B20_RESOLUTION_10B);
+    // 12-bit: 0.0625 °C step, ~750 ms conversion — the finest the DS18B20
+    // offers, so Home shows the best reading the sensor can give (absolute
+    // accuracy is still ±0.5 °C). Power is managed via the adaptive sampling
+    // modes and the report threshold, not by coarsening resolution.
+    return ds18b20_set_resolution(s_dev, DS18B20_RESOLUTION_12B);
 }
 
 static esp_err_t sensor_read(float *celsius)
 {
     esp_err_t err = ds18b20_trigger_temperature_conversion(s_dev);
     if (err != ESP_OK) return err;
-    // 10-bit max conversion time is 187.5 ms; 250 ms is a comfortable margin.
-    vTaskDelay(pdMS_TO_TICKS(250));
+    // 12-bit max conversion time is 750 ms; 800 ms is a comfortable margin.
+    vTaskDelay(pdMS_TO_TICKS(800));
     return ds18b20_get_temperature(s_dev, celsius);
 }
 

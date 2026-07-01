@@ -34,7 +34,7 @@ After the EVK works, **one** small step. No new features yet.
 - Initial Matter Temperature Sensor on Thread + Wi-Fi.
 - DS18B20 + DS2482-800 sensor paths, both auto-detect.
 - Adaptive sampling (fast 3 s / slow 60 s).
-- Threshold-gated reporting (default 0.1 °C).
+- Threshold-gated reporting (default 0.25 °C).
 - Light sleep + DFS + flash power-down.
 - AquaLink boot banner with PoolMicke nod.
 - Local-only git repo, no remote (private project).
@@ -43,7 +43,8 @@ After the EVK works, **one** small step. No new features yet.
   launcher/build/flash scripts drive-agnostic (WSL `wslpath`, not hardcoded C:).
 - Toolchain verified: ESP-IDF v5.4.1 + esp-matter release/v1.5 — the latest
   combo esp-matter v1.5 supports for ESP32-C6 (v5.5.x is C5/C61 only).
-- DS18B20 set to 10-bit (0.25 °C) to cut per-read conversion energy ~4×.
+- DS18B20 at full 12-bit (0.0625 °C); power managed via adaptive modes +
+  report threshold, not resolution (measure vs Nordic PPK2 before tuning).
 
 ---
 
@@ -58,6 +59,11 @@ above has happened.
 > See [docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md)
 > and [docs/WINTER_STORAGE_MODE.md](docs/WINTER_STORAGE_MODE.md).
 
+- **Resolution vs power:** DS18B20 runs full 12-bit (0.0625 °C, ~750 ms
+  conversion). Power is controlled by the adaptive modes (fast/slow periods)
+  and the report threshold — *not* by dropping resolution. Measure per-read
+  and average current on the **Nordic PPK2** before tuning; only revisit
+  12 → 11 → 10-bit if conversion awake-time proves significant.
 - Wi-Fi disconnect-mode (wake → associate → push → tear down → sleep).
 - Tune Thread SED poll period (120 s → 300 s → 600 s).
 - Deep sleep cycles (5–10 min between full samples).

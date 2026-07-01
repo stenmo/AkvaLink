@@ -37,7 +37,7 @@ extern "C" {
 #define APP_SAMPLE_PERIOD_SLOW_MS   60000     // 60 s — idle/stable (production)
 #define APP_FAST_THRESHOLD_C        0.5f      // °C change to trigger fast mode
 #define APP_FAST_COUNT              5         // stable reads before slowing down
-#define APP_REPORT_THRESHOLD_C      0.1f      // °C — only push to Matter on real change
+#define APP_REPORT_THRESHOLD_C      0.25f     // °C — report gate (4× the 12-bit 0.0625 °C LSB); power lever, tune vs PPK2
 
 // Endpoint id of the Matter Temperature Sensor (assigned in app_main.cpp).
 extern uint16_t g_temp_endpoint_id;
