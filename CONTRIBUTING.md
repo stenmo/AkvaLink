@@ -67,6 +67,21 @@ py -3 -m pip install -r requirements-dev.txt   # first time only
 py -3 -m pytest                                 # (python3 on Linux/macOS)
 ```
 
+### Cutting a release
+
+`version.txt` is the single source of truth for the version (ESP-IDF embeds it
+as the firmware `PROJECT_VER`). [scripts/release.py](scripts/release.py) runs
+the whole pipeline — preflight → pytest → bump → build → commit + tag →
+release notes → publish (GitHub release with `aqualink.bin` attached):
+
+```powershell
+py -3 scripts/release.py --bump patch --dry-run   # preview, change nothing
+py -3 scripts/release.py --bump patch             # 0.1.0 -> 0.1.1
+```
+
+It refuses to run on a dirty tree or off `main`, and prompts before publishing.
+Use `--skip-build` / `--skip-tests` / `--no-publish` to run a subset.
+
 ## Code conventions
 
 - Logging via ESP-IDF `ESP_LOGI/W/E(TAG, ...)`, not `printf`.
