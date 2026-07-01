@@ -17,7 +17,7 @@ environments where the temperature barely changes, but you want to know
 - **📱 Works with Apple Home, Google Home, Alexa** — standard Matter sensor
 - **🌐 No cloud** — local Matter over Thread or Wi-Fi
 - **💧 Waterproof probe** — DS18B20 in stainless steel (10 m+ cable possible)
-- **🛠 Open source** — built on esp-matter, MIT-style license
+- **🛠 Open source** — built on esp-matter, Apache-2.0 license
 
 ## Hardware
 
@@ -97,8 +97,10 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 ## Origin & Credits
 
 AquaLink is a clean-room productisation of the
-`companion/opencpu/nora-w40-thermometer/` reference example in
-[u-blox/u-connectMatter](https://github.com/u-blox/u-connectMatter).
+`companion/opencpu/nora-w40-thermometer/` NORA-W40 thermometer reference from
+u-blox, tracked at [u-blox/u-connectMatter](https://github.com/u-blox/u-connectMatter)
+(that public repo now hosts prebuilt reference binaries; the source tree is
+internal to u-blox).
 
 Built on:
 - [esp-matter](https://github.com/espressif/esp-matter) (release/v1.5)

@@ -23,7 +23,7 @@ at the repo root for hardware wiring, commissioning, and full usage.
 | Item | Value |
 |---|---|
 | Module | NORA-W401 / NORA-W406 (ESP32-C6, RISC-V @ 160 MHz) |
-| Sensor | DS18B20 or DS1822 (1-Wire, ±0.5 °C, 12-bit) |
+| Sensor | DS18B20 or DS1822 (1-Wire, ±0.5 °C; **10-bit / 0.25 °C on the default GPIO build** — a deliberate power trade-off, ~4× shorter conversion; the DS2482 Click path runs at the sensor default 12-bit) |
 | Sensor variants | DS18B20 (0x28), DS1822 (0x22), MAX31820 (0x3B) |
 | **Direct GPIO** | EVK J15.4 = GPIO15, 4.7 kΩ pull-up to +3V3 |
 | **DS2482 Click board** | MikroE I2C 1-Wire Click on MikroBUS 1 (SDA=GPIO6, SCL=GPIO7) |

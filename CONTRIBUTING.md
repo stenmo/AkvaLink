@@ -5,6 +5,12 @@ pool/aquatic temperature sensor on the u-blox NORA-W40 (ESP32-C6). It
 deliberately does **one thing well**, so contributions are very welcome —
 as long as they keep that focus.
 
+**Project status:** AquaLink is primarily a u-blox reference/demo design,
+maintained by the author. It **is open to outside pull requests** — bug
+fixes, docs, and small focused improvements especially — but the roadmap and
+scope are curated to keep the project simple. For anything large, please open
+an issue first (see below) so we can agree it fits before you invest the work.
+
 ## Before you start
 
 - **Open an issue first** for anything non-trivial. A quick "here's what I want
