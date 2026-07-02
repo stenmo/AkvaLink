@@ -126,6 +126,18 @@
 
   .band { background: linear-gradient(160deg, #eaf7fb, #d5eef4); }
 
+  /* Download cards */
+  .dl-card { display: block; text-align: center; text-decoration: none; color: inherit;
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px;
+    transition: transform .1s, box-shadow .1s; }
+  .dl-card:hover { text-decoration: none; transform: translateY(-2px); box-shadow: 0 8px 22px rgba(3,63,99,.10); }
+  .dl-card .ico { font-size: 1.8rem; }
+  .dl-card h3 { margin: 8px 0 2px; color: var(--deep); font-size: 1.1rem; }
+  .dl-card p { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
+  .dl-btn { display: inline-block; background: var(--water); color: #fff; padding: 8px 16px;
+    border-radius: 999px; font-weight: 600; font-size: .9rem; }
+  .dl-card:hover .dl-btn { background: var(--deep); }
+
   footer { background: var(--deep); color: #cfe6ee; padding: 40px 0; font-size: .92rem; }
   footer a { color: #fff; }
   footer .muted { opacity: .7; }
@@ -150,6 +162,7 @@
       Flera års batteritid · Lokal Matter · <strong>Ingen molntjänst, aldrig.</strong></p>
     <p class="cta">
       <a class="primary" href="https://github.com/stenmo/AkvaLink">Visa på GitHub</a>
+      <a class="ghost" href="#download">Ladda ner firmware</a>
       <a class="ghost" href="#how">Hur det fungerar</a>
     </p>
   </div>
@@ -270,6 +283,26 @@
         </tbody>
       </table>
     </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <h2>Ladda ner firmware</h2>
+    <p class="lead">Förbyggda enfilsbinärer för NORA-W40 (ESP32-C6) — alltid senaste releasen.</p>
+    <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Senaste release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=senaste&amp;logo=github"></a></p>
+    <div class="grid">
+      <a class="dl-card" id="dlThread" href="https://github.com/stenmo/AkvaLink/releases">
+        <span class="ico">🧵</span><h3>Thread</h3><p>Matter via Thread · batteri</p><span class="dl-btn">Ladda ner .bin</span>
+      </a>
+      <a class="dl-card" id="dlWifi" href="https://github.com/stenmo/AkvaLink/releases">
+        <span class="ico">📶</span><h3>Wi-Fi</h3><p>Matter via Wi-Fi</p><span class="dl-btn">Ladda ner .bin</span>
+      </a>
+      <a class="dl-card" id="dlBle" href="https://github.com/stenmo/AkvaLink/releases">
+        <span class="ico">🔵</span><h3>Endast BLE</h3><p>Fristående GATT · ingen hub</p><span class="dl-btn">Ladda ner .bin</span>
+      </a>
+    </div>
+    <p class="ble-note">Flasha till <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
   </div>
 </section>
 
@@ -545,6 +578,39 @@
       statusEl.className = 'status';
     }
   })();
+})();
+</script>
+
+<script>
+// Fyll de tre nedladdningsknapparna från senaste GitHub-releasen. De statiska
+// länkarna pekar redan på release-sidan som reserv (fungerar utan JS / vid
+// API-gräns); vid lyckad hämtning uppgraderas de till direkta asset-länkar och
+// versionen visas. Följer alltid nyaste releasen.
+(function () {
+  var REPO = 'stenmo/AkvaLink';
+  var cards = { thread: 'dlThread', wifi: 'dlWifi', ble: 'dlBle' };
+
+  function assetFor(assets, variant) {
+    var re = new RegExp('^akvalink-' + variant + '-v.*\\.bin$');
+    for (var i = 0; i < assets.length; i++) {
+      if (re.test(assets[i].name)) return assets[i].browser_download_url;
+    }
+    return null;
+  }
+
+  fetch('https://api.github.com/repos/' + REPO + '/releases/latest', {
+    headers: { 'Accept': 'application/vnd.github+json' }
+  })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function (rel) {
+      var assets = rel.assets || [];
+      Object.keys(cards).forEach(function (variant) {
+        var el = document.getElementById(cards[variant]);
+        var url = assetFor(assets, variant);
+        if (el && url) el.setAttribute('href', url);
+      });
+    })
+    .catch(function () { /* behåll reserv-länkar till release-sidan */ });
 })();
 </script>
 

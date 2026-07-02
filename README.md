@@ -1,5 +1,7 @@
 # AkvaLink 🏊
 
+[![Latest release](https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&label=latest&logo=github)](https://github.com/stenmo/AkvaLink/releases/latest)
+
 **Battery-powered Matter pool & aquatic temperature sensor**
 Single-SoC design on **u-blox NORA-W40** (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3)
 
