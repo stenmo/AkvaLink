@@ -80,13 +80,17 @@
   .status.on { color: var(--ok); font-weight: 600; }
   .age { color: var(--muted); font-size: .8rem; min-height: 1em; margin: 6px 0 0; }
   .live-card .cta a { cursor: pointer; }
+  .live-card .cta .primary { background: var(--water); color: #fff; }
+  .live-card .cta .primary:hover { background: var(--deep); }
   .ble-note { color: var(--muted); font-size: .84rem; margin: 14px 0 0; }
 
   /* OTA card */
   .ota-card { margin-top: 18px; }
   .ota-title { margin: 0 0 4px; color: var(--deep); font-size: 1.1rem; }
   .ota-hint { color: var(--muted); font-size: .9rem; margin: 0 0 16px; }
-  .ota-file { display: block; margin: 0 auto 14px; font-size: .9rem; max-width: 100%; }
+  .file-btn { display: inline-block; padding: 9px 18px; border-radius: 999px; border: 1.5px solid var(--water); color: var(--water); font-weight: 600; cursor: pointer; font-size: .9rem; }
+  .file-btn:hover { background: var(--water); color: #fff; }
+  .file-name { display: block; color: var(--muted); font-size: .82rem; margin: 8px 0 12px; }
   .progress { height: 8px; background: var(--foam); border-radius: 999px; overflow: hidden; margin: 4px 0 10px; }
   .progress .bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--water), var(--water-2)); transition: width .2s; }
 
@@ -155,14 +159,6 @@
       <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
     </div>
-    <div class="live-card ota-card" id="otaCard">
-      <h3 class="ota-title">Firmware update</h3>
-      <p class="ota-hint">Flash a new build straight from your browser — no cable, no app.</p>
-      <input type="file" id="otaFile" accept=".bin" class="ota-file" />
-      <div class="progress"><div id="otaBar" class="bar"></div></div>
-      <div id="otaStatus" class="status"></div>
-      <p class="cta"><a id="otaBtn" class="primary" role="button">Update firmware</a></p>
-    </div>
   </div>
 </section>
 
@@ -204,6 +200,16 @@
       </table>
     </div>
     <p class="lead" style="margin-top:16px"><strong>Schematic:</strong> GPIO15 → DS18B20 DQ, 4.7 kΩ pull-up to +3V3. That's it.</p>
+    <div class="live-card ota-card" id="otaCard">
+      <h3 class="ota-title">Firmware update over Bluetooth</h3>
+      <p class="ota-hint">Flash a new build straight from your browser — no cable, no app (Chrome/Edge).</p>
+      <label class="file-btn" for="otaFile">Choose .bin file</label>
+      <input type="file" id="otaFile" accept=".bin" hidden />
+      <span id="otaFileName" class="file-name">No file chosen</span>
+      <div class="progress"><div id="otaBar" class="bar"></div></div>
+      <div id="otaStatus" class="status"></div>
+      <p class="cta"><a id="otaBtn" class="primary" role="button">Update firmware</a></p>
+    </div>
   </div>
 </section>
 
@@ -304,6 +310,7 @@
   var otaBtn = document.getElementById('otaBtn');
   var otaBar = document.getElementById('otaBar');
   var otaStatus = document.getElementById('otaStatus');
+  var otaFileName = document.getElementById('otaFileName');
 
   var ESS_SERVICE = 0x181a;   // Environmental Sensing
   var TEMP_CHAR   = 0x2a6e;   // Temperature (sint16, 0.01 °C, little-endian)
@@ -516,6 +523,11 @@
   }
 
   otaBtn.addEventListener('click', function (e) { e.preventDefault(); runOta(); });
+  otaFile.addEventListener('change', function () {
+    otaFileName.textContent = (otaFile.files && otaFile.files[0]) ? otaFile.files[0].name : 'No file chosen';
+    otaSetProgress(0);
+    otaStatus.textContent = '';
+  });
 
   // On load, silently try a previously-paired AquaLink — no dialog, no gesture.
   (async function () {
