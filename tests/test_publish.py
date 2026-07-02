@@ -1,8 +1,5 @@
 """Tests for scripts/publish.py — pure helpers (no network, no build)."""
 
-import hashlib
-from pathlib import Path
-
 import pytest
 
 import publish
@@ -39,51 +36,33 @@ def test_clean_upload_url_quotes_special_chars():
     assert "a%20b%2Bc.bin" in url
 
 
-def test_esptool_merge_cmd_orders_offsets_ascending(tmp_path):
-    settings = {"flash_mode": "dio", "flash_freq": "80m", "flash_size": "4MB"}
-    files = {"0x20000": "app.bin", "0x0": "bootloader/boot.bin", "0x8000": "pt.bin"}
-    cmd = publish.esptool_merge_cmd("py", "esp32c6", settings, files, tmp_path, "out.bin")
-    assert "merge-bin" in cmd
-    assert cmd[cmd.index("--chip") + 1] == "esp32c6"
-    assert cmd[cmd.index("--flash-size") + 1] == "4MB"
-    assert cmd.index("0x0") < cmd.index("0x8000") < cmd.index("0x20000")
+def test_read_digest_parses_sidecar(tmp_path):
+    sidecar = tmp_path / "akvalink-thread-v0.1.0.bin.sha256"
+    sidecar.write_text("deadbeef  akvalink-thread-v0.1.0.bin\n", encoding="utf-8")
+    assert publish.read_digest(sidecar) == "deadbeef"
 
 
-def test_esptool_merge_cmd_prefixes_build_dir(tmp_path):
-    files = {"0x0": "bootloader/boot.bin"}
-    settings = {"flash_mode": "dio", "flash_freq": "80m", "flash_size": "4MB"}
-    cmd = publish.esptool_merge_cmd("py", "esp32c6", settings, files, tmp_path, "o.bin")
-    # the file path must be resolved under the given build dir
-    assert str(Path(tmp_path) / "bootloader/boot.bin") in cmd
+def test_read_digest_missing_file(tmp_path):
+    assert publish.read_digest(tmp_path / "nope.sha256") == "<unknown>"
 
 
-def test_variant_build_dir():
-    assert publish.variant_build_dir("wifi").name == "wifi"
-    assert publish.variant_build_dir("wifi").parent.name == "build"
+def test_collect_assets_ok(tmp_path, monkeypatch):
+    monkeypatch.setattr(publish, "DIST_DIR", tmp_path)
+    for variant in publish.VARIANTS:
+        name = publish.asset_name(variant, "0.2.0")
+        (tmp_path / name).write_bytes(b"IMG")
+        (tmp_path / (name + ".sha256")).write_text(f"abc  {name}\n", encoding="utf-8")
+    assets = publish.collect_assets("0.2.0")
+    assert len(assets) == 6   # image + sidecar for each of the three variants
+    names = [p.name for p in assets]
+    assert "akvalink-thread-v0.2.0.bin" in names
+    assert "akvalink-ble-v0.2.0.bin.sha256" in names
 
 
-def test_build_variant_cmd_windows(monkeypatch):
-    monkeypatch.setattr(publish.os, "name", "nt")
-    assert "--wifi" in publish.build_variant_cmd("wifi")
-    assert "--build" in publish.build_variant_cmd("wifi")
-    assert "--rebuild" not in publish.build_variant_cmd("wifi")
-    # thread carries no network flag
-    assert "--wifi" not in publish.build_variant_cmd("thread")
-    assert "--ble" not in publish.build_variant_cmd("thread")
-
-
-def test_build_variant_cmd_posix(monkeypatch):
-    monkeypatch.setattr(publish.os, "name", "posix")
-    cmd = publish.build_variant_cmd("ble")
-    assert cmd[0] == "bash"
-    assert cmd[1].endswith("build.sh")
-    assert "build" in cmd and "--ble" in cmd
-
-
-def test_sha256_file(tmp_path):
-    f = tmp_path / "x.bin"
-    f.write_bytes(b"hello world")
-    assert publish.sha256_file(f) == hashlib.sha256(b"hello world").hexdigest()
+def test_collect_assets_missing_raises(tmp_path, monkeypatch):
+    monkeypatch.setattr(publish, "DIST_DIR", tmp_path)
+    with pytest.raises(SystemExit):
+        publish.collect_assets("0.2.0")
 
 
 def test_format_notes_lists_all_variants_and_hashes():

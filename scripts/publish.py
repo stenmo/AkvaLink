@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""AkvaLink publish helper — build every firmware variant and ship a GitHub release.
+"""AkvaLink publish helper — ship a GitHub release from the dist/ artifacts.
 
-Builds the three shipping variants (Thread, Wi-Fi, BLE) into their own isolated
-build directories, merges each into a single 0x0-flashable image under dist/,
-then creates (or updates) a GitHub release and uploads the images as assets.
+Takes the merged images that scripts/release.py produced in dist/ (one per
+variant: thread, wifi, ble), pushes the tag, then creates (or updates) the
+GitHub release and uploads those images + their .sha256 sidecars as assets.
 
-Division of labour (see also scripts/release.py):
-    scripts/release.py  --bump patch --no-publish   # test, bump version.txt, commit + tag
-    scripts/publish.py                              # build all variants + publish
+Division of labour:
+    scripts/release.py  --bump patch   # prepare: test, bump, build all, tag, dist/
+    scripts/publish.py                 # ship: push tag + GitHub release from dist/
 
-So release.py *prepares* (version + tag); publish.py *ships* (build + upload).
+So release.py *prepares* locally; publish.py *ships* remotely. publish.py does
+NOT build — run release.py first (it fills dist/).
 
 Auth: reuses the GitHub token Git Credential Manager already stores for
 github.com (the same one `git push` uses) — no `gh` CLI required. Override with
@@ -17,19 +18,16 @@ the GITHUB_TOKEN environment variable (handy for CI).
 
 Examples
 --------
-    py -3 scripts/publish.py --dry-run          # show the plan, change nothing
-    py -3 scripts/publish.py                     # build all 3, publish v<version.txt>
-    py -3 scripts/publish.py --no-build          # publish already-built variants
-    py -3 scripts/publish.py --draft             # create the release as a draft
+    py -3 scripts/publish.py --dry-run   # show the plan, change nothing
+    py -3 scripts/publish.py             # publish v<version.txt> from dist/
+    py -3 scripts/publish.py --draft     # create the release as a draft
 
-Requires: git, esptool (`pip install esptool`), and network access. The build
-step uses the WSL launcher on Windows and build.sh elsewhere.
+Requires: git and network access.
 """
 
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import subprocess
@@ -59,10 +57,6 @@ def asset_name(variant: str, version: str) -> str:
     return f"akvalink-{variant}-v{version}.bin"
 
 
-def variant_build_dir(variant: str) -> Path:
-    return REPO_ROOT / "build" / variant
-
-
 def clean_upload_url(upload_url: str, filename: str) -> str:
     """Turn GitHub's templated upload_url into a concrete asset-upload URL.
 
@@ -74,47 +68,11 @@ def clean_upload_url(upload_url: str, filename: str) -> str:
     return f"{base}?name={urllib.parse.quote(filename)}"
 
 
-def esptool_merge_cmd(python: str, chip: str, settings: dict,
-                      flash_files: dict, build_dir, out_path) -> list[str]:
-    """Build the `esptool merge-bin` argv, offsets ascending so the merged
-    image is laid out correctly regardless of dict ordering."""
-    cmd = [
-        python, "-m", "esptool", "--chip", chip, "merge-bin",
-        "-o", str(out_path),
-        "--flash-mode", settings["flash_mode"],
-        "--flash-freq", settings["flash_freq"],
-        "--flash-size", settings["flash_size"],
-    ]
-    for offset, rel in sorted(flash_files.items(), key=lambda kv: int(kv[0], 16)):
-        cmd += [offset, str(Path(build_dir) / rel)]
-    return cmd
-
-
-def sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as fh:
-        for chunk in iter(lambda: fh.read(65536), b""):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-def build_variant_cmd(variant: str) -> list[str]:
-    """Command that builds one variant into its own build/<variant> dir.
-
-    Uses --build (not --rebuild): the per-variant directories are already
-    isolated, so there is nothing to clean between variants.
-    """
-    flag = {"wifi": "--wifi", "ble": "--ble", "sensor": "--sensor"}.get(variant)
-    if os.name == "nt":
-        cmd = ["cmd", "/c", str(REPO_ROOT / "launch-akvalink-wsl.cmd")]
-        if flag:
-            cmd.append(flag)
-        cmd.append("--build")
-        return cmd
-    cmd = ["bash", str(REPO_ROOT / "build.sh"), "build"]
-    if flag:
-        cmd.append(flag)
-    return cmd
+def read_digest(path: Path) -> str:
+    """Read the sha256 hex from a `<hex>  <name>` sidecar written by release.py."""
+    if not path.is_file():
+        return "<unknown>"
+    return path.read_text(encoding="utf-8").split()[0]
 
 
 def format_notes(version: str, digests: dict) -> str:
@@ -249,30 +207,22 @@ def upload_asset(token: str, release: dict, path: Path) -> None:
 
 # ---- pipeline --------------------------------------------------------------
 
-def merge_variant(variant: str, version: str, dry_run: bool):
-    """Merge one variant's build into dist/akvalink-<variant>-v<ver>.bin.
-    Returns the sha256 hex (or '<dry-run>')."""
-    build_dir = variant_build_dir(variant)
-    flasher_args = build_dir / "flasher_args.json"
-    if not flasher_args.is_file():
-        raise SystemExit(
-            f"missing {flasher_args} — build the '{variant}' variant first "
-            f"(or drop --no-build)."
-        )
-    data = json.loads(flasher_args.read_text(encoding="utf-8"))
-    chip = data.get("extra_esptool_args", {}).get("chip", "esp32c6")
-    out = DIST_DIR / asset_name(variant, version)
-    _run(
-        esptool_merge_cmd(sys.executable, chip, data["flash_settings"],
-                          data["flash_files"], build_dir, out),
-        dry_run,
-    )
-    if dry_run:
-        return "<dry-run>"
-    digest = sha256_file(out)
-    (DIST_DIR / (out.name + ".sha256")).write_text(
-        f"{digest}  {out.name}\n", encoding="utf-8")
-    return digest
+def collect_assets(version: str) -> list[Path]:
+    """Return the dist/ files to upload (image + sidecar per variant).
+    Raises if a variant's image is missing (release.py hasn't produced it)."""
+    assets: list[Path] = []
+    for variant in VARIANTS:
+        image = DIST_DIR / asset_name(variant, version)
+        if not image.is_file():
+            raise SystemExit(
+                f"missing {image} — run `py -3 scripts/release.py` first to "
+                f"build + package the variants into dist/."
+            )
+        assets.append(image)
+        sidecar = DIST_DIR / (image.name + ".sha256")
+        if sidecar.is_file():
+            assets.append(sidecar)
+    return assets
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -281,10 +231,9 @@ def main(argv: list[str] | None = None) -> int:
     except (AttributeError, ValueError):
         pass
 
-    p = argparse.ArgumentParser(description="Build all variants and publish a GitHub release.")
+    p = argparse.ArgumentParser(description="Ship a GitHub release from the dist/ artifacts.")
     p.add_argument("--version", help="version to publish (default: version.txt)")
     p.add_argument("--tag", help="git tag (default: v<version>)")
-    p.add_argument("--no-build", action="store_true", help="use existing build/<variant> dirs")
     p.add_argument("--no-push", action="store_true", help="do not push the tag before releasing")
     p.add_argument("--draft", action="store_true", help="create the release as a draft")
     p.add_argument("--dry-run", action="store_true", help="print the plan, change nothing")
@@ -300,18 +249,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         print("[dry-run] no changes will be made.\n")
 
-    DIST_DIR.mkdir(exist_ok=True)
-
-    # 1. Build + merge each variant.
-    digests: dict[str, str] = {}
-    for variant in VARIANTS:
-        if args.no_build:
-            print(f"• build: skipped ({variant})")
-        else:
-            print(f"• build: {variant}")
-            _run(build_variant_cmd(variant), args.dry_run)
-        print(f"• package: dist/{asset_name(variant, version)}")
-        digests[variant] = merge_variant(variant, version, args.dry_run)
+    # 1. Gather the artifacts release.py built into dist/ (fails if missing).
+    assets = collect_assets(version)
+    digests = {v: read_digest(DIST_DIR / (asset_name(v, version) + ".sha256")) for v in VARIANTS}
+    for path in assets:
+        print(f"• asset: dist/{path.name}")
 
     notes = format_notes(version, digests)
     print("• release notes:\n" + "\n".join("    " + ln for ln in notes.splitlines()))

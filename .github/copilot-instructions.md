@@ -79,19 +79,22 @@ therefore needs **no** reconfigure or rebuild; each keeps its own ccache.
 Two scripts, clean split — `release.py` *prepares*, `publish.py` *ships*:
 
 ```powershell
-# 1. Prepare: test, bump version.txt, commit + tag (no push/publish yet)
-py -3 scripts/release.py --bump patch --no-publish
+# 1. Prepare (local): test, bump version.txt, build ALL 3 variants → merged
+#    0x0 images in dist/, commit + tag. Touches nothing remote.
+py -3 scripts/release.py --bump patch
 
-# 2. Ship: build all 3 variants → merged 0x0 images in dist/, push tag,
-#    create the GitHub release and upload the assets (thread, wifi, ble)
+# 2. Ship (remote): push the tag, create the GitHub release and upload the
+#    dist/ assets (thread, wifi, ble). Re-runnable; never rebuilds.
 py -3 scripts/publish.py
 ```
 
+- `release.py` = **build**, `publish.py` = **upload**. If a GitHub upload
+  hiccups, re-run `publish.py` — no rebuild needed.
 - `publish.py` needs **no `gh` CLI** — it uses the GitHub REST API with the
   token Git Credential Manager already holds (override via `GITHUB_TOKEN`).
 - Each release asset is a single image flashable with
   `esptool --chip esp32c6 write-flash 0x0 akvalink-<variant>-v<ver>.bin`.
-- `dist/` is git-ignored; regenerate it any time with `publish.py`.
+- `dist/` is git-ignored; regenerate it any time with `release.py`.
 
 ## Power optimisation rules
 
