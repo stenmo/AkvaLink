@@ -294,6 +294,8 @@
   }
 
   var device = null;
+  var tempChar = null;
+  var pollTimer = null;
 
   function setTemp(celsius) { tempEl.textContent = celsius.toFixed(2); tempEl.classList.remove('idle'); }
 
@@ -301,7 +303,19 @@
     setTemp(event.target.value.getInt16(0, true) / 100);   // little-endian sint16
   }
 
+  // Keep-alive: re-read the value on a timer so the display stays live even if
+  // the device notifies sparsely (it only notifies on a new sample) or the
+  // platform doesn't deliver notifications reliably.
+  async function pollTemp() {
+    if (!tempChar || !device || !device.gatt.connected) return;
+    try { setTemp((await tempChar.readValue()).getInt16(0, true) / 100); } catch (e) { /* ignore */ }
+  }
+
+  function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
   function onDisconnected() {
+    stopPolling();
+    tempChar = null;
     statusEl.textContent = 'Disconnected';
     statusEl.className = 'status';
     tempEl.textContent = '\u2014';
@@ -324,8 +338,14 @@
     var ch = await service.getCharacteristic(TEMP_CHAR);
 
     setTemp((await ch.readValue()).getInt16(0, true) / 100);
-    await ch.startNotifications();
-    ch.addEventListener('characteristicvaluechanged', onTemp);
+    try {
+      await ch.startNotifications();
+      ch.addEventListener('characteristicvaluechanged', onTemp);
+    } catch (e) { /* notify unsupported — the poll below keeps it live */ }
+
+    tempChar = ch;
+    stopPolling();
+    pollTimer = setInterval(pollTemp, 3000);   // keep the reading fresh (~3 s)
 
     statusEl.textContent = 'Connected to ' + (dev.name || 'AquaLink');
     statusEl.className = 'status on';
