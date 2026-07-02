@@ -93,6 +93,7 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 - [x] Adaptive sampling + threshold reporting
 - [x] Light sleep + DFS + flash power-down
 - [x] DS2482 Click board (long cable variant)
+- [x] BLE firmware update over the air (custom GATT over `esp_ota`, `--ble` variant)
 - [ ] **Real power measurement (Joulescope/PPK2) + deep sleep** — see [TODO.md](TODO.md)
 - [ ] **E-ink display** (big-digit, battery, trend) — see [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md)
 - [ ] Wi-Fi 6 TWT integration in code (currently DTIM only)
