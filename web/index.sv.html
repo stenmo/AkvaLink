@@ -225,7 +225,10 @@
     <p class="lead" style="margin-top:16px"><strong>Kopplingsschema:</strong> GPIO15 → DS18B20 DQ, 4,7 kΩ pull-up till +3V3. Det är allt.</p>
     <div class="live-card ota-card" id="otaCard">
       <h3 class="ota-title">Firmware-uppdatering via Bluetooth</h3>
-      <p class="ota-hint">Flasha en ny version direkt från webbläsaren — ingen kabel, ingen app (Chrome/Edge).</p>
+      <p class="ota-hint">Ett klick — sidan hämtar senaste firmware och flashar den via BLE (Chrome/Edge).</p>
+      <div id="otaFwLine" class="file-name"></div>
+      <p class="cta"><a id="otaLatestBtn" class="primary" role="button">Flasha senaste firmware</a></p>
+      <p class="ble-note" style="margin:6px 0 10px">…eller välj en .bin manuellt:</p>
       <label class="file-btn" for="otaFile">Välj .bin-fil</label>
       <input type="file" id="otaFile" accept=".bin" hidden />
       <span id="otaFileName" class="file-name">Ingen fil vald</span>
@@ -354,6 +357,8 @@
   var otaBar = document.getElementById('otaBar');
   var otaStatus = document.getElementById('otaStatus');
   var otaFileName = document.getElementById('otaFileName');
+  var otaLatestBtn = document.getElementById('otaLatestBtn');
+  var otaFwLine = document.getElementById('otaFwLine');
 
   var ESS_SERVICE = 0x181a;   // Environmental Sensing
   var TEMP_CHAR   = 0x2a6e;   // Temperature (sint16, 0.01 °C, little-endian)
@@ -500,53 +505,85 @@
     await connectViaChooser();
   }
 
-  async function runOta() {
-    var file = otaFile.files && otaFile.files[0];
-    if (!file) { otaStatus.textContent = 'Välj en .bin-fil först'; return; }
+  var otaLatestTag = null;   // senaste release-tagg, fylls vid sidladdning
+  function otaLatestSuffix() { return otaLatestTag ? '  ·  senaste: ' + otaLatestTag : ''; }
 
-    otaBtn.textContent = 'Uppdaterar\u2026';
+  // Läs firmware-versionen från Device Information Service (0x180A / 0x2A26).
+  async function showDeviceFw(server) {
+    try {
+      var dis = await server.getPrimaryService(0x180a);
+      var fwChar = await dis.getCharacteristic(0x2a26);
+      var fw = new TextDecoder().decode(await fwChar.readValue());
+      console.log('[OTA] device firmware revision:', fw);
+      if (otaFwLine) otaFwLine.textContent = 'På enheten: v' + fw + otaLatestSuffix();
+      return fw;
+    } catch (e) { console.warn('[OTA] DIS read failed', e); return null; }
+  }
+
+  // Gemensamt OTA-flöde: hämta bytes (vald fil ELLER same-origin-fetch),
+  // anslut, sedan BEGIN -> ström -> END. getBytes() returnerar en Uint8Array.
+  async function doOta(getBytes) {
     otaSetProgress(0);
     var failed = false;
-
     try {
+      otaStatus.textContent = 'Hämtar firmware\u2026';
+      var bytes = await getBytes();     // först — radera inte sloten vid misslyckad hämtning
+
       otaStatus.textContent = 'Ansluter\u2026';
       await ensureConnected();
       var server = device.gatt;
+      await showDeviceFw(server);
       var svc  = await server.getPrimaryService(OTA_SERVICE);
       var ctrl = await svc.getCharacteristic(OTA_CTRL);
       var data = await svc.getCharacteristic(OTA_DATA);
+      console.log('[OTA] connected; OTA service + characteristics found');
+      device.addEventListener('gattserverdisconnected', function () {
+        console.warn('[OTA] gattserverdisconnected during transfer');
+      });
 
       // Statusnotifikationer: resultatbyte != 0 betyder att enheten felat.
       try {
         await ctrl.startNotifications();
         ctrl.addEventListener('characteristicvaluechanged', function (e) {
-          if (e.target.value.getUint8(1) !== 0) {
+          var op = e.target.value.getUint8(0), res = e.target.value.getUint8(1);
+          console.log('[OTA] status notify: op=0x' + op.toString(16) + ' result=' + res);
+          if (res !== 0) {
             failed = true;
-            otaStatus.textContent = 'Enheten rapporterade fel (kod ' + e.target.value.getUint8(1) + ')';
+            otaStatus.textContent = 'Enheten rapporterade fel (kod ' + res + ')';
           }
         });
-      } catch (e) { /* notifikationer valfria */ }
+      } catch (e) { console.warn('[OTA] notifications unavailable', e); }
 
       // BEGIN — enheten raderar den passiva sloten (några sekunder).
       otaStatus.textContent = 'Förbereder enhet (raderar slot)\u2026';
+      console.log('[OTA] BEGIN — erasing passive slot…');
       await ctrl.writeValue(new Uint8Array([0x01]));
       await sleep(400);
       if (failed) throw new Error('enheten avvisade BEGIN');
 
       // Strömma bilden i MTU-säkra bitar.
-      var bytes = new Uint8Array(await file.arrayBuffer());
       var CHUNK = 240;
-      var writeChunk = data.writeValueWithoutResponse
+      var useNoRsp = !!data.writeValueWithoutResponse;
+      var writeChunk = useNoRsp
         ? data.writeValueWithoutResponse.bind(data)
         : data.writeValue.bind(data);
+      console.log('[OTA] streaming', bytes.length, 'bytes in ' + CHUNK + 'B chunks,',
+                  useNoRsp ? 'write-no-response' : 'write-with-response');
+      var t0 = Date.now();
       for (var off = 0; off < bytes.length; off += CHUNK) {
         if (failed) throw new Error('avbruten av enheten');
         await writeChunk(bytes.subarray(off, Math.min(off + CHUNK, bytes.length)));
         if ((off % (CHUNK * 34)) < CHUNK) {   // uppdatera UI ~var 8:e kB
           otaSetProgress(off / bytes.length);
           otaStatus.textContent = 'Laddar upp ' + Math.round(100 * off / bytes.length) + '%';
+          var dt = (Date.now() - t0) / 1000;
+          console.log('[OTA] ' + off + '/' + bytes.length + ' B (' +
+                      Math.round(100 * off / bytes.length) + '%), ' +
+                      (dt > 0 ? Math.round(off / 1024 / dt) : 0) + ' kB/s');
         }
       }
+      console.log('[OTA] all ' + bytes.length + ' bytes written in ' +
+                  ((Date.now() - t0) / 1000).toFixed(1) + 's');
       otaSetProgress(1);
 
       // END — enheten slutför, sätter bootslotet och startar om.
@@ -554,21 +591,62 @@
       await ctrl.writeValue(new Uint8Array([0x02]));
       otaStatus.textContent = 'Uppdatering skickad — enheten startar om med ny firmware ✓';
     } catch (err) {
-      otaStatus.textContent = 'Uppdatering misslyckades: ' + ((err && err.message) || err);
+      console.error('[OTA] failed:', err && err.name, err && err.message, err);
+      otaStatus.textContent = 'Uppdatering misslyckades: ' +
+        ((err && err.name ? err.name + ': ' : '') + ((err && err.message) || err));
       try {   // försök avbryta på enheten
         var s = await device.gatt.getPrimaryService(OTA_SERVICE);
         await (await s.getCharacteristic(OTA_CTRL)).writeValue(new Uint8Array([0x03]));
-      } catch (e) { /* ignorera */ }
+        console.log('[OTA] ABORT sent to device');
+      } catch (e) { console.warn('[OTA] abort failed', e); }
     }
+  }
+
+  // Manuellt: flasha en vald .bin-fil.
+  async function runOta() {
+    var file = otaFile.files && otaFile.files[0];
+    if (!file) { otaStatus.textContent = 'Välj en .bin-fil först'; return; }
+    otaBtn.textContent = 'Uppdaterar\u2026';
+    await doOta(async function () {
+      console.log('[OTA] file:', file.name, '(' + file.size + ' bytes)');
+      return new Uint8Array(await file.arrayBuffer());
+    });
     otaBtn.textContent = 'Uppdatera firmware';
   }
 
+  // Ett klick: hämta senaste firmware som Pages-sidan hostar same-origin
+  // (från nyaste GitHub-releasen) och flasha den — ingen nedladdning/sparning.
+  async function runOtaLatest() {
+    otaLatestBtn.textContent = 'Uppdaterar\u2026';
+    await doOta(async function () {
+      var r = await fetch('firmware/akvalink-ble-app.bin', { cache: 'no-store' });
+      if (!r.ok) throw new Error('ingen hostad firmware än (HTTP ' + r.status + ') — använd “Välj .bin”');
+      var buf = await r.arrayBuffer();
+      console.log('[OTA] fetched latest firmware:', buf.byteLength, 'bytes');
+      return new Uint8Array(buf);
+    });
+    otaLatestBtn.textContent = otaLatestTag ? 'Flasha senaste firmware (' + otaLatestTag + ')' : 'Flasha senaste firmware';
+  }
+
   otaBtn.addEventListener('click', function (e) { e.preventDefault(); runOta(); });
+  otaLatestBtn.addEventListener('click', function (e) { e.preventDefault(); runOtaLatest(); });
   otaFile.addEventListener('change', function () {
     otaFileName.textContent = (otaFile.files && otaFile.files[0]) ? otaFile.files[0].name : 'Ingen fil vald';
     otaSetProgress(0);
     otaStatus.textContent = '';
   });
+
+  // Märk ett-klick-knappen med nyaste release-versionen.
+  fetch('https://api.github.com/repos/stenmo/AkvaLink/releases/latest', {
+    headers: { 'Accept': 'application/vnd.github+json' }
+  }).then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (rel) {
+      if (rel && rel.tag_name) {
+        otaLatestTag = rel.tag_name;
+        otaLatestBtn.textContent = 'Flasha senaste firmware (' + rel.tag_name + ')';
+        if (otaFwLine && !otaFwLine.textContent) otaFwLine.textContent = 'Senaste release: ' + rel.tag_name;
+      }
+    }).catch(function () { /* offline / gränsad — knappen fungerar ändå */ });
 
   // Vid sidladdning: försök tyst ansluta till en tidigare ihopparad AkvaLink — ingen dialog, ingen gest.
   (async function () {

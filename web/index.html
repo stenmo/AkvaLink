@@ -225,7 +225,10 @@
     <p class="lead" style="margin-top:16px"><strong>Schematic:</strong> GPIO15 → DS18B20 DQ, 4.7 kΩ pull-up to +3V3. That's it.</p>
     <div class="live-card ota-card" id="otaCard">
       <h3 class="ota-title">Firmware update over Bluetooth</h3>
-      <p class="ota-hint">Flash a new build straight from your browser — no cable, no app (Chrome/Edge).</p>
+      <p class="ota-hint">One click — the page fetches the latest firmware and flashes it over BLE (Chrome/Edge).</p>
+      <div id="otaFwLine" class="file-name"></div>
+      <p class="cta"><a id="otaLatestBtn" class="primary" role="button">Flash latest firmware</a></p>
+      <p class="ble-note" style="margin:6px 0 10px">…or pick a .bin manually:</p>
       <label class="file-btn" for="otaFile">Choose .bin file</label>
       <input type="file" id="otaFile" accept=".bin" hidden />
       <span id="otaFileName" class="file-name">No file chosen</span>
@@ -354,6 +357,8 @@
   var otaBar = document.getElementById('otaBar');
   var otaStatus = document.getElementById('otaStatus');
   var otaFileName = document.getElementById('otaFileName');
+  var otaLatestBtn = document.getElementById('otaLatestBtn');
+  var otaFwLine = document.getElementById('otaFwLine');
 
   var ESS_SERVICE = 0x181a;   // Environmental Sensing
   var TEMP_CHAR   = 0x2a6e;   // Temperature (sint16, 0.01 °C, little-endian)
@@ -502,53 +507,86 @@
     await connectViaChooser();
   }
 
-  async function runOta() {
-    var file = otaFile.files && otaFile.files[0];
-    if (!file) { otaStatus.textContent = 'Choose a .bin file first'; return; }
+  var otaLatestTag = null;   // newest release tag, filled on load
+  function otaLatestSuffix() { return otaLatestTag ? '  ·  latest: ' + otaLatestTag : ''; }
 
-    otaBtn.textContent = 'Updating\u2026';
+  // Read the running firmware version from the Device Information Service
+  // (0x180A / 0x2A26 firmware revision) and show it. Best-effort — DIS optional.
+  async function showDeviceFw(server) {
+    try {
+      var dis = await server.getPrimaryService(0x180a);
+      var fwChar = await dis.getCharacteristic(0x2a26);
+      var fw = new TextDecoder().decode(await fwChar.readValue());
+      console.log('[OTA] device firmware revision:', fw);
+      if (otaFwLine) otaFwLine.textContent = 'On device: v' + fw + otaLatestSuffix();
+      return fw;
+    } catch (e) { console.warn('[OTA] DIS read failed', e); return null; }
+  }
+
+  // Shared OTA flow: get the image bytes (picked file OR same-origin fetch),
+  // connect, then BEGIN -> stream -> END. getBytes() returns a Uint8Array.
+  async function doOta(getBytes) {
     otaSetProgress(0);
     var failed = false;
-
     try {
+      otaStatus.textContent = 'Fetching firmware\u2026';
+      var bytes = await getBytes();     // first — don't erase the slot on a bad fetch
+
       otaStatus.textContent = 'Connecting\u2026';
       await ensureConnected();
       var server = device.gatt;
+      await showDeviceFw(server);
       var svc  = await server.getPrimaryService(OTA_SERVICE);
       var ctrl = await svc.getCharacteristic(OTA_CTRL);
       var data = await svc.getCharacteristic(OTA_DATA);
+      console.log('[OTA] connected; OTA service + characteristics found');
+      device.addEventListener('gattserverdisconnected', function () {
+        console.warn('[OTA] gattserverdisconnected during transfer');
+      });
 
       // Status notifications: result byte != 0 means the device errored.
       try {
         await ctrl.startNotifications();
         ctrl.addEventListener('characteristicvaluechanged', function (e) {
-          if (e.target.value.getUint8(1) !== 0) {
+          var op = e.target.value.getUint8(0), res = e.target.value.getUint8(1);
+          console.log('[OTA] status notify: op=0x' + op.toString(16) + ' result=' + res);
+          if (res !== 0) {
             failed = true;
-            otaStatus.textContent = 'Device reported error (code ' + e.target.value.getUint8(1) + ')';
+            otaStatus.textContent = 'Device reported error (code ' + res + ')';
           }
         });
-      } catch (e) { /* notify optional */ }
+      } catch (e) { console.warn('[OTA] notifications unavailable', e); }
 
       // BEGIN — the device erases the passive slot (a few seconds).
       otaStatus.textContent = 'Preparing device (erasing slot)\u2026';
+      console.log('[OTA] BEGIN — erasing passive slot…');
       await ctrl.writeValue(new Uint8Array([0x01]));
       await sleep(400);
       if (failed) throw new Error('device rejected BEGIN');
 
       // Stream the image in MTU-safe chunks.
-      var bytes = new Uint8Array(await file.arrayBuffer());
       var CHUNK = 240;
-      var writeChunk = data.writeValueWithoutResponse
+      var useNoRsp = !!data.writeValueWithoutResponse;
+      var writeChunk = useNoRsp
         ? data.writeValueWithoutResponse.bind(data)
         : data.writeValue.bind(data);
+      console.log('[OTA] streaming', bytes.length, 'bytes in ' + CHUNK + 'B chunks,',
+                  useNoRsp ? 'write-no-response' : 'write-with-response');
+      var t0 = Date.now();
       for (var off = 0; off < bytes.length; off += CHUNK) {
         if (failed) throw new Error('aborted by device');
         await writeChunk(bytes.subarray(off, Math.min(off + CHUNK, bytes.length)));
         if ((off % (CHUNK * 34)) < CHUNK) {   // refresh UI ~every 8 KB
           otaSetProgress(off / bytes.length);
           otaStatus.textContent = 'Uploading ' + Math.round(100 * off / bytes.length) + '%';
+          var dt = (Date.now() - t0) / 1000;
+          console.log('[OTA] ' + off + '/' + bytes.length + ' B (' +
+                      Math.round(100 * off / bytes.length) + '%), ' +
+                      (dt > 0 ? Math.round(off / 1024 / dt) : 0) + ' kB/s');
         }
       }
+      console.log('[OTA] all ' + bytes.length + ' bytes written in ' +
+                  ((Date.now() - t0) / 1000).toFixed(1) + 's');
       otaSetProgress(1);
 
       // END — device finalises, sets the boot slot, and reboots.
@@ -556,21 +594,62 @@
       await ctrl.writeValue(new Uint8Array([0x02]));
       otaStatus.textContent = 'Update sent — device rebooting into new firmware ✓';
     } catch (err) {
-      otaStatus.textContent = 'Update failed: ' + ((err && err.message) || err);
+      console.error('[OTA] failed:', err && err.name, err && err.message, err);
+      otaStatus.textContent = 'Update failed: ' +
+        ((err && err.name ? err.name + ': ' : '') + ((err && err.message) || err));
       try {   // best-effort abort on the device
         var s = await device.gatt.getPrimaryService(OTA_SERVICE);
         await (await s.getCharacteristic(OTA_CTRL)).writeValue(new Uint8Array([0x03]));
-      } catch (e) { /* ignore */ }
+        console.log('[OTA] ABORT sent to device');
+      } catch (e) { console.warn('[OTA] abort failed', e); }
     }
+  }
+
+  // Manual: flash a picked .bin file.
+  async function runOta() {
+    var file = otaFile.files && otaFile.files[0];
+    if (!file) { otaStatus.textContent = 'Choose a .bin file first'; return; }
+    otaBtn.textContent = 'Updating\u2026';
+    await doOta(async function () {
+      console.log('[OTA] file:', file.name, '(' + file.size + ' bytes)');
+      return new Uint8Array(await file.arrayBuffer());
+    });
     otaBtn.textContent = 'Update firmware';
   }
 
+  // One-click: fetch the latest firmware the Pages site hosts same-origin
+  // (staged from the newest GitHub release) and flash it — no download/save.
+  async function runOtaLatest() {
+    otaLatestBtn.textContent = 'Updating\u2026';
+    await doOta(async function () {
+      var r = await fetch('firmware/akvalink-ble-app.bin', { cache: 'no-store' });
+      if (!r.ok) throw new Error('no hosted firmware yet (HTTP ' + r.status + ') — use “Choose .bin” instead');
+      var buf = await r.arrayBuffer();
+      console.log('[OTA] fetched latest firmware:', buf.byteLength, 'bytes');
+      return new Uint8Array(buf);
+    });
+    otaLatestBtn.textContent = otaLatestTag ? 'Flash latest firmware (' + otaLatestTag + ')' : 'Flash latest firmware';
+  }
+
   otaBtn.addEventListener('click', function (e) { e.preventDefault(); runOta(); });
+  otaLatestBtn.addEventListener('click', function (e) { e.preventDefault(); runOtaLatest(); });
   otaFile.addEventListener('change', function () {
     otaFileName.textContent = (otaFile.files && otaFile.files[0]) ? otaFile.files[0].name : 'No file chosen';
     otaSetProgress(0);
     otaStatus.textContent = '';
   });
+
+  // Label the one-click button with the newest release version.
+  fetch('https://api.github.com/repos/stenmo/AkvaLink/releases/latest', {
+    headers: { 'Accept': 'application/vnd.github+json' }
+  }).then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (rel) {
+      if (rel && rel.tag_name) {
+        otaLatestTag = rel.tag_name;
+        otaLatestBtn.textContent = 'Flash latest firmware (' + rel.tag_name + ')';
+        if (otaFwLine && !otaFwLine.textContent) otaFwLine.textContent = 'Latest release: ' + rel.tag_name;
+      }
+    }).catch(function () { /* offline / rate-limited — button still works */ });
 
   // On load, silently try a previously-paired AkvaLink — no dialog, no gesture.
   (async function () {
