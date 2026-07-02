@@ -27,3 +27,10 @@ CONFIG_FREERTOS_USE_TICKLESS_IDLE=n
 CONFIG_ENABLE_WIFI_STATION=y
 CONFIG_ESP_WIFI_ENABLE_WPA3_SAE=y
 CONFIG_ESP_WIFI_SOFTAP_SUPPORT=n
+
+# Fast reconnect (KISS — reuse ESP-IDF's built-in, no custom code):
+# the Wi-Fi driver caches the last AP's channel + BSSID in NVS and probes that
+# channel first on reconnect, falling back to a full scan only if it fails.
+# The NVS write happens only when the stored AP/channel changes, so flash wear
+# is negligible (this is why we don't need a hand-rolled RTC cache).
+CONFIG_ESP_WIFI_NVS_ENABLED=y

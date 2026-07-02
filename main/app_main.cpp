@@ -12,6 +12,7 @@
 #include "qr_console.h"
 
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "nvs_flash.h"
 
 #if !CONFIG_AQUALINK_BLE_ONLY && !CONFIG_AQUALINK_SENSOR_TEST
@@ -86,6 +87,17 @@ static void on_matter_event(const ChipDeviceEvent * event, intptr_t)
                          chip::DeviceLayer::kConnectivity_Established
                              ? "ESTABLISHED"
                              : "LOST");
+            break;
+        case chip::DeviceLayer::DeviceEventType::kWiFiConnectivityChange:
+            // Log uptime at Wi-Fi (re)connect so you can confirm the built-in
+            // NVS fast-connect is working — a targeted last-channel reconnect is
+            // much quicker than a cold full-channel scan.
+            ESP_LOGI(TAG, "📶 Wi-Fi %s (uptime %lld ms)",
+                     event->WiFiConnectivityChange.Result ==
+                         chip::DeviceLayer::kConnectivity_Established
+                             ? "connected"
+                             : "lost",
+                     esp_timer_get_time() / 1000);
             break;
         case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:
             ESP_LOGI(TAG, "🎉 Commissioning complete!");
