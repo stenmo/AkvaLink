@@ -82,6 +82,14 @@
   .live-card .cta a { cursor: pointer; }
   .ble-note { color: var(--muted); font-size: .84rem; margin: 14px 0 0; }
 
+  /* OTA card */
+  .ota-card { margin-top: 18px; }
+  .ota-title { margin: 0 0 4px; color: var(--deep); font-size: 1.1rem; }
+  .ota-hint { color: var(--muted); font-size: .9rem; margin: 0 0 16px; }
+  .ota-file { display: block; margin: 0 auto 14px; font-size: .9rem; max-width: 100%; }
+  .progress { height: 8px; background: var(--foam); border-radius: 999px; overflow: hidden; margin: 4px 0 10px; }
+  .progress .bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--water), var(--water-2)); transition: width .2s; }
+
   /* Tables */
   .tbl-scroll { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
@@ -147,6 +155,14 @@
       <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
     </div>
+    <div class="live-card ota-card" id="otaCard">
+      <h3 class="ota-title">Firmware update</h3>
+      <p class="ota-hint">Flash a new build straight from your browser — no cable, no app.</p>
+      <input type="file" id="otaFile" accept=".bin" class="ota-file" />
+      <div class="progress"><div id="otaBar" class="bar"></div></div>
+      <div id="otaStatus" class="status"></div>
+      <p class="cta"><a id="otaBtn" class="primary" role="button">Update firmware</a></p>
+    </div>
   </div>
 </section>
 
@@ -206,7 +222,7 @@
         </tbody>
       </table>
     </div>
-    <p class="lead" style="margin-top:14px">Estimates from the power model — real measurement (PPK2/Joulescope) is on the roadmap.</p>
+    <p class="lead" style="margin-top:14px">Estimates from the power model — real measurement (PPK2/Joulescope) is on the roadmap. In practice, alkaline AA self-discharge and shelf-life cap real-world life at roughly <strong>5–7 years</strong> regardless of draw; <strong>lithium AA (e.g. Energizer L91)</strong> last longer and cope far better with outdoor cold.</p>
   </div>
 </section>
 
@@ -283,14 +299,23 @@
   var tempEl = document.getElementById('tempVal');
   var ageEl = document.getElementById('bleAge');
   var noteEl = document.getElementById('bleNote');
+  var otaCard = document.getElementById('otaCard');
+  var otaFile = document.getElementById('otaFile');
+  var otaBtn = document.getElementById('otaBtn');
+  var otaBar = document.getElementById('otaBar');
+  var otaStatus = document.getElementById('otaStatus');
 
   var ESS_SERVICE = 0x181a;   // Environmental Sensing
   var TEMP_CHAR   = 0x2a6e;   // Temperature (sint16, 0.01 °C, little-endian)
+  var OTA_SERVICE = 'f0a00001-6e40-4a71-9b2c-6b6e696c0010';
+  var OTA_CTRL    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0011';   // write + notify status
+  var OTA_DATA    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0012';   // write firmware chunks
 
   // Web Bluetooth is Chromium-only (Chrome/Edge desktop, Chrome Android).
   var supported = typeof navigator !== 'undefined' && !!navigator.bluetooth;
   if (!supported) {
     btn.style.display = 'none';
+    if (otaCard) otaCard.style.display = 'none';
     statusEl.textContent = 'Bluetooth not available in this browser';
     noteEl.textContent = 'Open this page in Chrome or Edge (desktop or Android) to connect live over Bluetooth.';
     return;
@@ -393,8 +418,8 @@
     statusEl.textContent = 'Choose your AquaLink\u2026';
     statusEl.className = 'status';
     var dev = await navigator.bluetooth.requestDevice({
-      filters: [{ name: 'AquaLink' }],
-      optionalServices: [ESS_SERVICE]
+      filters: [{ namePrefix: 'AquaLink' }],
+      optionalServices: [ESS_SERVICE, OTA_SERVICE]
     });
     await attach(dev);
   }
@@ -415,6 +440,82 @@
       statusEl.className = 'status';
     }
   });
+
+  // --- Firmware update over BLE (OTA) ---------------------------------------
+  function otaSetProgress(frac) { otaBar.style.width = Math.round(frac * 100) + '%'; }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  // Connect if needed. Called straight from the button click so requestDevice
+  // keeps its user gesture (no getDevices await in front of it).
+  async function ensureConnected() {
+    if (device && device.gatt && device.gatt.connected) return;
+    await connectViaChooser();
+  }
+
+  async function runOta() {
+    var file = otaFile.files && otaFile.files[0];
+    if (!file) { otaStatus.textContent = 'Choose a .bin file first'; return; }
+
+    otaBtn.textContent = 'Updating\u2026';
+    otaSetProgress(0);
+    var failed = false;
+
+    try {
+      otaStatus.textContent = 'Connecting\u2026';
+      await ensureConnected();
+      var server = device.gatt;
+      var svc  = await server.getPrimaryService(OTA_SERVICE);
+      var ctrl = await svc.getCharacteristic(OTA_CTRL);
+      var data = await svc.getCharacteristic(OTA_DATA);
+
+      // Status notifications: result byte != 0 means the device errored.
+      try {
+        await ctrl.startNotifications();
+        ctrl.addEventListener('characteristicvaluechanged', function (e) {
+          if (e.target.value.getUint8(1) !== 0) {
+            failed = true;
+            otaStatus.textContent = 'Device reported error (code ' + e.target.value.getUint8(1) + ')';
+          }
+        });
+      } catch (e) { /* notify optional */ }
+
+      // BEGIN — the device erases the passive slot (a few seconds).
+      otaStatus.textContent = 'Preparing device (erasing slot)\u2026';
+      await ctrl.writeValue(new Uint8Array([0x01]));
+      await sleep(400);
+      if (failed) throw new Error('device rejected BEGIN');
+
+      // Stream the image in MTU-safe chunks.
+      var bytes = new Uint8Array(await file.arrayBuffer());
+      var CHUNK = 240;
+      var writeChunk = data.writeValueWithoutResponse
+        ? data.writeValueWithoutResponse.bind(data)
+        : data.writeValue.bind(data);
+      for (var off = 0; off < bytes.length; off += CHUNK) {
+        if (failed) throw new Error('aborted by device');
+        await writeChunk(bytes.subarray(off, Math.min(off + CHUNK, bytes.length)));
+        if ((off % (CHUNK * 34)) < CHUNK) {   // refresh UI ~every 8 KB
+          otaSetProgress(off / bytes.length);
+          otaStatus.textContent = 'Uploading ' + Math.round(100 * off / bytes.length) + '%';
+        }
+      }
+      otaSetProgress(1);
+
+      // END — device finalises, sets the boot slot, and reboots.
+      otaStatus.textContent = 'Finalising\u2026';
+      await ctrl.writeValue(new Uint8Array([0x02]));
+      otaStatus.textContent = 'Update sent — device rebooting into new firmware ✓';
+    } catch (err) {
+      otaStatus.textContent = 'Update failed: ' + ((err && err.message) || err);
+      try {   // best-effort abort on the device
+        var s = await device.gatt.getPrimaryService(OTA_SERVICE);
+        await (await s.getCharacteristic(OTA_CTRL)).writeValue(new Uint8Array([0x03]));
+      } catch (e) { /* ignore */ }
+    }
+    otaBtn.textContent = 'Update firmware';
+  }
+
+  otaBtn.addEventListener('click', function (e) { e.preventDefault(); runOta(); });
 
   // On load, silently try a previously-paired AquaLink — no dialog, no gesture.
   (async function () {
