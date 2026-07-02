@@ -130,6 +130,24 @@ def test_sha256_file(tmp_path):
     assert release.sha256_file(f) == hashlib.sha256(b"hello world").hexdigest()
 
 
+def test_app_image_name():
+    assert release.app_image_name("wifi", "1.2.3") == "akvalink-wifi-app-v1.2.3.bin"
+
+
+def test_stage_app_image_copies_and_hashes(monkeypatch, tmp_path):
+    build = tmp_path / "build"
+    build.mkdir()
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (build / "akvalink.bin").write_bytes(b"APPIMG")
+    monkeypatch.setattr(release, "BUILD_DIR", build)
+    monkeypatch.setattr(release, "DIST_DIR", dist)
+    out = release.stage_app_image("ble", "0.2.0", dry_run=False)
+    assert out.name == "akvalink-ble-app-v0.2.0.bin"
+    assert out.read_bytes() == b"APPIMG"
+    assert (dist / (out.name + ".sha256")).is_file()
+
+
 def test_merge_firmware_missing_flasher_args(monkeypatch, tmp_path):
     monkeypatch.setattr(release, "FLASHER_ARGS", tmp_path / "nope.json")
     assert release.merge_firmware("0.1.1", "thread", dry_run=False) is None

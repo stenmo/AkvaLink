@@ -57,6 +57,11 @@ def asset_name(variant: str, version: str) -> str:
     return f"akvalink-{variant}-v{version}.bin"
 
 
+def app_image_name(variant: str, version: str) -> str:
+    # Bare app-partition image — the OTA payload (BLE / Matter OTA + web 'flash latest').
+    return f"akvalink-{variant}-app-v{version}.bin"
+
+
 def clean_upload_url(upload_url: str, filename: str) -> str:
     """Turn GitHub's templated upload_url into a concrete asset-upload URL.
 
@@ -208,8 +213,9 @@ def upload_asset(token: str, release: dict, path: Path) -> None:
 # ---- pipeline --------------------------------------------------------------
 
 def collect_assets(version: str) -> list[Path]:
-    """Return the dist/ files to upload (image + sidecar per variant).
-    Raises if a variant's image is missing (release.py hasn't produced it)."""
+    """Return the dist/ files to upload (merged image + bare app image + sidecars
+    per variant). Raises if a variant's merged image is missing (release.py
+    hasn't produced it)."""
     assets: list[Path] = []
     for variant in VARIANTS:
         image = DIST_DIR / asset_name(variant, version)
@@ -218,10 +224,12 @@ def collect_assets(version: str) -> list[Path]:
                 f"missing {image} — run `py -3 scripts/release.py` first to "
                 f"build + package the variants into dist/."
             )
-        assets.append(image)
-        sidecar = DIST_DIR / (image.name + ".sha256")
-        if sidecar.is_file():
-            assets.append(sidecar)
+        for candidate in (image, DIST_DIR / app_image_name(variant, version)):
+            if candidate.is_file():
+                assets.append(candidate)
+            sidecar = DIST_DIR / (candidate.name + ".sha256")
+            if sidecar.is_file():
+                assets.append(sidecar)
     return assets
 
 

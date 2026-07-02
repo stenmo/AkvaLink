@@ -65,6 +65,24 @@ def test_collect_assets_missing_raises(tmp_path, monkeypatch):
         publish.collect_assets("0.2.0")
 
 
+def test_app_image_name():
+    assert publish.app_image_name("ble", "0.2.0") == "akvalink-ble-app-v0.2.0.bin"
+
+
+def test_collect_assets_includes_app_images(tmp_path, monkeypatch):
+    monkeypatch.setattr(publish, "DIST_DIR", tmp_path)
+    for variant in publish.VARIANTS:
+        for name in (publish.asset_name(variant, "0.2.0"),
+                     publish.app_image_name(variant, "0.2.0")):
+            (tmp_path / name).write_bytes(b"IMG")
+            (tmp_path / (name + ".sha256")).write_text(f"abc  {name}\n", encoding="utf-8")
+    assets = publish.collect_assets("0.2.0")
+    # (merged + app) x (image + sidecar) x 3 variants
+    assert len(assets) == 12
+    names = [p.name for p in assets]
+    assert "akvalink-ble-app-v0.2.0.bin" in names
+
+
 def test_format_notes_lists_all_variants_and_hashes():
     digests = {"thread": "aaa", "wifi": "bbb", "ble": "ccc"}
     notes = publish.format_notes("0.2.0", digests)

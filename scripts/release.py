@@ -38,6 +38,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -179,6 +180,31 @@ def merge_firmware(version: str, variant: str, dry_run: bool, out_dir=None):
     return (out, sha_path, digest)
 
 
+def app_image_name(variant: str, version: str) -> str:
+    """The bare app-partition image name (the OTA payload — flashed to the app
+    slot only, NOT the merged 0x0 image)."""
+    return f"akvalink-{variant}-app-v{version}.bin"
+
+
+def stage_app_image(variant: str, version: str, dry_run: bool):
+    """Copy build/<variant>/akvalink.bin -> dist/akvalink-<variant>-app-v<ver>.bin
+    (+ sha256). This bare app image is what BLE / Matter OTA flash (app slot),
+    and what the web page's 'flash latest' streams over BLE."""
+    dst = DIST_DIR / app_image_name(variant, version)
+    print(f"• package: dist/{dst.name}")
+    if dry_run:
+        return None
+    src = BUILD_DIR / "akvalink.bin"
+    if not src.is_file():
+        print(f"    (no {src} — skipping app image)")
+        return None
+    shutil.copyfile(src, dst)
+    digest = sha256_file(dst)
+    (DIST_DIR / (dst.name + ".sha256")).write_text(
+        f"{digest}  {dst.name}\n", encoding="utf-8")
+    return dst
+
+
 # ---- pipeline --------------------------------------------------------------
 def preflight(args) -> None:
     if not args.allow_dirty and _query(["git", "status", "--porcelain"]):
@@ -253,6 +279,7 @@ def main(argv: list[str] | None = None) -> int:
                 raise
             print(f"• package: dist/akvalink-{variant}-v{new_version}.bin")
             merge_firmware(new_version, variant, args.dry_run, out_dir=DIST_DIR)
+            stage_app_image(variant, new_version, args.dry_run)
 
     # 4. Commit + tag
     print(f"• commit + tag {tag}")
