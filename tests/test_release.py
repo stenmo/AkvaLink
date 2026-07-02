@@ -114,7 +114,7 @@ def test_build_cmd_windows_wifi(monkeypatch):
 def test_build_cmd_windows_ble(monkeypatch):
     monkeypatch.setattr(release.os, "name", "nt")
     cmd = release._build_cmd("ble")
-    assert "--ble-only" in cmd and "--rebuild" in cmd
+    assert "--ble" in cmd and "--rebuild" in cmd
     assert "--wifi" not in cmd
 
 

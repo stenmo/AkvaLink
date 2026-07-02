@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.16)
 set(PROJECT_VER "3.4.0")
 set(PROJECT_VER_NUMBER 3)
 
-# The --ble-only and --sensor-only variants set AQUALINK_NO_MATTER in the
+# The --ble and --sensor variants set AQUALINK_NO_MATTER in the
 # environment (via build.sh). They must NOT pull in the esp-matter component
 # glue below: esp-matter's NetworkCommissioning cluster static_assert fails to
 # compile when no transport (Thread/Wi-Fi) is enabled. So build a plain

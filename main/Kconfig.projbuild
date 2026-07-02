@@ -4,19 +4,19 @@ menu "AquaLink"
         bool "Build the standalone BLE-only variant (no Matter)"
         default n
         help
-            Build the --ble-only AquaLink variant: skip Matter/Thread/Wi-Fi and
+            Build the --ble AquaLink variant: skip Matter/Thread/Wi-Fi and
             run a standalone NimBLE GATT server (Device Information, Environmental
             Sensing temperature, and a custom AquaLink service with uptime).
 
             Use this for homes with no Matter hub and no Wi-Fi — a phone/app
-            connects directly over BLE. Select via the launcher's --ble-only flag
+            connects directly over BLE. Select via the launcher's --ble flag
             (which layers sdkconfig.defaults.ble on top of sdkconfig.defaults).
 
     config AQUALINK_SENSOR_TEST
         bool "Build the sensor-only test variant (no Matter, no BLE)"
         default n
         help
-            Build the --sensor-only test variant: skip Matter and BLE entirely
+            Build the --sensor test variant: skip Matter and BLE entirely
             and just read the sensor (DS18B20) over 1-Wire, logging the
             temperature. Use it to verify probe wiring and the sensor before
             building the full app.

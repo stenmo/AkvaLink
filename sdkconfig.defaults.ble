@@ -2,7 +2,7 @@
 #
 # Layer on top of the base defaults:
 #   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.ble" reconfigure
-# or via the launcher:  launch-aqualink-wsl.cmd --ble-only --rebuild
+# or via the launcher:  launch-aqualink-wsl.cmd --ble --rebuild
 #
 # For homes with no Matter hub and no Wi-Fi: a phone/app connects directly over
 # BLE and reads device info + live temperature. See main/ble_gatt.cpp.

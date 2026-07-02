@@ -1,7 +1,7 @@
 # AquaLink sensor-only test variant — read the connected sensor and log it.
 # No Matter, no BLE, no networking. For verifying probe wiring / the sensor.
 #
-#   launch-aqualink-wsl.cmd --sensor-only --rebuild
+#   launch-aqualink-wsl.cmd --sensor --rebuild
 #
 # build.sh passes -DAQUALINK_NO_MATTER=1 so the root CMakeLists skips the whole
 # esp-matter stack (otherwise its NetworkCommissioning static_assert fails when

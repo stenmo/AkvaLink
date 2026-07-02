@@ -13,7 +13,7 @@ if(APP_USE_DS2482)
 endif()
 
 # Standalone BLE-only variant (no Matter): NimBLE GATT server.
-# Gated on the AQUALINK_BLE *environment* var (build.sh --ble-only), NOT a
+# Gated on the AQUALINK_BLE *environment* var (build.sh --ble), NOT a
 # CONFIG_ value nor a -D cache var: component SRCS/REQUIRES are expanded before
 # Kconfig loads, and -D cache vars aren't visible during that expansion.
 if(DEFINED ENV{AQUALINK_BLE})
@@ -27,7 +27,7 @@ if(NOT DEFINED ENV{AQUALINK_BLE} AND NOT DEFINED ENV{AQUALINK_NO_MATTER})
     list(APPEND SRCS "qrcodegen.c" "qr_console.c")
 endif()
 
-# The --ble-only / --sensor-only variants drop the whole Matter stack (with no
+# The --ble / --sensor variants drop the whole Matter stack (with no
 # Thread/Wi-Fi transport esp-matter's NetworkCommissioning static_assert fails).
 # Gate on env vars for the same expansion-timing reason as above.
 set(AQ_PRIV_REQ nvs_flash driver esp_timer

@@ -222,7 +222,7 @@ they pick BLE-only or Wi-Fi-standalone in the app.
 |--------|---------------|-------------------|
 | Matter / Thread (default) | *(none)* | esp-matter, OpenThread, BLE (commissioning) |
 | Matter / Wi-Fi | `--wifi` | esp-matter, Wi-Fi, BLE (commissioning) |
-| BLE-only | `--ble-only` *(new)* | NimBLE, no Matter, no Wi-Fi, no Thread |
+| BLE-only | `--ble` *(new)* | NimBLE, no Matter, no Wi-Fi, no Thread |
 | Wi-Fi standalone | `--wifi-standalone` *(new)* | LwIP, mDNS, HTTP, NimBLE (provisioning), no Matter |
 | **Universal** (eventual goal) | `--all` *(stretch)* | All of the above, runtime mode select. Larger flash, but one SKU. |
 

@@ -16,8 +16,8 @@ REM   --erase    [COM<N>]  Erase NVS region (commissioning data) via esptool
 REM   --flash    [COM<N>]  Flash all 4 partitions via esptool
 REM   --log      [COM<N>]  Start serial monitor → timestamped log file
 REM   --wifi               Build the Matter-over-Wi-Fi variant
-REM   --ble-only           Build the standalone BLE GATT variant (no Matter)
-REM   --sensor-only        Build the sensor read test (no Matter/BLE)
+REM   --ble                Build the standalone BLE GATT variant (no Matter)
+REM   --sensor             Build the sensor read test (no Matter/BLE)
 REM   --help               Show this help
 REM
 REM COM port is autodetected by VID_303A&PID_1001 if not supplied.
@@ -97,8 +97,8 @@ if /I "%A%"=="--clean"      ( set "DO_CLEAN=1"      & set "ANY_FLAG=1" & shift &
 if /I "%A%"=="clean"        ( set "DO_CLEAN=1"      & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--rebuild"    ( set "DO_CLEAN=1" & set "DO_BUILD=1" & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--wifi"       ( set "DO_WIFI=1"       & set "ANY_FLAG=1" & shift & goto parse_args )
-if /I "%A%"=="--ble-only"   ( set "DO_BLE=1"        & set "ANY_FLAG=1" & shift & goto parse_args )
-if /I "%A%"=="--sensor-only" ( set "DO_SENSOR=1"     & set "ANY_FLAG=1" & shift & goto parse_args )
+if /I "%A%"=="--ble"        ( set "DO_BLE=1"        & set "ANY_FLAG=1" & shift & goto parse_args )
+if /I "%A%"=="--sensor"     ( set "DO_SENSOR=1"     & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--clickboard" ( set "DO_CLICKBOARD=1" & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="setup"        ( set "DO_SETUP=1"      & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="menuconfig"   ( set "DO_MENUCONFIG=1" & set "ANY_FLAG=1" & shift & goto parse_args )
@@ -140,8 +140,8 @@ exit /b 2
 REM Default: no args = show help (KISS — no implicit action)
 if "%ANY_FLAG%"=="0" goto :show_help
 
-REM A bare variant/modifier flag (e.g. --ble-only, --wifi, --sensor-only) with
-REM no explicit action defaults to --build, matching --sensor-only ergonomics.
+REM A bare variant/modifier flag (e.g. --ble, --wifi, --sensor) with
+REM no explicit action defaults to --build, matching --sensor ergonomics.
 if not "%DO_BUILD%"=="1" if not "%DO_CLEAN%"=="1" if not "%DO_FLASH%"=="1" if not "%DO_ERASE%"=="1" if not "%DO_LOG%"=="1" if not "%DO_SETUP%"=="1" if not "%DO_MENUCONFIG%"=="1" set "DO_BUILD=1"
 
 REM --- Setup / menuconfig short-circuits (mutually exclusive) ---------------
@@ -168,15 +168,15 @@ REM --- Step 2: build --------------------------------------------------------
 if "%DO_BUILD%"=="1" (
     set "BUILD_ARGS="
     if "%DO_WIFI%"=="1"       set "BUILD_ARGS=!BUILD_ARGS! --wifi"
-    if "%DO_BLE%"=="1"        set "BUILD_ARGS=!BUILD_ARGS! --ble-only"
-    if "%DO_SENSOR%"=="1"     set "BUILD_ARGS=!BUILD_ARGS! --sensor-only"
+    if "%DO_BLE%"=="1"        set "BUILD_ARGS=!BUILD_ARGS! --ble"
+    if "%DO_SENSOR%"=="1"     set "BUILD_ARGS=!BUILD_ARGS! --sensor"
     if "%DO_CLICKBOARD%"=="1" set "BUILD_ARGS=!BUILD_ARGS! --clickboard"
     if "%DO_CLICKBOARD%"=="1" (
         echo === --build --clickboard: DS2482 Click board ^(I2C-to-1-Wire, MikroBUS 1^) ===
     ) else if "%DO_SENSOR%"=="1" (
-        echo === --build --sensor-only: DS18B20 read test ^(no Matter/BLE^) ===
+        echo === --build --sensor: DS18B20 read test ^(no Matter/BLE^) ===
     ) else if "%DO_BLE%"=="1" (
-        echo === --build --ble-only: standalone BLE GATT variant ^(no Matter^) ===
+        echo === --build --ble: standalone BLE GATT variant ^(no Matter^) ===
     ) else if "%DO_WIFI%"=="1" (
         echo === --build --wifi: Matter-over-Wi-Fi variant ===
     ) else (
@@ -303,8 +303,8 @@ echo   --erase    [COM^<N^>]  Erase NVS via esptool ^(autodetect if no port^)
 echo   --flash    [COM^<N^>]  Flash 4 partitions via esptool ^(autodetect if no port^)
 echo   --log      [COM^<N^>]  Serial monitor → logs/nora-w40-^<TS^>.log ^(autodetect if no port^)
 echo   --wifi               Build the Matter-over-Wi-Fi variant
-echo   --ble-only           Build the standalone BLE GATT variant ^(no Matter^)
-echo   --sensor-only        Build the sensor read test ^(no Matter/BLE^)
+echo   --ble                Build the standalone BLE GATT variant ^(no Matter^)
+echo   --sensor             Build the sensor read test ^(no Matter/BLE^)
 echo   --clickboard         Build with DS2482 Click board ^(I2C-to-1-Wire, MikroBUS 1^)
 echo   --help               Show this help
 echo.

@@ -129,7 +129,7 @@ def _run(cmd: list[str], dry_run: bool) -> None:
 def _build_cmd(variant: str) -> list[str]:
     if os.name == "nt":
         cmd = ["cmd", "/c", str(REPO_ROOT / "launch-aqualink-wsl.cmd")]
-        flag = {"wifi": "--wifi", "ble": "--ble-only"}.get(variant)
+        flag = {"wifi": "--wifi", "ble": "--ble"}.get(variant)
         if flag:
             cmd.append(flag)
         cmd.append("--rebuild")

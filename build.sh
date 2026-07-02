@@ -96,8 +96,8 @@ case "$cmd" in
         for arg in "${@:2}"; do
             case "$arg" in
                 --wifi)        build_wifi=1 ;;
-                --ble-only)    build_ble=1 ;;
-                --sensor-only) build_sensor=1 ;;
+                --ble)         build_ble=1 ;;
+                --sensor)      build_sensor=1 ;;
                 --clickboard)  build_clickboard=1 ;;
                 *) echo "Unknown build option: $arg"; exit 1 ;;
             esac

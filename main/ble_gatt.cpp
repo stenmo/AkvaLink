@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
-// Standalone BLE GATT server for the --ble-only AquaLink variant (NimBLE).
+// Standalone BLE GATT server for the --ble AquaLink variant (NimBLE).
 //
 // Services:
 //   - Device Information (0x180A): manufacturer, model, firmware revision
@@ -15,9 +15,8 @@
 // to C compound literals, which are NOT valid C++. So every UUID here is a
 // file-scope `static const ble_uuidNN_t` object referenced by &obj.u.
 //
-// UNBUILT: needs a WSL esp-idf build pass to compile-check (NimBLE API + the
-// --ble-only sdkconfig). Written to be correct-by-construction; iterate on any
-// build errors.
+// Verified on NORA-W40 hardware: boots, advertises (rotating 1M legacy +
+// Coded PHY S=8), and serves the GATT services over the --ble sdkconfig.
 
 #include "ble_gatt.h"
 

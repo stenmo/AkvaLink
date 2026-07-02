@@ -110,14 +110,14 @@ above has happened.
   radios would wreck battery life. Pick at flash time;
   `release.py --variant {thread,wifi,ble}` names each image. Guidance: Thread
   hub (Apple TV / HomePod / Nest) → Thread; Wi-Fi network, no Thread hub →
-  Wi-Fi; **no hub or router at all → `ble`** (beacon + GATT, `--ble-only` build).
+  Wi-Fi; **no hub or router at all → `ble`** (beacon + GATT, `--ble` build).
 - **BLE temperature beacon fallback** — if no Matter fabric is commissioned (or
   the network is down), advertise the temperature in BLE manufacturer data so a
   phone app can read it with zero pairing. Very low power (advertise every N s).
   It's the core of the `ble` variant, and can also ride along as a *fallback*
   inside the `thread`/`wifi` variants — the "minimum viable, no-hub" path the
   product should always have.
-- Standalone BLE GATT (`--ble-only` build) — a small GATT server exposing
+- Standalone BLE GATT (`--ble` build) — a small GATT server exposing
   device info + live telemetry so a phone app (no hub, no router) can read
   everything about the sensor:
   - **Device Information Service (0x180A):** manufacturer (u-blox), model
