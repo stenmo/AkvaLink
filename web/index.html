@@ -78,6 +78,7 @@
   #tempVal.idle { color: #c6d9e0; }
   .status { color: var(--muted); margin: 12px 0 18px; font-size: .95rem; min-height: 1.2em; }
   .status.on { color: var(--ok); font-weight: 600; }
+  .age { color: var(--muted); font-size: .8rem; min-height: 1em; margin: 6px 0 0; }
   .live-card .cta a { cursor: pointer; }
   .ble-note { color: var(--muted); font-size: .84rem; margin: 14px 0 0; }
 
@@ -141,6 +142,7 @@
     <p class="lead">Connect straight to a nearby AquaLink over Bluetooth — no app, right in your browser.</p>
     <div class="live-card">
       <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit">°C</span></div>
+      <div id="bleAge" class="age"></div>
       <div id="bleStatus" class="status">Not connected</div>
       <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
@@ -279,6 +281,7 @@
   var btn = document.getElementById('bleBtn');
   var statusEl = document.getElementById('bleStatus');
   var tempEl = document.getElementById('tempVal');
+  var ageEl = document.getElementById('bleAge');
   var noteEl = document.getElementById('bleNote');
 
   var ESS_SERVICE = 0x181a;   // Environmental Sensing
@@ -296,8 +299,21 @@
   var device = null;
   var tempChar = null;
   var pollTimer = null;
+  var ageTimer = null;
+  var lastUpdate = 0;
 
-  function setTemp(celsius) { tempEl.textContent = celsius.toFixed(2); tempEl.classList.remove('idle'); }
+  function renderAge() {
+    if (!lastUpdate) { ageEl.textContent = ''; return; }
+    var s = Math.round((Date.now() - lastUpdate) / 1000);
+    ageEl.textContent = 'updated ' + (s <= 0 ? 'just now' : s + 's ago');
+  }
+
+  function setTemp(celsius) {
+    tempEl.textContent = celsius.toFixed(2);
+    tempEl.classList.remove('idle');
+    lastUpdate = Date.now();
+    renderAge();
+  }
 
   function onTemp(event) {
     setTemp(event.target.value.getInt16(0, true) / 100);   // little-endian sint16
@@ -315,6 +331,9 @@
 
   function onDisconnected() {
     stopPolling();
+    if (ageTimer) { clearInterval(ageTimer); ageTimer = null; }
+    lastUpdate = 0;
+    ageEl.textContent = '';
     tempChar = null;
     statusEl.textContent = 'Disconnected';
     statusEl.className = 'status';
@@ -346,6 +365,8 @@
     tempChar = ch;
     stopPolling();
     pollTimer = setInterval(pollTemp, 3000);   // keep the reading fresh (~3 s)
+    if (ageTimer) clearInterval(ageTimer);
+    ageTimer = setInterval(renderAge, 1000);   // tick the "updated Ns ago" line
 
     statusEl.textContent = 'Connected to ' + (dev.name || 'AquaLink');
     statusEl.className = 'status on';
