@@ -86,6 +86,7 @@ static esp_err_t sensor_init(void)
 
     onewire_bus_config_t bus_config = {
         .bus_gpio_num = APP_DS18B20_GPIO,
+        .flags = {},
     };
     onewire_bus_rmt_config_t rmt_config = {
         .max_rx_bytes = 10,

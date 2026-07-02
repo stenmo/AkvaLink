@@ -94,6 +94,26 @@ This is a **battery-powered product**. Every line of code should respect that.
 - **Style:** Match existing — 4-space indent, snake_case for C, camelCase for C++ classes
 - **Comments:** Explain *why*, not *what*. Code already says what.
 
+## Zero warnings — a hard goal
+
+The build should be **warning-clean**. A new warning is a bug report from the
+compiler; treat it as such.
+
+- **Fix at the source, in our code.** e.g. fully initialise structs (a trailing
+  `{}` / zeroed member) instead of leaving `-Wmissing-field-initializers`;
+  mark deliberate no-ops `(void)x;` or `__attribute__((unused))`; don't leave
+  unused functions/variables lying around.
+- **Never silence a warning to hide a real problem.** No blanket `-w`, no
+  drive-by `#pragma` over our own code. If you suppress, suppress the narrowest
+  scope and say *why* in a comment.
+- **Third-party / SDK warnings we can't fix** (esp-idf, esp-matter, NimBLE
+  headers, managed_components) may be tolerated, but prefer isolating them
+  (e.g. a targeted `-Wno-...` on that component only) over accepting them
+  project-wide.
+- **When you touch a file, leave it warning-clean.** Don't add new warnings;
+  clear existing ones in code you're already editing.
+- Check the tail of every build for `warning:` before calling a build "done".
+
 ## Future direct-to-app path (planned)
 
 A non-Matter path is planned for direct app integration without a hub:

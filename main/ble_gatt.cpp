@@ -113,6 +113,13 @@ static int gatt_access(uint16_t /*conn*/, uint16_t /*attr*/,
 }
 
 // --- Service / characteristic tables ----------------------------------------
+// NimBLE's ble_gatt_chr_def / ble_gatt_svc_def carry several optional trailing
+// members (arg, descriptors, cpfd, min_key_size, includes, …) that we
+// deliberately leave zero-defaulted. Scope -Wmissing-field-initializers off for
+// just these SDK tables rather than spelling out every field (which also drifts
+// between NimBLE versions); our own structs stay warning-checked.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 static const struct ble_gatt_chr_def s_dis_chrs[] = {
     { .uuid = &UUID_MANUFACTURER.u, .access_cb = gatt_access, .flags = BLE_GATT_CHR_F_READ },
     { .uuid = &UUID_MODEL.u,        .access_cb = gatt_access, .flags = BLE_GATT_CHR_F_READ },
@@ -140,6 +147,7 @@ static const struct ble_gatt_svc_def s_services[] = {
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_AQUALINK_SVC.u, .characteristics = s_aqualink_chrs },
     { 0 },
 };
+#pragma GCC diagnostic pop
 
 // --- GAP events -------------------------------------------------------------
 static int gap_event(struct ble_gap_event *event, void * /*arg*/)
