@@ -9,6 +9,7 @@
 #include "app_priv.h"
 #include "ds18b20_task.h"
 #include "ble_gatt.h"
+#include "qr_console.h"
 
 #include "esp_log.h"
 #include "nvs_flash.h"
@@ -19,6 +20,7 @@
 #include <esp_matter_ota.h>
 
 #include <app/server/Server.h>
+#include <setup_payload/OnboardingCodesUtil.h>
 #include <esp_pm.h>
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
@@ -209,6 +211,21 @@ extern "C" void app_main()
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "esp_matter::start failed: %d", err);
         return;
+    }
+
+    // --- Scannable QR straight into the log (no "open this URL" round-trip) --
+    // esp-matter only logs the MT: payload + a link to the online QR viewer;
+    // render the real thing so you can scan it from the serial monitor.
+    {
+        char qr_buf[128];
+        chip::MutableCharSpan qr(qr_buf);
+        if (GetQRCode(qr, chip::RendezvousInformationFlags(chip::RendezvousInformationFlag::kBLE)) == CHIP_NO_ERROR
+            && qr.size() < sizeof(qr_buf)) {
+            qr_buf[qr.size()] = '\0';   // MutableCharSpan isn't NUL-terminated
+            aqualink_qr_print(qr_buf);
+        } else {
+            ESP_LOGW(TAG, "Could not build Matter QR payload");
+        }
     }
 
     // --- Thread SED poll period (Kconfig symbols not honored by esp-matter) --

@@ -185,10 +185,12 @@ static void push_to_matter(float celsius)
         return;                                 // suppress noise → save radio
     }
 
-    // Matter TemperatureMeasurement::MeasuredValue is int16, 0.01 °C units.
+    // Matter TemperatureMeasurement::MeasuredValue is a NULLABLE int16 in
+    // 0.01 °C units — the endpoint declares it nullable, so the update value
+    // must be nullable too or attribute::update rejects it with INVALID_ARG.
     int16_t measured = (int16_t)lroundf(celsius * 100.0f);
 
-    esp_matter_attr_val_t val = esp_matter_int16(measured);
+    esp_matter_attr_val_t val = esp_matter_nullable_int16(nullable<int16_t>(measured));
     attribute::update(g_temp_endpoint_id,
                       TemperatureMeasurement::Id,
                       TemperatureMeasurement::Attributes::MeasuredValue::Id,

@@ -20,6 +20,13 @@ if(DEFINED ENV{AQUALINK_BLE})
     list(APPEND SRCS "ble_gatt.cpp")
 endif()
 
+# QR-in-console for Matter commissioning: renders the "MT:..." setup payload as
+# a scannable ASCII QR (Nayuki qrcodegen, MIT). Needs CHIP's GetQRCode, so it's
+# Matter-only — i.e. neither the BLE nor the no-Matter env var is set.
+if(NOT DEFINED ENV{AQUALINK_BLE} AND NOT DEFINED ENV{AQUALINK_NO_MATTER})
+    list(APPEND SRCS "qrcodegen.c" "qr_console.c")
+endif()
+
 # The --ble-only / --sensor-only variants drop the whole Matter stack (with no
 # Thread/Wi-Fi transport esp-matter's NetworkCommissioning static_assert fails).
 # Gate on env vars for the same expansion-timing reason as above.
