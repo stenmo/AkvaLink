@@ -6,6 +6,7 @@
 //   - Device Information (0x180A): manufacturer, model, firmware revision
 //   - Environmental Sensing (0x181A): Temperature 0x2A6E (sint16, 0.01 °C), notify
 //   - AquaLink custom service: uptime (uint32 seconds), read + notify
+//   - AquaLink OTA service (128-bit): BLE firmware update — control + data chars
 //
 // Advertising rotates between legacy 1M (broad phone compatibility, esp. iOS)
 // and extended Coded PHY S=8 (long range, ~2-4x). Coded needs CONFIG_BT_NIMBLE_
@@ -26,6 +27,12 @@
 #include "esp_log.h"
 #include "esp_app_desc.h"
 #include "esp_timer.h"
+#include "esp_ota_ops.h"
+#include "esp_system.h"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/stream_buffer.h"
 
 #include "nimble/nimble_port.h"
 #include "nimble/nimble_port_freertos.h"
@@ -64,6 +71,17 @@ static const ble_uuid128_t UUID_UPTIME = BLE_UUID128_INIT(
     0x02, 0x00, 0x6c, 0x69, 0x6e, 0x6b, 0x2c, 0x9b,
     0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
 
+// BLE OTA service + control/data characteristics (same 128-bit base).
+static const ble_uuid128_t UUID_OTA_SVC = BLE_UUID128_INIT(
+    0x10, 0x00, 0x6c, 0x69, 0x6e, 0x6b, 0x2c, 0x9b,
+    0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
+static const ble_uuid128_t UUID_OTA_CTRL = BLE_UUID128_INIT(
+    0x11, 0x00, 0x6c, 0x69, 0x6e, 0x6b, 0x2c, 0x9b,
+    0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
+static const ble_uuid128_t UUID_OTA_DATA = BLE_UUID128_INIT(
+    0x12, 0x00, 0x6c, 0x69, 0x6e, 0x6b, 0x2c, 0x9b,
+    0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
+
 // --- State ------------------------------------------------------------------
 static uint8_t  s_own_addr_type   = 0;
 static uint16_t s_conn_handle     = BLE_HS_CONN_HANDLE_NONE;
@@ -71,6 +89,13 @@ static uint16_t s_temp_val_handle = 0;
 static uint16_t s_uptime_val_handle = 0;
 static bool     s_temp_subscribed = false;
 static int16_t  s_temp_centi      = 0;   // temperature in 0.01 °C units
+
+// --- BLE OTA state ----------------------------------------------------------
+static uint16_t              s_ota_ctrl_handle = 0;
+static StreamBufferHandle_t  s_ota_stream = nullptr;
+static TaskHandle_t          s_ota_task   = nullptr;
+static volatile bool         s_ota_finish = false;
+static volatile bool         s_ota_abort  = false;
 
 static void adv_configure(void);
 static void adv_rotate_start(uint8_t instance);
@@ -111,6 +136,137 @@ static int gatt_access(uint16_t /*conn*/, uint16_t /*attr*/,
     }
 }
 
+// --- BLE OTA (custom service) -----------------------------------------------
+// Firmware update straight over BLE: the client streams the image in chunks and
+// we write it into the passive OTA slot via esp_ota. The flash work runs in a
+// dedicated task fed by a stream buffer, so the NimBLE host task never blocks on
+// the (multi-second) slot erase or the per-chunk writes.
+//
+// Protocol:
+//   OTA_CTRL (write, + notify status):  0x01 BEGIN | 0x02 END | 0x03 ABORT
+//   OTA_DATA (write / write-no-rsp):    raw firmware bytes, in order
+//   Status notify on OTA_CTRL: [echoed opcode][result]  (result 0 = OK)
+
+static void ota_notify(uint8_t opcode, uint8_t result)
+{
+    if (s_conn_handle == BLE_HS_CONN_HANDLE_NONE || s_ota_ctrl_handle == 0) {
+        return;
+    }
+    uint8_t buf[2] = { opcode, result };
+    struct os_mbuf *om = ble_hs_mbuf_from_flat(buf, sizeof(buf));
+    if (om) {
+        ble_gatts_notify_custom(s_conn_handle, s_ota_ctrl_handle, om);
+    }
+}
+
+static void ota_task(void * /*arg*/)
+{
+    esp_ota_handle_t       handle = 0;
+    const esp_partition_t *part   = esp_ota_get_next_update_partition(NULL);
+    if (!part || esp_ota_begin(part, OTA_SIZE_UNKNOWN, &handle) != ESP_OK) {
+        ESP_LOGE(TAG, "OTA begin failed");
+        ota_notify(0x01, 2);
+        s_ota_task = nullptr;
+        vTaskDelete(NULL);
+        return;
+    }
+    ESP_LOGI(TAG, "\xF0\x9F\x9A\x80 BLE OTA started → slot '%s'", part->label);
+    ota_notify(0x01, 0);
+
+    uint8_t  buf[512];
+    uint32_t total  = 0;
+    bool     failed = false;
+
+    while (true) {
+        size_t n = xStreamBufferReceive(s_ota_stream, buf, sizeof(buf), pdMS_TO_TICKS(100));
+        if (n > 0) {
+            if (esp_ota_write(handle, buf, n) != ESP_OK) { failed = true; }
+            total += n;
+        }
+        if (s_ota_abort || failed) {
+            esp_ota_abort(handle);
+            ESP_LOGW(TAG, "BLE OTA aborted (%lu bytes)", (unsigned long)total);
+            ota_notify(failed ? 0x02 : 0x03, failed ? 6 : 0);
+            break;
+        }
+        if (s_ota_finish && xStreamBufferIsEmpty(s_ota_stream)) {
+            if (esp_ota_end(handle) == ESP_OK &&
+                esp_ota_set_boot_partition(part) == ESP_OK) {
+                ESP_LOGI(TAG, "\xE2\x9C\x85 BLE OTA complete (%lu bytes) — rebooting",
+                         (unsigned long)total);
+                ota_notify(0x02, 0);
+                vTaskDelay(pdMS_TO_TICKS(500));   // let the notify flush
+                esp_restart();
+            } else {
+                ESP_LOGE(TAG, "OTA end / set-boot failed");
+                ota_notify(0x02, 4);
+            }
+            break;
+        }
+    }
+    s_ota_task = nullptr;
+    vTaskDelete(NULL);
+}
+
+static int ota_access(uint16_t /*conn*/, uint16_t /*attr*/,
+                      struct ble_gatt_access_ctxt *ctxt, void * /*arg*/)
+{
+    if (ctxt->op != BLE_GATT_ACCESS_OP_WRITE_CHR) {
+        return BLE_ATT_ERR_WRITE_NOT_PERMITTED;
+    }
+
+    // Control channel: 1-byte opcode.
+    if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_OTA_CTRL.u) == 0) {
+        uint8_t  cmd[8];
+        uint16_t len = 0;
+        ble_hs_mbuf_to_flat(ctxt->om, cmd, sizeof(cmd), &len);
+        if (len < 1) {
+            return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+        }
+        switch (cmd[0]) {
+            case 0x01:  // BEGIN
+                if (s_ota_task) { return 0; }   // already running
+                s_ota_finish = false;
+                s_ota_abort  = false;
+                if (!s_ota_stream) {
+                    s_ota_stream = xStreamBufferCreate(8192, 1);
+                }
+                if (!s_ota_stream) { ota_notify(0x01, 7); return 0; }
+                xStreamBufferReset(s_ota_stream);
+                if (xTaskCreate(ota_task, "ble_ota", 4096, NULL,
+                                tskIDLE_PRIORITY + 4, &s_ota_task) != pdPASS) {
+                    s_ota_task = nullptr;
+                    ota_notify(0x01, 8);
+                }
+                break;
+            case 0x02:  // END
+                s_ota_finish = true;
+                break;
+            case 0x03:  // ABORT
+                s_ota_abort = true;
+                break;
+            default:
+                return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+        }
+        return 0;
+    }
+
+    // Data channel: append raw firmware bytes to the stream.
+    if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_OTA_DATA.u) == 0) {
+        if (!s_ota_task || !s_ota_stream) {
+            return BLE_ATT_ERR_UNLIKELY;   // no OTA in progress
+        }
+        uint8_t  chunk[512];
+        uint16_t len = 0;
+        ble_hs_mbuf_to_flat(ctxt->om, chunk, sizeof(chunk), &len);
+        // Flash is faster than BLE, so this rarely blocks — it just paces bursts.
+        xStreamBufferSend(s_ota_stream, chunk, len, pdMS_TO_TICKS(200));
+        return 0;
+    }
+
+    return BLE_ATT_ERR_UNLIKELY;
+}
+
 // --- Service / characteristic tables ----------------------------------------
 // NimBLE's ble_gatt_chr_def / ble_gatt_svc_def carry several optional trailing
 // members (arg, descriptors, cpfd, min_key_size, includes, …) that we
@@ -140,10 +296,20 @@ static const struct ble_gatt_chr_def s_aqualink_chrs[] = {
     { 0 },
 };
 
+static const struct ble_gatt_chr_def s_ota_chrs[] = {
+    { .uuid = &UUID_OTA_CTRL.u, .access_cb = ota_access,
+      .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_NOTIFY,
+      .val_handle = &s_ota_ctrl_handle },
+    { .uuid = &UUID_OTA_DATA.u, .access_cb = ota_access,
+      .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP },
+    { 0 },
+};
+
 static const struct ble_gatt_svc_def s_services[] = {
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_DIS.u,          .characteristics = s_dis_chrs },
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_ESS.u,          .characteristics = s_ess_chrs },
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_AQUALINK_SVC.u, .characteristics = s_aqualink_chrs },
+    { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_OTA_SVC.u,      .characteristics = s_ota_chrs },
     { 0 },
 };
 #pragma GCC diagnostic pop
@@ -170,6 +336,7 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
             ESP_LOGI(TAG, "central disconnected (reason %d)", event->disconnect.reason);
             s_conn_handle = BLE_HS_CONN_HANDLE_NONE;
             s_temp_subscribed = false;
+            s_ota_abort = true;   // cancel any OTA in flight
             adv_rotate_start(ADV_INST_LEGACY);
             break;
         case BLE_GAP_EVENT_SUBSCRIBE:

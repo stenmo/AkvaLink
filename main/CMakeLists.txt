@@ -33,7 +33,7 @@ endif()
 set(AQ_PRIV_REQ nvs_flash driver esp_timer
     espressif__ds18b20 espressif__onewire_bus)
 if(DEFINED ENV{AQUALINK_BLE})
-    list(APPEND AQ_PRIV_REQ bt esp_app_format)
+    list(APPEND AQ_PRIV_REQ bt esp_app_format app_update)
 elseif(NOT DEFINED ENV{AQUALINK_NO_MATTER})
     list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)
 endif()
