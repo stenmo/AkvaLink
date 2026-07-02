@@ -116,15 +116,22 @@ compiler; treat it as such.
 
 ## Project web page
 
-A product landing page lives in [web/index.html](../web/index.html) — a single,
-self-contained static file (inline CSS, no build step, no dependencies,
-publishable as-is via GitHub Pages).
+Two product landing pages live in `web/`:
+- [web/index.html](../web/index.html) — **English** (source of truth)
+- [web/index.sv.html](../web/index.sv.html) — **Swedish** translation
 
-- **Keep it in sync with reality.** When product facts change — specs, battery
-  numbers, build variants/flags, roadmap status — update the page too. It
-  mirrors the README's tables and the roadmap; they should not drift apart.
-- **Stay self-contained.** No frameworks, no external CSS/JS/build tooling. One
-  file that opens by double-clicking. Bump the "Last updated" line on changes.
+Both are self-contained static files (inline CSS, no build step, no dependencies),
+publishable as-is via GitHub Pages. A language toggle (EN | SV) links between them.
+
+- **Keep both files in sync — always.** When you change any text, spec, battery
+  number, roadmap item, or build variant in `index.html`, you **must** make the
+  equivalent change in `index.sv.html` in the same commit. No exceptions.
+- **`index.html` is the source of truth.** Edit English first, then carry the
+  change to Swedish. The two files are structurally identical; diff them if in doubt.
+- **Keep in sync with reality.** When product facts change — specs, battery
+  numbers, build variants/flags, roadmap status — update both pages and the README.
+- **Stay self-contained.** No frameworks, no external CSS/JS/build tooling. Each
+  file opens by double-clicking. Bump the "Last updated" line on changes (both files).
 - **On brand:** water/pool theme (cyan/teal), plain-spoken, honest — same voice
   as the README. No cloud claims, no vaporware presented as shipping.
 

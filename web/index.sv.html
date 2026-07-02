@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AkvaLink — battery-powered Matter pool &amp; aquatic temperature sensor</title>
-<meta name="description" content="AkvaLink is a single-SoC, battery-powered Matter temperature sensor on u-blox NORA-W40 (ESP32-C6). Multi-year battery life. Local Matter over Thread or Wi-Fi. No cloud, ever." />
+<title>AkvaLink — batteridrivad Matter-sensor för pool och vatten</title>
+<meta name="description" content="AkvaLink är en batteridrivad Matter-temperatursensor på u-blox NORA-W40 (ESP32-C6). Flera års batteritid. Lokal Matter via Thread eller Wi-Fi. Ingen molntjänst, aldrig." />
 <style>
   :root {
     --deep: #033f63;
@@ -51,6 +51,12 @@
   .cta .ghost { border: 1.5px solid rgba(255,255,255,.7); color: #fff; }
   .cta a:hover { text-decoration: none; transform: translateY(-1px); }
   .wave { position: absolute; bottom: -1px; left: 0; width: 100%; display: block; }
+
+  /* Language toggle */
+  .lang-toggle { position: absolute; top: 18px; right: 20px; display: flex; gap: 4px; z-index: 10; }
+  .lang-btn { background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.45); color: rgba(255,255,255,.85); padding: 4px 12px; border-radius: 999px; font-size: .82rem; font-weight: 700; font-family: inherit; letter-spacing: .04em; text-decoration: none; display: inline-block; }
+  .lang-btn.active { background: #fff; color: var(--deep); border-color: #fff; cursor: default; }
+  .lang-btn:hover:not(.active) { background: rgba(255,255,255,.28); color: #fff; text-decoration: none; }
 
   /* Sections */
   section { padding: 54px 0; }
@@ -128,29 +134,23 @@
     .logo { font-size: 2.4rem; }
     ul.roadmap { columns: 1; }
   }
-
-  /* Language toggle */
-  .lang-toggle { position: absolute; top: 18px; right: 20px; display: flex; gap: 4px; z-index: 10; }
-  .lang-btn { background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.45); color: rgba(255,255,255,.85); padding: 4px 12px; border-radius: 999px; font-size: .82rem; font-weight: 700; font-family: inherit; letter-spacing: .04em; text-decoration: none; display: inline-block; }
-  .lang-btn.active { background: #fff; color: var(--deep); border-color: #fff; cursor: default; }
-  .lang-btn:hover:not(.active) { background: rgba(255,255,255,.28); color: #fff; text-decoration: none; }
 </style>
 </head>
 <body>
 
 <header class="hero">
   <div class="lang-toggle">
-    <span class="lang-btn active">EN</span>
-    <a class="lang-btn" href="index.sv.html">SV</a>
+    <a class="lang-btn" href="index.html">EN</a>
+    <span class="lang-btn active">SV</span>
   </div>
   <div class="wrap">
     <h1 class="logo">AkvaLink <span class="drop">🏊 🌊</span></h1>
-    <p class="tagline">Battery-powered Matter pool &amp; aquatic temperature sensor</p>
-    <p class="subtag">Single-SoC on u-blox NORA-W40 (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3).<br />
-      Multi-year battery life · Local Matter · <strong>No cloud, ever.</strong></p>
+    <p class="tagline">Batteridrivad Matter-temperatursensor för pool och vatten</p>
+    <p class="subtag">Single-SoC på u-blox NORA-W40 (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3).<br />
+      Flera års batteritid · Lokal Matter · <strong>Ingen molntjänst, aldrig.</strong></p>
     <p class="cta">
-      <a class="primary" href="https://github.com/stenmo/AkvaLink">View on GitHub</a>
-      <a class="ghost" href="#how">How it works</a>
+      <a class="primary" href="https://github.com/stenmo/AkvaLink">Visa på GitHub</a>
+      <a class="ghost" href="#how">Hur det fungerar</a>
     </p>
   </div>
   <svg class="wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
@@ -160,13 +160,13 @@
 
 <section id="live">
   <div class="wrap">
-    <h2>See it live</h2>
-    <p class="lead">Connect straight to a nearby AkvaLink over Bluetooth — no app, right in your browser.</p>
+    <h2>Se det live</h2>
+    <p class="lead">Anslut direkt till en AkvaLink i närheten via Bluetooth — ingen app, direkt i din webbläsare.</p>
     <div class="live-card">
       <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit">°C</span></div>
       <div id="bleAge" class="age"></div>
-      <div id="bleStatus" class="status">Not connected</div>
-      <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
+      <div id="bleStatus" class="status">Inte ansluten</div>
+      <p class="cta"><a id="bleBtn" class="primary" role="button">Anslut via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
     </div>
   </div>
@@ -174,99 +174,99 @@
 
 <section id="why">
   <div class="wrap">
-    <h2>Why AkvaLink?</h2>
-    <p class="lead">For pools, spas, aquariums, wine cellars and cold storage — places where the
-      temperature barely changes, but you want to know <em>immediately</em> when it does.</p>
+    <h2>Varför AkvaLink?</h2>
+    <p class="lead">För pooler, spas, akvarium, vinkällare och kylrum — platser där temperaturen knappt förändras,
+      men du vill veta <em>omedelbart</em> när den gör det.</p>
     <div class="grid">
-      <div class="card"><div class="ico">🔋</div><h3>Years on 2× AA</h3>
-        <p>Adaptive sampling, Matter Sleepy End Device, and threshold reporting keep the radio asleep.</p></div>
+      <div class="card"><div class="ico">🔋</div><h3>År på 2× AA-batterier</h3>
+        <p>Adaptiv sampling, Matter Sleepy End Device och tröskelrapportering håller radion i viloläge.</p></div>
       <div class="card"><div class="ico">📱</div><h3>Apple / Google / Alexa</h3>
-        <p>A standard Matter Temperature Sensor — commission by scanning a QR, no app to install.</p></div>
-      <div class="card"><div class="ico">🌐</div><h3>No cloud</h3>
-        <p>Local Matter over Thread or Wi-Fi. Your data never leaves your home network.</p></div>
-      <div class="card"><div class="ico">💧</div><h3>Waterproof probe</h3>
-        <p>DS18B20 in stainless steel, 10 m+ cable possible — drop it in and forget it.</p></div>
-      <div class="card"><div class="ico">🛠️</div><h3>Open source</h3>
-        <p>Built on esp-matter, Apache-2.0 licensed. Single-SoC — no companion MCU.</p></div>
-      <div class="card"><div class="ico">🩺</div><h3>Honest engineering</h3>
-        <p>Battery math, RF rules and known limitations are documented, not hand-waved.</p></div>
+        <p>En standard Matter-temperatursensor — driftsätt via QR-kod, ingen app att installera.</p></div>
+      <div class="card"><div class="ico">🌐</div><h3>Ingen molntjänst</h3>
+        <p>Lokal Matter via Thread eller Wi-Fi. Din data lämnar aldrig ditt hemnätverk.</p></div>
+      <div class="card"><div class="ico">💧</div><h3>Vattentät givare</h3>
+        <p>DS18B20 i rostfritt stål, kabel på 10+ m möjlig — doppa den och glöm den.</p></div>
+      <div class="card"><div class="ico">🛠️</div><h3>Öppen källkod</h3>
+        <p>Byggd på esp-matter, Apache-2.0-licensierad. Single-SoC — ingen kompanjon-MCU.</p></div>
+      <div class="card"><div class="ico">🩺</div><h3>Ärlig ingenjörskonst</h3>
+        <p>Batteriräkneexempel, RF-regler och kända begränsningar är dokumenterade, inte bortförklarade.</p></div>
     </div>
   </div>
 </section>
 
 <section class="band" id="hardware">
   <div class="wrap">
-    <h2>Hardware</h2>
-    <p class="lead">One tiny module, one sensor, one pull-up resistor.</p>
+    <h2>Hårdvara</h2>
+    <p class="lead">En liten modul, en sensor, ett pull-up-motstånd.</p>
     <div class="tbl-scroll">
       <table>
-        <thead><tr><th>Component</th><th>Part</th><th>Why</th></tr></thead>
+        <thead><tr><th>Komponent</th><th>Del</th><th>Varför</th></tr></thead>
         <tbody>
-          <tr><td>Module</td><td>NORA-W401 / NORA-W406</td><td>Wi-Fi 6 + Thread + BLE in one module</td></tr>
-          <tr><td>MCU</td><td>ESP32-C6 (RISC-V @ 160 MHz)</td><td>Inside NORA-W40</td></tr>
-          <tr><td>Sensor</td><td>DS18B20 (stainless probe)</td><td>±0.5 °C, 12-bit (0.0625 °C), 1-Wire, ~$3</td></tr>
-          <tr><td>Power</td><td>2× AA alkaline (or 18650 Li)</td><td>~12 years on 2× AA in pool conditions</td></tr>
+          <tr><td>Modul</td><td>NORA-W401 / NORA-W406</td><td>Wi-Fi 6 + Thread + BLE i en modul</td></tr>
+          <tr><td>MCU</td><td>ESP32-C6 (RISC-V @ 160 MHz)</td><td>Inuti NORA-W40</td></tr>
+          <tr><td>Sensor</td><td>DS18B20 (rostfri givare)</td><td>±0,5 °C, 12-bit (0,0625 °C), 1-Wire, ~$3</td></tr>
+          <tr><td>Strömförsörjning</td><td>2× AA alkaline (eller 18650 Li)</td><td>~12 år på 2× AA i poolförhållanden</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="lead" style="margin-top:16px"><strong>Schematic:</strong> GPIO15 → DS18B20 DQ, 4.7 kΩ pull-up to +3V3. That's it.</p>
+    <p class="lead" style="margin-top:16px"><strong>Kopplingsschema:</strong> GPIO15 → DS18B20 DQ, 4,7 kΩ pull-up till +3V3. Det är allt.</p>
     <div class="live-card ota-card" id="otaCard">
-      <h3 class="ota-title">Firmware update over Bluetooth</h3>
-      <p class="ota-hint">Flash a new build straight from your browser — no cable, no app (Chrome/Edge).</p>
-      <label class="file-btn" for="otaFile">Choose .bin file</label>
+      <h3 class="ota-title">Firmware-uppdatering via Bluetooth</h3>
+      <p class="ota-hint">Flasha en ny version direkt från webbläsaren — ingen kabel, ingen app (Chrome/Edge).</p>
+      <label class="file-btn" for="otaFile">Välj .bin-fil</label>
       <input type="file" id="otaFile" accept=".bin" hidden />
-      <span id="otaFileName" class="file-name">No file chosen</span>
+      <span id="otaFileName" class="file-name">Ingen fil vald</span>
       <div class="progress"><div id="otaBar" class="bar"></div></div>
       <div id="otaStatus" class="status"></div>
-      <p class="cta"><a id="otaBtn" class="primary" role="button">Update firmware</a></p>
+      <p class="cta"><a id="otaBtn" class="primary" role="button">Uppdatera firmware</a></p>
     </div>
   </div>
 </section>
 
 <section id="battery">
   <div class="wrap">
-    <h2>Battery life</h2>
-    <p class="lead">Heated pool at 28–29 °C with a 0.25 °C report threshold.</p>
+    <h2>Batteritid</h2>
+    <p class="lead">Uppvärmd pool vid 28–29 °C med 0,25 °C rapporteringströskel.</p>
     <div class="tbl-scroll">
       <table>
-        <thead><tr><th>Battery</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (disconnect)</th></tr></thead>
+        <thead><tr><th>Batteri</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (frånkopplad)</th></tr></thead>
         <tbody>
-          <tr><td>CR2477 (1000 mAh)</td><td>~5 years</td><td>~6 months</td><td>~3.3 years</td></tr>
-          <tr><td>2× AAA (1200 mAh)</td><td>~6 years</td><td>~8 months</td><td>~4 years</td></tr>
-          <tr><td class="hi">2× AA (2800 mAh)</td><td class="hi">~12 years</td><td class="hi">~1.8 years</td><td class="hi">~9 years</td></tr>
-          <tr><td>18650 (3400 mAh)</td><td>~15+ years</td><td>~2.2 years</td><td>~11 years</td></tr>
+          <tr><td>CR2477 (1000 mAh)</td><td>~5 år</td><td>~6 månader</td><td>~3,3 år</td></tr>
+          <tr><td>2× AAA (1200 mAh)</td><td>~6 år</td><td>~8 månader</td><td>~4 år</td></tr>
+          <tr><td class="hi">2× AA (2800 mAh)</td><td class="hi">~12 år</td><td class="hi">~1,8 år</td><td class="hi">~9 år</td></tr>
+          <tr><td>18650 (3400 mAh)</td><td>~15+ år</td><td>~2,2 år</td><td>~11 år</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="lead" style="margin-top:14px">Estimates from the power model — real measurement (PPK2/Joulescope) is on the roadmap. In practice, alkaline AA self-discharge and shelf-life cap real-world life at roughly <strong>5–7 years</strong> regardless of draw; <strong>lithium AA (e.g. Energizer L91)</strong> last longer and cope far better with outdoor cold.</p>
+    <p class="lead" style="margin-top:14px">Uppskattningar från effektmodellen — riktig mätning (PPK2/Joulescope) finns på färdplanen. I praktiken begränsar alkaliska AA-batteriernas självurladdning och hållbarhet den verkliga livslängden till ungefär <strong>5–7 år</strong> oavsett förbrukning; <strong>litium AA (t.ex. Energizer L91)</strong> håller längre och klarar kyla mycket bättre.</p>
   </div>
 </section>
 
 <section class="band" id="how">
   <div class="wrap">
-    <h2>How it works</h2>
-    <p class="lead">Everything runs on the one ESP32-C6 inside NORA-W40 — no companion MCU.</p>
+    <h2>Hur det fungerar</h2>
+    <p class="lead">Allt körs på en ESP32-C6 inuti NORA-W40 — ingen kompanjon-MCU.</p>
     <div class="flow">
-      <div class="step"><span class="n">1</span><h3>Sense</h3><p>Read the DS18B20 over 1-Wire with adaptive sampling — fast while changing, slow when stable.</p></div>
-      <div class="step"><span class="n">2</span><h3>Gate</h3><p>Only report when the temperature moves past a threshold, so the radio stays asleep.</p></div>
-      <div class="step"><span class="n">3</span><h3>Report</h3><p>Push the reading over Matter — Thread (Sleepy End Device) or Wi-Fi (TWT).</p></div>
-      <div class="step"><span class="n">4</span><h3>Show</h3><p>It appears in Apple Home, Google Home or Alexa as a standard temperature sensor.</p></div>
+      <div class="step"><span class="n">1</span><h3>Mät</h3><p>Läs DS18B20 via 1-Wire med adaptiv sampling — snabbt vid förändring, långsamt vid stabilitet.</p></div>
+      <div class="step"><span class="n">2</span><h3>Filtrera</h3><p>Rapportera bara när temperaturen passerar ett tröskelvärde, så radion förblir i viloläge.</p></div>
+      <div class="step"><span class="n">3</span><h3>Rapportera</h3><p>Skicka mätvärdet via Matter — Thread (Sleepy End Device) eller Wi-Fi (TWT).</p></div>
+      <div class="step"><span class="n">4</span><h3>Visa</h3><p>Det visas i Apple Home, Google Home eller Alexa som en standard-temperatursensor.</p></div>
     </div>
   </div>
 </section>
 
 <section id="variants">
   <div class="wrap">
-    <h2>Build variants</h2>
-    <p class="lead">One codebase, one SoC — pick the network at build time.</p>
+    <h2>Byggvarianter</h2>
+    <p class="lead">En kodbas, en SoC — välj nätverk vid byggtid.</p>
     <div class="tbl-scroll">
       <table>
-        <thead><tr><th>Variant</th><th>Flag</th><th>Stack</th></tr></thead>
+        <thead><tr><th>Variant</th><th>Flagga</th><th>Stack</th></tr></thead>
         <tbody>
-          <tr><td>Matter / Thread <em>(default)</em></td><td><code>(none)</code></td><td>esp-matter, OpenThread, BLE commissioning</td></tr>
-          <tr><td>Matter / Wi-Fi</td><td><code>--wifi</code></td><td>esp-matter, Wi-Fi, BLE commissioning</td></tr>
-          <tr><td>BLE-only</td><td><code>--ble</code></td><td>NimBLE GATT — no hub, no router</td></tr>
-          <tr><td>Sensor test</td><td><code>--sensor</code></td><td>Read &amp; log the probe only</td></tr>
+          <tr><td>Matter / Thread <em>(standard)</em></td><td><code>(ingen)</code></td><td>esp-matter, OpenThread, BLE-driftsättning</td></tr>
+          <tr><td>Matter / Wi-Fi</td><td><code>--wifi</code></td><td>esp-matter, Wi-Fi, BLE-driftsättning</td></tr>
+          <tr><td>Endast BLE</td><td><code>--ble</code></td><td>NimBLE GATT — ingen hub, ingen router</td></tr>
+          <tr><td>Sensortest</td><td><code>--sensor</code></td><td>Läs &amp; logga givaren enbart</td></tr>
         </tbody>
       </table>
     </div>
@@ -275,36 +275,36 @@
 
 <section class="band" id="status">
   <div class="wrap">
-    <h2>Status &amp; roadmap</h2>
-    <p class="lead">Working today, and where it's headed.</p>
+    <h2>Status &amp; färdplan</h2>
+    <p class="lead">Fungerar idag, och vart det är på väg.</p>
     <ul class="roadmap">
-      <li class="done"><span class="mark">✓</span>Matter Temperature Sensor over Thread (single-SoC)</li>
-      <li class="done"><span class="mark">✓</span>Matter Temperature Sensor over Wi-Fi</li>
-      <li class="done"><span class="mark">✓</span>Adaptive sampling + threshold reporting</li>
-      <li class="done"><span class="mark">✓</span>Light sleep + DFS + flash power-down</li>
-      <li class="done"><span class="mark">✓</span>DS2482 Click board (long-cable variant)</li>
-      <li class="done"><span class="mark">✓</span>Scannable setup QR in the boot log</li>
-      <li class="done"><span class="mark">✓</span>Standalone BLE GATT variant (no hub)</li>
-      <li class="done"><span class="mark">✓</span>Live temperature in the browser (Web Bluetooth)</li>
-      <li class="todo"><span class="mark">▹</span>Real power measurement + deep sleep</li>
-      <li class="todo"><span class="mark">▹</span>E-ink display (big-digit, battery, trend)</li>
-      <li class="todo"><span class="mark">▹</span>BLE firmware update (Espressif BLE OTA)</li>
-      <li class="todo"><span class="mark">▹</span>Battery voltage + low-battery Matter event</li>
-      <li class="todo"><span class="mark">▹</span>Waterproof production enclosure (IP67)</li>
+      <li class="done"><span class="mark">✓</span>Matter-temperatursensor via Thread (single-SoC)</li>
+      <li class="done"><span class="mark">✓</span>Matter-temperatursensor via Wi-Fi</li>
+      <li class="done"><span class="mark">✓</span>Adaptiv sampling + tröskelrapportering</li>
+      <li class="done"><span class="mark">✓</span>Light sleep + DFS + flash-avstängning</li>
+      <li class="done"><span class="mark">✓</span>DS2482 Click-kort (långkabelvariant)</li>
+      <li class="done"><span class="mark">✓</span>Skanningsbar setup-QR i startloggen</li>
+      <li class="done"><span class="mark">✓</span>Fristående BLE GATT-variant (utan hub)</li>
+      <li class="done"><span class="mark">✓</span>Live-temperatur i webbläsaren (Web Bluetooth)</li>
+      <li class="todo"><span class="mark">▹</span>Riktig effektmätning + djupt viloläge</li>
+      <li class="todo"><span class="mark">▹</span>E-ink-display (stora siffror, batteri, trend)</li>
+      <li class="todo"><span class="mark">▹</span>BLE firmware-uppdatering (Espressif BLE OTA)</li>
+      <li class="todo"><span class="mark">▹</span>Batterispänning + låg-batteri Matter-händelse</li>
+      <li class="todo"><span class="mark">▹</span>Vattentät produktionskapsling (IP67)</li>
     </ul>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    <p>Built on
+    <p>Byggd på
       <a href="https://github.com/espressif/esp-matter">esp-matter</a>,
       <a href="https://github.com/espressif/esp-idf">ESP-IDF</a>,
-      <a href="https://github.com/project-chip/connectedhomeip">connectedhomeip</a>, and the
+      <a href="https://github.com/project-chip/connectedhomeip">connectedhomeip</a> och
       <a href="https://www.u-blox.com/en/product/nora-w40-series">u-blox NORA-W40</a>.</p>
-    <p class="muted">A clean-room productisation of the u-blox NORA-W40 thermometer reference.
-      Inspired by <a href="https://poolmicke.se/">poolmicke.se</a> — tack Micke! 🇸🇪 ·
-      Apache-2.0 · Last updated July 2026.</p>
+    <p class="muted">En renrumsproduktifiering av u-blox NORA-W40 termometerreferensen.
+      Inspirerad av <a href="https://poolmicke.se/">poolmicke.se</a> — tack Micke! 🇸🇪 ·
+      Apache-2.0 · Senast uppdaterad juli 2026.</p>
   </div>
 </footer>
 
@@ -328,13 +328,13 @@
   var OTA_CTRL    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0011';   // write + notify status
   var OTA_DATA    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0012';   // write firmware chunks
 
-  // Web Bluetooth is Chromium-only (Chrome/Edge desktop, Chrome Android).
+  // Web Bluetooth är bara tillgängligt i Chromium (Chrome/Edge desktop, Chrome Android).
   var supported = typeof navigator !== 'undefined' && !!navigator.bluetooth;
   if (!supported) {
     btn.style.display = 'none';
     if (otaCard) otaCard.style.display = 'none';
-    statusEl.textContent = 'Bluetooth not available in this browser';
-    noteEl.textContent = 'Open this page in Chrome or Edge (desktop or Android) to connect live over Bluetooth.';
+    statusEl.textContent = 'Bluetooth är inte tillgängligt i den här webbläsaren';
+    noteEl.textContent = 'Öppna sidan i Chrome eller Edge (dator eller Android) för att ansluta live via Bluetooth.';
     return;
   }
 
@@ -347,7 +347,7 @@
   function renderAge() {
     if (!lastUpdate) { ageEl.textContent = ''; return; }
     var s = Math.round((Date.now() - lastUpdate) / 1000);
-    ageEl.textContent = 'updated ' + (s <= 0 ? 'just now' : s + 's ago');
+    ageEl.textContent = s <= 0 ? 'uppdaterad just nu' : ('uppdaterad för ' + s + ' s sedan');
   }
 
   function setTemp(celsius) {
@@ -361,12 +361,11 @@
     setTemp(event.target.value.getInt16(0, true) / 100);   // little-endian sint16
   }
 
-  // Keep-alive: re-read the value on a timer so the display stays live even if
-  // the device notifies sparsely (it only notifies on a new sample) or the
-  // platform doesn't deliver notifications reliably.
+  // Keep-alive: läs värdet på en timer så displayen hålls uppdaterad även om
+  // enheten rapporterar glest eller plattformen inte levererar notifikationer pålitligt.
   async function pollTemp() {
     if (!tempChar || !device || !device.gatt.connected) return;
-    try { setTemp((await tempChar.readValue()).getInt16(0, true) / 100); } catch (e) { /* ignore */ }
+    try { setTemp((await tempChar.readValue()).getInt16(0, true) / 100); } catch (e) { /* ignorera */ }
   }
 
   function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
@@ -377,22 +376,22 @@
     lastUpdate = 0;
     ageEl.textContent = '';
     tempChar = null;
-    statusEl.textContent = 'Disconnected';
+    statusEl.textContent = 'Frånkopplad';
     statusEl.className = 'status';
     tempEl.textContent = '\u2014';
     tempEl.classList.add('idle');
-    btn.textContent = 'Reconnect';
+    btn.textContent = 'Återanslut';
   }
 
   function isAkva(d) { return d && d.name && d.name.indexOf('AkvaLink') === 0; }
 
-  // Shared: open GATT, subscribe to the temperature, update the UI.
+  // Gemensam sökväg: öppna GATT, prenumerera på temperaturen, uppdatera UI.
   async function attach(dev) {
     device = dev;
     dev.removeEventListener('gattserverdisconnected', onDisconnected);
     dev.addEventListener('gattserverdisconnected', onDisconnected);
 
-    statusEl.textContent = 'Connecting\u2026';
+    statusEl.textContent = 'Ansluter\u2026';
     statusEl.className = 'status';
     var server = await dev.gatt.connect();
     var service = await server.getPrimaryService(ESS_SERVICE);
@@ -402,37 +401,36 @@
     try {
       await ch.startNotifications();
       ch.addEventListener('characteristicvaluechanged', onTemp);
-    } catch (e) { /* notify unsupported — the poll below keeps it live */ }
+    } catch (e) { /* notifikationer stöds ej — pollningen nedan håller det live */ }
 
     tempChar = ch;
     stopPolling();
-    pollTimer = setInterval(pollTemp, 3000);   // keep the reading fresh (~3 s)
+    pollTimer = setInterval(pollTemp, 3000);   // håll avläsningen färsk (~3 s)
     if (ageTimer) clearInterval(ageTimer);
-    ageTimer = setInterval(renderAge, 1000);   // tick the "updated Ns ago" line
+    ageTimer = setInterval(renderAge, 1000);   // ticka "uppdaterad för Ns sedan"
 
-    statusEl.textContent = 'Connected to ' + (dev.name || 'AkvaLink');
+    statusEl.textContent = 'Ansluten till ' + (dev.name || 'AkvaLink');
     statusEl.className = 'status on';
-    btn.textContent = 'Disconnect';
+    btn.textContent = 'Koppla från';
   }
 
-  // Smooth path: reconnect to an already-permitted device with NO chooser.
-  // getDevices() returns devices this page was previously granted access to —
-  // it needs a persistent origin (https / localhost), so on a bare file:// URL
-  // it may return nothing (that's fine — we fall back to the chooser).
+  // Smidig sökväg: återanslut till en tidigare ihopparad enhet utan dialog.
+  // getDevices() returnerar enheter som sidan tidigare beviljats åtkomst till —
+  // kräver persistent origin (https / localhost), fungerar inte på file://.
   async function connectKnown() {
     if (!navigator.bluetooth.getDevices) return false;
     var devs;
     try { devs = await navigator.bluetooth.getDevices(); } catch (e) { return false; }
     var known = devs.filter(isAkva);
     for (var i = 0; i < known.length; i++) {
-      try { await attach(known[i]); return true; } catch (e) { /* out of range — try next */ }
+      try { await attach(known[i]); return true; } catch (e) { /* utom räckvidd — prova nästa */ }
     }
     return false;
   }
 
-  // Fallback: the browser chooser (requires a user gesture / click).
+  // Reservväg: webbläsarens enhetsväljare (kräver användargest/klick).
   async function connectViaChooser() {
-    statusEl.textContent = 'Choose your AkvaLink\u2026';
+    statusEl.textContent = 'Välj din AkvaLink\u2026';
     statusEl.className = 'status';
     var dev = await navigator.bluetooth.requestDevice({
       filters: [{ namePrefix: 'AkvaLink' }],
@@ -448,22 +446,22 @@
       return;
     }
     try {
-      if (await connectKnown()) return;   // no dialog if already paired + in range
-      await connectViaChooser();          // otherwise pick it once
+      if (await connectKnown()) return;   // ingen dialog om redan ihopparad + inom räckvidd
+      await connectViaChooser();          // annars välj en gång
     } catch (err) {
       statusEl.textContent = (err && err.name === 'NotFoundError')
-        ? 'No AkvaLink selected'
-        : 'Connection failed: ' + ((err && err.message) || err);
+        ? 'Ingen AkvaLink vald'
+        : 'Anslutning misslyckades: ' + ((err && err.message) || err);
       statusEl.className = 'status';
     }
   });
 
-  // --- Firmware update over BLE (OTA) ---------------------------------------
+  // --- Firmware-uppdatering via BLE (OTA) ------------------------------------
   function otaSetProgress(frac) { otaBar.style.width = Math.round(frac * 100) + '%'; }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-  // Connect if needed. Called straight from the button click so requestDevice
-  // keeps its user gesture (no getDevices await in front of it).
+  // Anslut om nödvändigt. Anropas direkt från knapptrycket så att requestDevice
+  // behåller sin användargest (ingen getDevices-await framför den).
   async function ensureConnected() {
     if (device && device.gatt && device.gatt.connected) return;
     await connectViaChooser();
@@ -471,79 +469,79 @@
 
   async function runOta() {
     var file = otaFile.files && otaFile.files[0];
-    if (!file) { otaStatus.textContent = 'Choose a .bin file first'; return; }
+    if (!file) { otaStatus.textContent = 'Välj en .bin-fil först'; return; }
 
-    otaBtn.textContent = 'Updating\u2026';
+    otaBtn.textContent = 'Uppdaterar\u2026';
     otaSetProgress(0);
     var failed = false;
 
     try {
-      otaStatus.textContent = 'Connecting\u2026';
+      otaStatus.textContent = 'Ansluter\u2026';
       await ensureConnected();
       var server = device.gatt;
       var svc  = await server.getPrimaryService(OTA_SERVICE);
       var ctrl = await svc.getCharacteristic(OTA_CTRL);
       var data = await svc.getCharacteristic(OTA_DATA);
 
-      // Status notifications: result byte != 0 means the device errored.
+      // Statusnotifikationer: resultatbyte != 0 betyder att enheten felat.
       try {
         await ctrl.startNotifications();
         ctrl.addEventListener('characteristicvaluechanged', function (e) {
           if (e.target.value.getUint8(1) !== 0) {
             failed = true;
-            otaStatus.textContent = 'Device reported error (code ' + e.target.value.getUint8(1) + ')';
+            otaStatus.textContent = 'Enheten rapporterade fel (kod ' + e.target.value.getUint8(1) + ')';
           }
         });
-      } catch (e) { /* notify optional */ }
+      } catch (e) { /* notifikationer valfria */ }
 
-      // BEGIN — the device erases the passive slot (a few seconds).
-      otaStatus.textContent = 'Preparing device (erasing slot)\u2026';
+      // BEGIN — enheten raderar den passiva sloten (några sekunder).
+      otaStatus.textContent = 'Förbereder enhet (raderar slot)\u2026';
       await ctrl.writeValue(new Uint8Array([0x01]));
       await sleep(400);
-      if (failed) throw new Error('device rejected BEGIN');
+      if (failed) throw new Error('enheten avvisade BEGIN');
 
-      // Stream the image in MTU-safe chunks.
+      // Strömma bilden i MTU-säkra bitar.
       var bytes = new Uint8Array(await file.arrayBuffer());
       var CHUNK = 240;
       var writeChunk = data.writeValueWithoutResponse
         ? data.writeValueWithoutResponse.bind(data)
         : data.writeValue.bind(data);
       for (var off = 0; off < bytes.length; off += CHUNK) {
-        if (failed) throw new Error('aborted by device');
+        if (failed) throw new Error('avbruten av enheten');
         await writeChunk(bytes.subarray(off, Math.min(off + CHUNK, bytes.length)));
-        if ((off % (CHUNK * 34)) < CHUNK) {   // refresh UI ~every 8 KB
+        if ((off % (CHUNK * 34)) < CHUNK) {   // uppdatera UI ~var 8:e kB
           otaSetProgress(off / bytes.length);
-          otaStatus.textContent = 'Uploading ' + Math.round(100 * off / bytes.length) + '%';
+          otaStatus.textContent = 'Laddar upp ' + Math.round(100 * off / bytes.length) + '%';
         }
       }
       otaSetProgress(1);
 
-      // END — device finalises, sets the boot slot, and reboots.
-      otaStatus.textContent = 'Finalising\u2026';
+      // END — enheten slutför, sätter bootslotet och startar om.
+      otaStatus.textContent = 'Slutför\u2026';
       await ctrl.writeValue(new Uint8Array([0x02]));
-      otaStatus.textContent = 'Update sent — device rebooting into new firmware ✓';
+      otaStatus.textContent = 'Uppdatering skickad — enheten startar om med ny firmware ✓';
     } catch (err) {
-      otaStatus.textContent = 'Update failed: ' + ((err && err.message) || err);
-      try {   // best-effort abort on the device
+      otaStatus.textContent = 'Uppdatering misslyckades: ' + ((err && err.message) || err);
+      try {   // försök avbryta på enheten
         var s = await device.gatt.getPrimaryService(OTA_SERVICE);
         await (await s.getCharacteristic(OTA_CTRL)).writeValue(new Uint8Array([0x03]));
-      } catch (e) { /* ignore */ }
+      } catch (e) { /* ignorera */ }
     }
-    otaBtn.textContent = 'Update firmware';
+    otaBtn.textContent = 'Uppdatera firmware';
   }
 
   otaBtn.addEventListener('click', function (e) { e.preventDefault(); runOta(); });
   otaFile.addEventListener('change', function () {
-    otaFileName.textContent = (otaFile.files && otaFile.files[0]) ? otaFile.files[0].name : 'No file chosen';
+    otaFileName.textContent = (otaFile.files && otaFile.files[0]) ? otaFile.files[0].name : 'Ingen fil vald';
     otaSetProgress(0);
     otaStatus.textContent = '';
   });
 
-  // On load, silently try a previously-paired AkvaLink — no dialog, no gesture.
+  // Vid sidladdning: försök tyst ansluta till en tidigare ihopparad AkvaLink — ingen dialog, ingen gest.
   (async function () {
-    statusEl.textContent = 'Looking for a paired AkvaLink\u2026';
+    statusEl.textContent = 'Söker efter en ihopparad AkvaLink\u2026';
     if (!(await connectKnown())) {
-      statusEl.textContent = 'Not connected';
+      statusEl.textContent = 'Inte ansluten';
       statusEl.className = 'status';
     }
   })();
