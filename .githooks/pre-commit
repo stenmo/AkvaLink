@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# AkvaLink pre-commit hook — run the fast host-side test suite before each commit.
+#
+# Enable once (per clone):
+#     git config core.hooksPath .githooks
+#
+# Runs the same pytest suite CI does (helpers + web HTML validation, ~0.5 s).
+# Skip a one-off commit with:  git commit --no-verify
+set -e
+
+echo "[pre-commit] running pytest…"
+if command -v py >/dev/null 2>&1; then
+    py -3 -m pytest -q
+elif command -v python3 >/dev/null 2>&1; then
+    python3 -m pytest -q
+else
+    python -m pytest -q
+fi

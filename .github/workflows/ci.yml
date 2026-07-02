@@ -1,0 +1,33 @@
+name: CI
+
+# Fast host-side checks on every push / PR: the Python helper unit tests plus
+# the web landing-page HTML validation (all pure stdlib + pytest — no ESP-IDF,
+# no hardware). Keeps release.py / publish.py and web/ from silently breaking.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dev dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run tests (helpers + web validation)
+        run: python -m pytest -q
