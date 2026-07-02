@@ -17,7 +17,7 @@
 // because app_main() runs on a modestly-sized stack.
 #define QR_MAX_VERSION 6
 
-void aqualink_qr_print(const char *text)
+void akvalink_qr_print(const char *text)
 {
     if (text == NULL || text[0] == '\0') {
         return;
@@ -36,7 +36,7 @@ void aqualink_qr_print(const char *text)
     const int size   = qrcodegen_getSize(qr);
     const int border = 2;  // quiet zone (spec minimum is 4, 2 scans fine on-screen)
 
-    printf("\n\033[1m  Scan to commission AquaLink (Matter):\033[0m\n\n");
+    printf("\n\033[1m  Scan to commission AkvaLink (Matter):\033[0m\n\n");
 
     // Two module-rows are packed into each text line via upper/lower half
     // blocks; one char per module then keeps the aspect roughly square

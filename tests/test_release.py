@@ -47,7 +47,7 @@ def test_format_release_notes_with_prev_tag():
     notes = release.format_release_notes(
         "0.1.1", ["fix: a thing", "docs: another"], "v0.1.0"
     )
-    assert notes.startswith("# AquaLink v0.1.1")
+    assert notes.startswith("# AkvaLink v0.1.1")
     assert "Changes since v0.1.0:" in notes
     assert "- fix: a thing" in notes
     assert "- docs: another" in notes
@@ -86,7 +86,7 @@ def test_esptool_merge_cmd_orders_offsets_ascending():
 
 def test_flash_instructions_has_command_name_and_hash():
     txt = release.flash_instructions("0.1.1", "thread", "deadbeef")
-    assert "aqualink-thread-v0.1.1.bin" in txt
+    assert "akvalink-thread-v0.1.1.bin" in txt
     assert "write-flash 0x0" in txt
     assert "deadbeef" in txt
     assert "**thread**" in txt
@@ -94,7 +94,7 @@ def test_flash_instructions_has_command_name_and_hash():
 
 def test_flash_instructions_variant_wifi():
     txt = release.flash_instructions("1.2.3", "wifi", "abc")
-    assert "aqualink-wifi-v1.2.3.bin" in txt
+    assert "akvalink-wifi-v1.2.3.bin" in txt
 
 
 def test_build_cmd_windows_thread(monkeypatch):
@@ -153,7 +153,7 @@ def test_merge_firmware_produces_image_and_sidecar(monkeypatch, tmp_path):
     result = release.merge_firmware("0.1.1", "thread", dry_run=False)
     assert result is not None
     image, sidecar, digest = result
-    assert image.name == "aqualink-thread-v0.1.1.bin"
+    assert image.name == "akvalink-thread-v0.1.1.bin"
     assert Path(sidecar).is_file()
     assert digest == hashlib.sha256(b"MERGED").hexdigest()
     assert digest in Path(sidecar).read_text()

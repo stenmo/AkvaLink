@@ -113,12 +113,12 @@ case "$cmd" in
 
         if [ "$build_ble" -eq 1 ]; then
             echo "=== Network: BLE-only (standalone NimBLE GATT, no Matter) ==="
-            export AQUALINK_NO_MATTER=1
-            export AQUALINK_BLE=1
+            export AKVALINK_NO_MATTER=1
+            export AKVALINK_BLE=1
             idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.ble" reconfigure
         elif [ "$build_sensor" -eq 1 ]; then
             echo "=== Sensor-only test: read the sensor, no Matter/BLE ==="
-            export AQUALINK_NO_MATTER=1
+            export AKVALINK_NO_MATTER=1
             idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.sensor" reconfigure
         elif [ "$build_wifi" -eq 1 ]; then
             echo "=== Network: Matter-over-Wi-Fi ==="
@@ -132,7 +132,7 @@ case "$cmd" in
         cp -f build/bootloader/bootloader.bin           images/bootloader.bin
         cp -f build/partition_table/partition-table.bin images/partition-table.bin
         cp -f build/ota_data_initial.bin                images/ota_data_initial.bin
-        cp -f build/aqualink.bin                         images/aqualink.bin
+        cp -f build/akvalink.bin                         images/akvalink.bin
         echo
         echo "=== Build complete. Images in images/ ==="
         ;;
@@ -184,7 +184,7 @@ Paths:
   ESP_MATTER_PATH  = ${ESP_MATTER_PATH}
 
 This script is intended for Linux / WSL2. From Windows, run:
-  launch-aqualink-wsl.cmd build
+  launch-akvalink-wsl.cmd build
 EOF
         ;;
 esac

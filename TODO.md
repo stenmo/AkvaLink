@@ -1,4 +1,4 @@
-# AquaLink — TODO
+# AkvaLink — TODO
 
 > Living roadmap. **Current scope is deliberately small** (KISS).
 > Everything else lives in *Future ideas* below — that's the parking lot,
@@ -36,10 +36,10 @@ After the EVK works, **one** small step. No new features yet.
 - Adaptive sampling (fast 3 s / slow 60 s).
 - Threshold-gated reporting (default 0.25 °C).
 - Light sleep + DFS + flash power-down.
-- AquaLink boot banner with PoolMicke nod.
+- AkvaLink boot banner with PoolMicke nod.
 - Local-only git repo, no remote (private project).
 - Design docs for power, winter mode, e-ink, enclosure, RF, connectivity.
-- Repo cleaned of upstream `u-connectMatter` naming; binary is `aqualink.bin`;
+- Repo cleaned of upstream `u-connectMatter` naming; binary is `akvalink.bin`;
   launcher/build/flash scripts drive-agnostic (WSL `wslpath`, not hardcoded C:).
 - Toolchain verified: ESP-IDF v5.4.1 + esp-matter release/v1.5 — the latest
   combo esp-matter v1.5 supports for ESP32-C6 (v5.5.x is C5/C61 only).
@@ -121,11 +121,11 @@ above has happened.
   device info + live telemetry so a phone app (no hub, no router) can read
   everything about the sensor:
   - **Device Information Service (0x180A):** manufacturer (u-blox), model
-    (AquaLink NORA-W40), **firmware revision** (`version.txt` / `PROJECT_VER`),
+    (AkvaLink NORA-W40), **firmware revision** (`version.txt` / `PROJECT_VER`),
     hardware revision, serial (ROM ID).
   - **Environmental Sensing (0x181A):** Temperature (0x2A6E), notify on change.
   - **Battery Service (0x180F):** Battery Level (0x2A19).
-  - **Custom AquaLink service:** **uptime**, boot count, last-reset reason,
+  - **Custom AkvaLink service:** **uptime**, boot count, last-reset reason,
     sample interval, report threshold, sensor family, RSSI — read + notify.
   - **Range:** advertising rotates legacy 1M (phone-friendly, esp. iOS) + Coded
     PHY S=8 (long range ~2-4×) so both scanner types find it; requests Coded S=8
@@ -147,7 +147,7 @@ above has happened.
 - Long-press (15 s) factory reset → wipe NVS → provisioning.
 
 ## Apps & integrations
-> Beyond Matter. AquaLink stays a Matter device first (works today in Apple /
+> Beyond Matter. AkvaLink stays a Matter device first (works today in Apple /
 > Google / Alexa / Home Assistant via the standard Temperature Sensor cluster);
 > everything here is an *additional*, optional path layered on top — no cloud.
 > See [docs/CONNECTIVITY.md](docs/CONNECTIVITY.md) for the connectivity design.

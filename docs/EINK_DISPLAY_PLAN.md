@@ -3,7 +3,7 @@
 > *"Most pool thermometers suck visually. Make yours: big clean number,
 > battery icon, trend arrow. Update only when needed."*
 
-E-ink is the natural fit for AquaLink: **zero current to hold the image**,
+E-ink is the natural fit for AkvaLink: **zero current to hold the image**,
 ~30 mA only during the ~2-second refresh. Perfectly aligned with the
 threshold-gated reporting model — display refreshes only when something
 worth saying actually changed.
@@ -19,10 +19,10 @@ direct register-level drivers.
 | Panel | Resolution | Size | Price | Best for | Why / Why not |
 |-------|-----------|------|-------|----------|---------------|
 | **Waveshare 2.9" V2** | 296×128 | 66×29 mm | ~$15 | All-in-one battery enclosure, on-the-pool-edge unit | Sweet spot for size/cost. Big enough for a 60 px digit + battery + trend. Partial refresh supported. |
-| **Waveshare 4.2" V2** | 400×300 | 84×64 mm | ~$30 | Wall-mounted "AquaLink dashboard" near the door | **Recommended for the demo.** Readable from 3-4 m. Massive digit area. Still <100 mA peak. |
+| **Waveshare 4.2" V2** | 400×300 | 84×64 mm | ~$30 | Wall-mounted "AkvaLink dashboard" near the door | **Recommended for the demo.** Readable from 3-4 m. Massive digit area. Still <100 mA peak. |
 | Waveshare 2.13" V3 | 250×122 | 48×27 mm | ~$11 | Tiny low-cost unit | Cheapest. Tight for big-digit + icons. |
 | GoodDisplay GDEY029T94 | 296×128 | bare panel | ~$8 | Custom PCB integration | Same as Waveshare 2.9" but bare panel — for the productised version. |
-| LilyGO T5 4.2" | 400×300 + ESP32 | dev board | ~$40 | Quick prototype, NOT for AquaLink | Has its own ESP32 — duplicates the NORA-W40. Skip. |
+| LilyGO T5 4.2" | 400×300 + ESP32 | dev board | ~$40 | Quick prototype, NOT for AkvaLink | Has its own ESP32 — duplicates the NORA-W40. Skip. |
 
 **Recommendation for v1:** Start with **Waveshare 4.2" V2 SPI**. Wall-mount,
 huge legibility, only ~$30. Drop to 2.9" for the integrated battery-pack
@@ -83,7 +83,7 @@ Two paths, in order of preference for this codebase:
 
 ```
 ┌────────────────────────────────────────┐
-│  AquaLink            🔋 87%   ⏱ 3 min  │  ← header band, 24 px
+│  AkvaLink            🔋 87%   ⏱ 3 min  │  ← header band, 24 px
 │                                        │
 │                                        │
 │        2 8 . 4                         │  ← big digits, ~140 px tall
@@ -144,4 +144,4 @@ is essentially free.
   the display below 0 °C and rely on Matter only.
 - Should the display side and the sensor side be **physically separate**
   (sensor in a tiny waterproof pod by the water, display indoors via
-  Matter)? That collapses to "two AquaLinks", which is also a fine answer.
+  Matter)? That collapses to "two AkvaLinks", which is also a fine answer.

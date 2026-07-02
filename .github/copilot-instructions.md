@@ -1,8 +1,8 @@
-# AquaLink — AI Coding Instructions
+# AkvaLink — AI Coding Instructions
 
 ## Project Overview
 
-**AquaLink** is a battery-powered, single-SoC pool/aquatic temperature sensor
+**AkvaLink** is a battery-powered, single-SoC pool/aquatic temperature sensor
 based on **u-blox NORA-W40** (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3). It runs
 the **esp-matter** stack (Matter over Thread or Wi-Fi) and is optimised for
 **multi-year battery life** monitoring stable environments (pool, spa,
@@ -10,7 +10,7 @@ aquarium, wine cellar, cold storage).
 
 **Origin:** Forked from the `companion/opencpu/nora-w40-thermometer/` reference
 in `u-connectMatter` (May 2026). That project remains as the upstream reference;
-AquaLink is the productised, demo-focused clean-room version.
+AkvaLink is the productised, demo-focused clean-room version.
 
 **Goals:**
 - Polished demo for u-blox showcasing single-SoC Matter on NORA-W40
@@ -54,14 +54,14 @@ AquaLink is the productised, demo-focused clean-room version.
 
 ```powershell
 # Default (Thread, GPIO sensor)
-.\launch-aqualink-wsl.cmd build
-.\launch-aqualink-wsl.cmd flash COM62
+.\launch-akvalink-wsl.cmd build
+.\launch-akvalink-wsl.cmd flash COM62
 
 # Wi-Fi variant
-.\launch-aqualink-wsl.cmd --wifi build
+.\launch-akvalink-wsl.cmd --wifi build
 
 # DS2482 Click board
-.\launch-aqualink-wsl.cmd --clickboard build
+.\launch-akvalink-wsl.cmd --clickboard build
 ```
 
 Build runs in **WSL Ubuntu-24.04**, sourcing:
@@ -203,6 +203,6 @@ Rules of engagement when implementing in this repo:
 This is u-blox showcase material. Make the demo delightful:
 - ASCII banner at boot with a 🏊 / 🌊 / 💧 emoji
 - ANSI colors in logs for state transitions (heating ↑ red, cooling ↓ blue)
-- Memorable startup line: `[AquaLink] Online · pool · 28.4 °C · battery 87%`
+- Memorable startup line: `[AkvaLink] Online · pool · 28.4 °C · battery 87%`
 
 Where fun does NOT belong: error logs, crash paths, hot loops.

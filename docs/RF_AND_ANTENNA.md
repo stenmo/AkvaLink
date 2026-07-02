@@ -1,12 +1,12 @@
 # RF & Antenna Design — NORA-W40 in a Floating Enclosure
 
-> *"On something floating in water like AquaLink, RF design will make or
+> *"On something floating in water like AkvaLink, RF design will make or
 > break the user experience — especially for Thread/Matter stability."*
 
 A floating, sealed, battery-powered Matter device in chlorinated water is
 an unusually hostile RF environment. Most "works on the desk, fails in
 the pool" stories come down to antenna placement that ignored the
-waterline. This doc captures the rules we follow on the AquaLink Smart
+waterline. This doc captures the rules we follow on the AkvaLink Smart
 Float, sourced from ESP32-C6 and u-blox NORA-W40 best practice + the
 specific physics of 2.4 GHz over water.
 
@@ -72,7 +72,7 @@ the top edge.
 Top view of the float, antenna at the upper rim:
 
 ```
-   AquaLink top housing (top view)
+   AkvaLink top housing (top view)
    ____________________________________
   /                                    \
  |        ┌──────────────────┐          |

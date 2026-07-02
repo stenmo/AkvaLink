@@ -10,7 +10,7 @@ KEY_FILES = [
     "CMakeLists.txt",
     "partitions.csv",
     "sdkconfig.defaults",
-    "launch-aqualink-wsl.cmd",
+    "launch-akvalink-wsl.cmd",
     "main/app_main.cpp",
     "main/ds18b20_task.cpp",
     "main/ds2482_onewire.cpp",

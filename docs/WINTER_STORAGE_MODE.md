@@ -31,7 +31,7 @@ Two equally valid triggers, support both:
 
 - **Long press of the BOOT button** (≥ 5 s) before putting the device away.
   The boot banner already mentions battery state; show a clear
-  `[AquaLink] Entering winter storage. Press button to wake.` line.
+  `[AkvaLink] Entering winter storage. Press button to wake.` line.
 - **Matter command** — a custom cluster command, or simply piggy-back on
   the OnOff cluster Off command if we add one. *Nice touch:* user can
   send the device to sleep from the Home app before going on holiday.
@@ -84,10 +84,10 @@ last-known battery voltage in the Home app. Make it Kconfig-tunable.
 | Source | Wire | Why |
 |--------|------|-----|
 | **Boot / user button** | EVK BOOT button or a dedicated front-panel button | Standard "wake me up" UX. |
-| **Reed switch (magnet)** | One GPIO + a 5–10 MΩ pull-up, switch to GND | **Killer feature for AquaLink.** Zero standby current (no closed circuit until magnet is present). Works through plastic and water. Perfect for waterproof enclosures with no exposed buttons. |
+| **Reed switch (magnet)** | One GPIO + a 5–10 MΩ pull-up, switch to GND | **Killer feature for AkvaLink.** Zero standby current (no closed circuit until magnet is present). Works through plastic and water. Perfect for waterproof enclosures with no exposed buttons. |
 | Timer (optional weekly) | RTC | Battery health check / "I'm alive" Matter heartbeat. |
 
-The reed switch is the AquaLink-specific bit. For a poolside device the
+The reed switch is the AkvaLink-specific bit. For a poolside device the
 enclosure is sealed — no buttons, no LEDs poking out, no holes for water
 to find. A magnet on a keyring, brought close to the labelled spot, is
 the entire UX. Cheap (~$0.20 for a normally-open reed), waterproof-friendly,
@@ -176,7 +176,7 @@ Critical pieces for fast rejoin:
 
 This earns a real bullet on the box:
 
-> **AquaLink — drop it in the pool and forget it.
+> **AkvaLink — drop it in the pool and forget it.
 > Magnet wake. Lithium-ready. Survives a Swedish winter.**
 
 Pair it with a video: device in a drawer for 3 months, magnet swipe,
@@ -191,11 +191,11 @@ Add to `app_main.cpp`:
 
 ```c
 typedef enum {
-    AQUALINK_NORMAL,
-    AQUALINK_STORAGE,
-} aqualink_mode_t;
+    AKVALINK_NORMAL,
+    AKVALINK_STORAGE,
+} akvalink_mode_t;
 
-void aqualink_enter_storage_mode(void);
+void akvalink_enter_storage_mode(void);
 ```
 
 New file `main/storage_mode.cpp` owns:
@@ -204,8 +204,8 @@ New file `main/storage_mode.cpp` owns:
 - The fast-rejoin path.
 
 Kconfig:
-- `CONFIG_AQUALINK_REED_GPIO` — reed switch GPIO (default: TBD per schematic).
-- `CONFIG_AQUALINK_STORAGE_BUTTON_HOLD_MS` — long-press threshold (default 5000).
-- `CONFIG_AQUALINK_STORAGE_HEARTBEAT_DAYS` — 0 = no timer wake (default 7).
+- `CONFIG_AKVALINK_REED_GPIO` — reed switch GPIO (default: TBD per schematic).
+- `CONFIG_AKVALINK_STORAGE_BUTTON_HOLD_MS` — long-press threshold (default 5000).
+- `CONFIG_AKVALINK_STORAGE_HEARTBEAT_DAYS` — 0 = no timer wake (default 7).
 
 Tracked in [TODO.md](../TODO.md) under **Winter Storage Mode** (P0).

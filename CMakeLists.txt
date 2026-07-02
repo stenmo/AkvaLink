@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-# AquaLink -- NORA-W40 (ESP32-C6) single-SoC Matter pool thermometer
+# AkvaLink -- NORA-W40 (ESP32-C6) single-SoC Matter pool thermometer
 #
 # Modelled on esp-matter/examples/light/CMakeLists.txt to ensure all
 # MATTER_SDK_PATH-derived include/source paths resolve. Built via the
-# WSL launcher (launch-aqualink-wsl.cmd) which sources export.sh from
+# WSL launcher (launch-akvalink-wsl.cmd) which sources export.sh from
 # both ESP-IDF v5.4.1 and esp-matter release/v1.5.
 
 cmake_minimum_required(VERSION 3.16)
@@ -11,15 +11,15 @@ cmake_minimum_required(VERSION 3.16)
 set(PROJECT_VER "3.4.0")
 set(PROJECT_VER_NUMBER 3)
 
-# The --ble and --sensor variants set AQUALINK_NO_MATTER in the
+# The --ble and --sensor variants set AKVALINK_NO_MATTER in the
 # environment (via build.sh). They must NOT pull in the esp-matter component
 # glue below: esp-matter's NetworkCommissioning cluster static_assert fails to
 # compile when no transport (Thread/Wi-Fi) is enabled. So build a plain
 # ESP-IDF project instead. (Env var, not -D, so it's visible everywhere.)
-if(DEFINED ENV{AQUALINK_NO_MATTER})
+if(DEFINED ENV{AKVALINK_NO_MATTER})
 
     include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-    project(aqualink)
+    project(akvalink)
 
 else()
 
@@ -28,7 +28,7 @@ else()
     if(NOT DEFINED ENV{ESP_MATTER_PATH})
         message(FATAL_ERROR
             "ESP_MATTER_PATH is not set. Source ~/esp/esp-matter/export.sh, "
-            "or run via launch-aqualink-wsl.cmd.")
+            "or run via launch-akvalink-wsl.cmd.")
     endif()
 
     # Per-chip device HAL path (drives BSP, default pins, etc).
@@ -58,7 +58,7 @@ else()
         "${ESP_MATTER_PATH}/device_hal/device"
         ${extra_components_dirs_append})
 
-    project(aqualink)
+    project(akvalink)
 
     # Match esp-matter example compile flags (C++17, size-optimised, suppress
     # noisy upstream warnings on RISC-V).

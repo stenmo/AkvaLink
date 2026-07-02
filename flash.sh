@@ -11,7 +11,7 @@ if [ -z "${PORT}" ]; then
   exit 1
 fi
 
-if [ ! -f "${IMG_DIR}/aqualink.bin" ]; then
+if [ ! -f "${IMG_DIR}/akvalink.bin" ]; then
   echo "ERROR: No firmware in ${IMG_DIR}. Run: $SCRIPT_DIR/build.sh build"
   exit 2
 fi
@@ -34,7 +34,7 @@ echo "=== Flashing thermometer firmware to ${PORT} ==="
 "${ESPTOOL}" --chip esp32c6 --port "${PORT}" --baud 460800 \
   write_flash --flash_mode dio --flash_size 4MB --flash_freq 80m \
   0x0     "${IMG_DIR}/bootloader.bin" \
-  0x20000 "${IMG_DIR}/aqualink.bin" \
+  0x20000 "${IMG_DIR}/akvalink.bin" \
   0x8000  "${IMG_DIR}/partition-table.bin" \
   0xf000  "${IMG_DIR}/ota_data_initial.bin"
 

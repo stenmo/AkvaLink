@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AquaLink release helper.
+"""AkvaLink release helper.
 
 One command to cut a release: preflight -> test (pytest) -> bump version ->
 build firmware -> commit + tag -> generate notes -> publish (GitHub release,
@@ -40,7 +40,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VERSION_FILE = REPO_ROOT / "version.txt"
 BUILD_DIR = REPO_ROOT / "build"
-FIRMWARE_BIN = BUILD_DIR / "aqualink.bin"
+FIRMWARE_BIN = BUILD_DIR / "akvalink.bin"
 FLASHER_ARGS = BUILD_DIR / "flasher_args.json"
 
 SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
@@ -67,7 +67,7 @@ def bump_version(current: str, part: str) -> str:
 
 
 def format_release_notes(version: str, subjects: list[str], prev_tag: str | None) -> str:
-    lines = [f"# AquaLink v{version}", ""]
+    lines = [f"# AkvaLink v{version}", ""]
     lines.append(f"Changes since {prev_tag}:" if prev_tag else "Initial release.")
     lines.append("")
     if subjects:
@@ -96,7 +96,7 @@ def esptool_merge_cmd(python: str, chip: str, settings: dict, flash_files: dict,
 
 
 def flash_instructions(version: str, variant: str, sha256: str) -> str:
-    name = f"aqualink-{variant}-v{version}.bin"
+    name = f"akvalink-{variant}-v{version}.bin"
     return (
         "## Flash it (no build needed)\n\n"
         f"Prebuilt **{variant}** firmware for the u-blox NORA-W40 (ESP32-C6) — a\n"
@@ -128,7 +128,7 @@ def _run(cmd: list[str], dry_run: bool) -> None:
 
 def _build_cmd(variant: str) -> list[str]:
     if os.name == "nt":
-        cmd = ["cmd", "/c", str(REPO_ROOT / "launch-aqualink-wsl.cmd")]
+        cmd = ["cmd", "/c", str(REPO_ROOT / "launch-akvalink-wsl.cmd")]
         flag = {"wifi": "--wifi", "ble": "--ble"}.get(variant)
         if flag:
             cmd.append(flag)
@@ -154,7 +154,7 @@ def merge_firmware(version: str, variant: str, dry_run: bool):
         return None
     data = json.loads(FLASHER_ARGS.read_text(encoding="utf-8"))
     chip = data.get("extra_esptool_args", {}).get("chip", "esp32c6")
-    out = BUILD_DIR / f"aqualink-{variant}-v{version}.bin"
+    out = BUILD_DIR / f"akvalink-{variant}-v{version}.bin"
     _run(esptool_merge_cmd(sys.executable, chip, data["flash_settings"],
                            data["flash_files"], out), dry_run)
     sha_path = Path(str(out) + ".sha256")
@@ -190,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
     except (AttributeError, ValueError):
         pass
 
-    p = argparse.ArgumentParser(description="Cut an AquaLink release.")
+    p = argparse.ArgumentParser(description="Cut an AkvaLink release.")
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument("--bump", choices=["major", "minor", "patch"], help="bump part of the semver")
     g.add_argument("--set", dest="set_version", metavar="X.Y.Z", help="set an explicit version")
@@ -212,7 +212,7 @@ def main(argv: list[str] | None = None) -> int:
     tag = f"v{new_version}"
     prev_tag = _query(["git", "describe", "--tags", "--abbrev=0"]) or None
 
-    print(f"AquaLink release: {current} -> {new_version}  (tag {tag})")
+    print(f"AkvaLink release: {current} -> {new_version}  (tag {tag})")
     if prev_tag:
         print(f"Previous tag: {prev_tag}")
     if args.dry_run:
@@ -251,7 +251,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"• commit + tag {tag}")
     _run(["git", "add", str(VERSION_FILE)], args.dry_run)
     _run(["git", "commit", "-m", f"release: {tag}"], args.dry_run)
-    _run(["git", "tag", "-a", tag, "-m", f"AquaLink {tag}"], args.dry_run)
+    _run(["git", "tag", "-a", tag, "-m", f"AkvaLink {tag}"], args.dry_run)
 
     # 5. Notes
     log_range = f"{prev_tag}..HEAD" if prev_tag else "HEAD"
@@ -277,7 +277,7 @@ def main(argv: list[str] | None = None) -> int:
     with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as fh:
         fh.write(notes)
         notes_path = fh.name
-    gh_cmd = ["gh", "release", "create", tag, "--title", f"AquaLink {tag}", "--notes-file", notes_path]
+    gh_cmd = ["gh", "release", "create", tag, "--title", f"AkvaLink {tag}", "--notes-file", notes_path]
     assets = []
     if merged:
         assets += [str(merged[0]), str(merged[1])]

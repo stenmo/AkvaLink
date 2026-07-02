@@ -13,17 +13,17 @@ if(APP_USE_DS2482)
 endif()
 
 # Standalone BLE-only variant (no Matter): NimBLE GATT server.
-# Gated on the AQUALINK_BLE *environment* var (build.sh --ble), NOT a
+# Gated on the AKVALINK_BLE *environment* var (build.sh --ble), NOT a
 # CONFIG_ value nor a -D cache var: component SRCS/REQUIRES are expanded before
 # Kconfig loads, and -D cache vars aren't visible during that expansion.
-if(DEFINED ENV{AQUALINK_BLE})
+if(DEFINED ENV{AKVALINK_BLE})
     list(APPEND SRCS "ble_gatt.cpp")
 endif()
 
 # QR-in-console for Matter commissioning: renders the "MT:..." setup payload as
 # a scannable ASCII QR (Nayuki qrcodegen, MIT). Needs CHIP's GetQRCode, so it's
 # Matter-only — i.e. neither the BLE nor the no-Matter env var is set.
-if(NOT DEFINED ENV{AQUALINK_BLE} AND NOT DEFINED ENV{AQUALINK_NO_MATTER})
+if(NOT DEFINED ENV{AKVALINK_BLE} AND NOT DEFINED ENV{AKVALINK_NO_MATTER})
     list(APPEND SRCS "qrcodegen.c" "qr_console.c")
 endif()
 
@@ -32,9 +32,9 @@ endif()
 # Gate on env vars for the same expansion-timing reason as above.
 set(AQ_PRIV_REQ nvs_flash driver esp_timer
     espressif__ds18b20 espressif__onewire_bus)
-if(DEFINED ENV{AQUALINK_BLE})
+if(DEFINED ENV{AKVALINK_BLE})
     list(APPEND AQ_PRIV_REQ bt esp_app_format app_update)
-elseif(NOT DEFINED ENV{AQUALINK_NO_MATTER})
+elseif(NOT DEFINED ENV{AKVALINK_NO_MATTER})
     list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)
 endif()
 

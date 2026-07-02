@@ -12,7 +12,7 @@ extern "C" {
 
 // Encodes `text` and prints a scannable QR to stdout. No-op on NULL/empty
 // input, or if the payload is too long for the (small) version cap.
-void aqualink_qr_print(const char *text);
+void akvalink_qr_print(const char *text);
 
 #ifdef __cplusplus
 }

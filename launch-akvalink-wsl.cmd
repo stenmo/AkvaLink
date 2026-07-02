@@ -1,6 +1,6 @@
 @echo off
 REM ========================================================================
-REM AquaLink -- u-blox NORA-W40 Matter pool thermometer launcher (WSL)
+REM AkvaLink -- u-blox NORA-W40 Matter pool thermometer launcher (WSL)
 REM ========================================================================
 REM Builds via WSL2 (Espressif's officially-supported workflow:
 REM ESP-IDF v5.4.1 + esp-matter release/v1.5), but flashes / erases / logs
@@ -29,22 +29,22 @@ REM   setup                One-time install of IDF + esp-matter (~6 GB)
 REM   menuconfig           idf.py menuconfig (interactive)
 REM
 REM Examples:
-REM   launch-aqualink-wsl.cmd
-REM   launch-aqualink-wsl.cmd --build --erase --flash --log
-REM   launch-aqualink-wsl.cmd --rebuild --wifi
-REM   launch-aqualink-wsl.cmd --flash COM62 --log COM62
-REM   launch-aqualink-wsl.cmd --log
+REM   launch-akvalink-wsl.cmd
+REM   launch-akvalink-wsl.cmd --build --erase --flash --log
+REM   launch-akvalink-wsl.cmd --rebuild --wifi
+REM   launch-akvalink-wsl.cmd --flash COM62 --log COM62
+REM   launch-akvalink-wsl.cmd --log
 REM ========================================================================
 
 setlocal enabledelayedexpansion
 
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-REM AquaLink is a stand-alone project — DEV_DIR is the repo root itself,
+REM AkvaLink is a stand-alone project — DEV_DIR is the repo root itself,
 REM not the legacy u-connectMatter companion/opencpu/nora-w40-thermometer/ subdir.
 set "DEV_DIR=%SCRIPT_DIR%"
 REM Derive the WSL mount path drive-letter-agnostically
-REM (E:\other\AquaLink -> /mnt/e/other/AquaLink). Convert backslashes to
+REM (E:\other\AkvaLink -> /mnt/e/other/AkvaLink). Convert backslashes to
 REM forward slashes first, then let wslpath map the drive letter + casing.
 set "SCRIPT_DIR_FWD=%SCRIPT_DIR:\=/%"
 for /f "usebackq delims=" %%P in (`wsl -- wslpath -a "%SCRIPT_DIR_FWD%"`) do set "DEV_DIR_WSL=%%P"
@@ -227,9 +227,9 @@ if "%DO_FLASH%"=="1" (
         exit /b 3
     )
     set "BLD=%DEV_DIR%\build"
-    if not exist "!BLD!\aqualink.bin" (
+    if not exist "!BLD!\akvalink.bin" (
         echo [ERROR] No firmware to flash. Run with --build first.
-        echo         Looked at: !BLD!\aqualink.bin
+        echo         Looked at: !BLD!\akvalink.bin
         exit /b 4
     )
     echo === --flash: 4 partitions to !PORT_FLASH! ===
@@ -240,7 +240,7 @@ if "%DO_FLASH%"=="1" (
         0x0      bootloader/bootloader.bin ^
         0x8000   partition_table/partition-table.bin ^
         0xf000   ota_data_initial.bin ^
-        0x20000  aqualink.bin
+        0x20000  akvalink.bin
     set "FLASH_RC=!errorlevel!"
     popd >nul
     if !FLASH_RC! NEQ 0 (
@@ -313,11 +313,11 @@ echo   setup                One-time install of ESP-IDF + esp-matter ^(~6 GB^)
 echo   menuconfig           idf.py menuconfig ^(interactive^)
 echo.
 echo Examples:
-echo   launch-aqualink-wsl.cmd --build --erase --flash --log
-echo   launch-aqualink-wsl.cmd --rebuild --wifi
-echo   launch-aqualink-wsl.cmd --rebuild --clickboard --flash --log
-echo   launch-aqualink-wsl.cmd --flash COM62 --log COM62
-echo   launch-aqualink-wsl.cmd --log
+echo   launch-akvalink-wsl.cmd --build --erase --flash --log
+echo   launch-akvalink-wsl.cmd --rebuild --wifi
+echo   launch-akvalink-wsl.cmd --rebuild --clickboard --flash --log
+echo   launch-akvalink-wsl.cmd --flash COM62 --log COM62
+echo   launch-akvalink-wsl.cmd --log
 echo.
 echo Autodetect: looks for VID_303A^&PID_1001 ^(NORA-W40 native USB-Serial/JTAG^).
 echo Native esptool ^(`py -m esptool`^) is used for erase/flash — no usbipd needed.

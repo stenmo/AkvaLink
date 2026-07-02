@@ -1,6 +1,6 @@
 # Enclosure & Industrial Design — Notes
 
-> *"This is where AquaLink becomes something people actually want in their
+> *"This is where AkvaLink becomes something people actually want in their
 > pool, not just tolerate."*
 
 Three things have to happen together — get one wrong and the product
@@ -60,7 +60,7 @@ Slightly organic / soft-triangle shape, matte white top, black e-ink
 window, subtle LED ring that lights only during pairing.
 
 - Same Smart Float internals, different ID language.
-- Where AquaLink can actually stand out on a shelf.
+- Where AkvaLink can actually stand out on a shelf.
 
 ---
 
@@ -89,7 +89,7 @@ Visual summary:
 - Top: matte white / light grey (UV-stable ASA).
 - Display: centred, black bezel for contrast, slight tilt for poolside readability.
 - Bottom: darker grey (hides algae / waterline staining).
-- Subtle embossed `AquaLink` logo on top — no paint, no print.
+- Subtle embossed `AkvaLink` logo on top — no paint, no print.
 
 Working dimensions are in
 [Concept V1 — dimensions and layout](#concept-v1--dimensions-and-layout) below.
@@ -131,7 +131,7 @@ deliberately conservative; tune after the float test.
  |            │   ☼      │          |
  |            └──────────┘          |
  |                                  |
- |          AquaLink                |
+ |          AkvaLink                |
   \                                /
    '.                            .'
      '-.______________________.-'

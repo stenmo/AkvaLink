@@ -1,14 +1,14 @@
-# AquaLink BLE-only variant — standalone NimBLE GATT server, no Matter.
+# AkvaLink BLE-only variant — standalone NimBLE GATT server, no Matter.
 #
 # Layer on top of the base defaults:
 #   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.ble" reconfigure
-# or via the launcher:  launch-aqualink-wsl.cmd --ble --rebuild
+# or via the launcher:  launch-akvalink-wsl.cmd --ble --rebuild
 #
 # For homes with no Matter hub and no Wi-Fi: a phone/app connects directly over
 # BLE and reads device info + live temperature. See main/ble_gatt.cpp.
 
 # Select the BLE-only app path (main/Kconfig.projbuild).
-CONFIG_AQUALINK_BLE_ONLY=y
+CONFIG_AKVALINK_BLE_ONLY=y
 
 # No Matter network stacks — BLE only.
 CONFIG_OPENTHREAD_ENABLED=n

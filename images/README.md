@@ -6,7 +6,7 @@
 #     bootloader.bin                  → flashed at 0x00000
 #     partition-table.bin             → flashed at 0x08000
 #     ota_data_initial.bin            → flashed at 0x0F000
-#     aqualink.bin                    → flashed at 0x20000  (factory app slot)
+#     akvalink.bin                    → flashed at 0x20000  (factory app slot)
 #
 # The flash scripts (flash.cmd / flash.sh) hardcode those four offsets to
 # match `partitions.csv` in the project root. If you change the partition

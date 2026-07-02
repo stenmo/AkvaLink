@@ -1,6 +1,6 @@
 # Security Policy
 
-AquaLink is a **network-attached device** — it speaks Matter over Thread or
+AkvaLink is a **network-attached device** — it speaks Matter over Thread or
 Wi-Fi. That means firmware bugs can have security consequences, and we take
 vulnerability reports seriously even though this is a small, private
 open-source initiative maintained in spare time.
@@ -15,7 +15,7 @@ Report privately instead, so a fix can ship before details are public:
    go to the **Security** tab → **Report a vulnerability**. This opens a
    private advisory visible only to you and the maintainer.
 2. **Alternative:** email the maintainer at **stenmo@gmail.com** with
-   `AquaLink SECURITY` in the subject line.
+   `AkvaLink SECURITY` in the subject line.
 
 Please include:
 
@@ -35,14 +35,14 @@ bound by a commercial SLA. Realistically:
 
 ## Scope
 
-In scope: the AquaLink firmware and helper scripts in this repository.
+In scope: the AkvaLink firmware and helper scripts in this repository.
 
 Out of scope: vulnerabilities in upstream dependencies
 (esp-matter, connectedhomeip, ESP-IDF, the u-blox NORA-W40 module) — please
 report those to their respective projects. If an upstream issue affects
-AquaLink specifically, a note here is still welcome so it can be tracked.
+AkvaLink specifically, a note here is still welcome so it can be tracked.
 
 ## No warranty
 
-AquaLink is provided under the Apache-2.0 License, "AS IS", without warranty
+AkvaLink is provided under the Apache-2.0 License, "AS IS", without warranty
 of any kind. See [LICENSE](LICENSE).

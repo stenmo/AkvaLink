@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
-// Standalone BLE GATT server for the --ble AquaLink variant (NimBLE).
+// Standalone BLE GATT server for the --ble AkvaLink variant (NimBLE).
 //
 // Services:
 //   - Device Information (0x180A): manufacturer, model, firmware revision
 //   - Environmental Sensing (0x181A): Temperature 0x2A6E (sint16, 0.01 °C), notify
-//   - AquaLink custom service: uptime (uint32 seconds), read + notify
-//   - AquaLink OTA service (128-bit): BLE firmware update — control + data chars
+//   - AkvaLink custom service: uptime (uint32 seconds), read + notify
+//   - AkvaLink OTA service (128-bit): BLE firmware update — control + data chars
 //
 // Advertising rotates between legacy 1M (broad phone compatibility, esp. iOS)
 // and extended Coded PHY S=8 (long range, ~2-4x). Coded needs CONFIG_BT_NIMBLE_
@@ -44,7 +44,7 @@
 
 static const char *TAG = "ble_gatt";
 
-#define DEVICE_NAME "AquaLink"
+#define DEVICE_NAME "AkvaLink"
 
 // Advertising instances: rotate between broad-compat legacy and long-range Coded.
 #define ADV_INST_LEGACY 0    // 1M legacy PDUs — best phone compatibility (esp. iOS)
@@ -52,7 +52,7 @@ static const char *TAG = "ble_gatt";
 #define ADV_ROTATE_MS   4000 // dwell per PHY before switching
 
 static const char *MANUFACTURER = "u-blox";
-static const char *MODEL        = "AquaLink NORA-W40";
+static const char *MODEL        = "AkvaLink NORA-W40";
 
 // --- UUIDs (static objects — see C++ note above) ----------------------------
 static const ble_uuid16_t UUID_DIS          = BLE_UUID16_INIT(0x180A);
@@ -62,9 +62,9 @@ static const ble_uuid16_t UUID_MODEL        = BLE_UUID16_INIT(0x2A24);
 static const ble_uuid16_t UUID_FW_REVISION  = BLE_UUID16_INIT(0x2A26);
 static const ble_uuid16_t UUID_TEMPERATURE  = BLE_UUID16_INIT(0x2A6E);
 
-// Custom AquaLink service + uptime characteristic (random 128-bit base).
-// f0aq0001-6e40-4a71-9b2c-aqualink0001 style; bytes are little-endian.
-static const ble_uuid128_t UUID_AQUALINK_SVC = BLE_UUID128_INIT(
+// Custom AkvaLink service + uptime characteristic (random 128-bit base).
+// f0aq0001-6e40-4a71-9b2c-akvalink0001 style; bytes are little-endian.
+static const ble_uuid128_t UUID_AKVALINK_SVC = BLE_UUID128_INIT(
     0x01, 0x00, 0x6c, 0x69, 0x6e, 0x6b, 0x2c, 0x9b,
     0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
 static const ble_uuid128_t UUID_UPTIME = BLE_UUID128_INIT(
@@ -289,7 +289,7 @@ static const struct ble_gatt_chr_def s_ess_chrs[] = {
     { 0 },
 };
 
-static const struct ble_gatt_chr_def s_aqualink_chrs[] = {
+static const struct ble_gatt_chr_def s_akvalink_chrs[] = {
     { .uuid = &UUID_UPTIME.u, .access_cb = gatt_access,
       .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
       .val_handle = &s_uptime_val_handle },
@@ -308,7 +308,7 @@ static const struct ble_gatt_chr_def s_ota_chrs[] = {
 static const struct ble_gatt_svc_def s_services[] = {
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_DIS.u,          .characteristics = s_dis_chrs },
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_ESS.u,          .characteristics = s_ess_chrs },
-    { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_AQUALINK_SVC.u, .characteristics = s_aqualink_chrs },
+    { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_AKVALINK_SVC.u, .characteristics = s_akvalink_chrs },
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_OTA_SVC.u,      .characteristics = s_ota_chrs },
     { 0 },
 };
@@ -489,7 +489,7 @@ static void host_task(void * /*param*/)
 }
 
 // --- Public API -------------------------------------------------------------
-esp_err_t aqualink_ble_gatt_start(void)
+esp_err_t akvalink_ble_gatt_start(void)
 {
     esp_err_t err = nimble_port_init();
     if (err != ESP_OK) {
@@ -512,11 +512,11 @@ esp_err_t aqualink_ble_gatt_start(void)
     if (rc != 0) { ESP_LOGW(TAG, "device_name_set rc=%d", rc); }
 
     nimble_port_freertos_init(host_task);
-    ESP_LOGI(TAG, "🌊 AquaLink BLE GATT server started");
+    ESP_LOGI(TAG, "🌊 AkvaLink BLE GATT server started");
     return ESP_OK;
 }
 
-void aqualink_ble_gatt_set_temperature(float celsius)
+void akvalink_ble_gatt_set_temperature(float celsius)
 {
     s_temp_centi = (int16_t)lroundf(celsius * 100.0f);
 

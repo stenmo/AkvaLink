@@ -1,6 +1,6 @@
 # Connectivity Strategy
 
-> AquaLink supports **multiple ways to talk to your phone**, picked at
+> AkvaLink supports **multiple ways to talk to your phone**, picked at
 > commissioning time. The hardware (NORA-W40 = Wi-Fi 6 + Thread + BLE 5.3)
 > can do all of them — the firmware exposes them as four selectable modes
 > so the user keeps the choice.
@@ -105,7 +105,7 @@ We don't write one for v1. The expectation is:
   in-ecosystem.
 - **nRF Connect** (free, iOS + Android) — equivalent raw BLE explorer, handy
   as a cross-check / for engineers who already have it.
-- **A tiny PWA / web-Bluetooth page** served from the AquaLink GitHub Pages
+- **A tiny PWA / web-Bluetooth page** served from the AkvaLink GitHub Pages
   (or the device's own Wi-Fi AP in mode 4) — opens in any browser, talks
   GATT directly, no install.
 - A real app comes later if the demo lands.
@@ -114,7 +114,7 @@ We don't write one for v1. The expectation is:
 
 - Joins the user's Wi-Fi (provisioned via BLE — see below).
 - Exposes:
-  - **mDNS** record `_aqualink._tcp.local`.
+  - **mDNS** record `_akvalink._tcp.local`.
   - **HTTP server** on `:80` with two endpoints:
     - `GET /api/v1/sensor` → JSON `{ "temp_c": 28.4, "battery_pct": 87, "rssi": -52, "uptime_s": ... }`.
     - `GET /` → minimal HTML/PWA dashboard for phone browsers.
@@ -123,8 +123,8 @@ We don't write one for v1. The expectation is:
 - Same disconnect-mode trick as Matter-over-Wi-Fi for battery.
 
 **Why offer it:** Home Assistant / Node-RED / integrator scenarios.
-Plus, an `_aqualink._tcp.local` device on the LAN is friction-free:
-no app, no account, just `http://aqualink.local`.
+Plus, an `_akvalink._tcp.local` device on the LAN is friction-free:
+no app, no account, just `http://akvalink.local`.
 
 ---
 
@@ -144,7 +144,7 @@ Matter is that this just works.
 
 **Chosen provisioner: Espressif Unified Provisioning** (`wifi_provisioning`)
 — it's in-tree, has a free published app, and adds zero dependencies. Nordic
-stays a Kconfig-gated *optional* extra (`CONFIG_AQUALINK_PROVISIONER`) only
+stays a Kconfig-gated *optional* extra (`CONFIG_AKVALINK_PROVISIONER`) only
 for the "provisions from both ecosystems" demo story; skip it otherwise.
 
 | Provisioner | Phone apps | Pros | Cons | Recommendation |
@@ -152,12 +152,12 @@ for the "provisions from both ecosystems" demo story; skip it otherwise.
 | **Espressif Unified Provisioning** (`wifi_provisioning`, "Improv-style") | **ESP BLE Provisioning** (Espressif, iOS+Android) | Already in ESP-IDF — zero extra deps. App is published, free, works. Same component used by every recent ESP32 product. Supports BLE *and* SoftAP transports, security2, custom data hooks. | Espressif-branded app; not a household name. | **v1 default.** |
 | **Nordic Wi-Fi Provisioner** | **nRF Wi-Fi Provisioner** (Nordic, iOS+Android) | Polished UX. Documented BLE GATT service spec — implementable on any chip. nRF Connect ecosystem is recognisable to BLE engineers. | Spec is Nordic-flavoured; we re-implement the GATT service on ESP-IDF (it's not a drop-in component). Splits dev effort if we also do Espressif. | **v1.1 add-on**, behind a build flag. Useful "we play well with both ecosystems" story. |
 | Improv-Wi-Fi (Home Assistant) | Any browser via Web Bluetooth | App-less. Open spec. | Slightly more limited feature set. | Nice-to-have v1.1 — same GATT-shaped problem as Nordic. |
-| **WPS Push-Button** (WPS-PBC) | Router button + AquaLink button | App-less, well-known UX. Press WPS on router → long-press button on AquaLink → paired. Works with most consumer routers. | WPS is officially deprecated in newer Wi-Fi specs and disabled by default on some enterprise APs / Eero / Unifi. WPA3-only networks don't support it. | **v1.1 add-on.** Cheap to add (`esp_wifi_wps_*` is in IDF) and a good fallback for non-technical users with a typical home router. |
+| **WPS Push-Button** (WPS-PBC) | Router button + AkvaLink button | App-less, well-known UX. Press WPS on router → long-press button on AkvaLink → paired. Works with most consumer routers. | WPS is officially deprecated in newer Wi-Fi specs and disabled by default on some enterprise APs / Eero / Unifi. WPA3-only networks don't support it. | **v1.1 add-on.** Cheap to add (`esp_wifi_wps_*` is in IDF) and a good fallback for non-technical users with a typical home router. |
 
-> **SoftAP** ("join AquaLink-XXXX, open `192.168.4.1`") is supported by
+> **SoftAP** ("join AkvaLink-XXXX, open `192.168.4.1`") is supported by
 > the Espressif provisioning component as a *transport option*, and
 > we keep it available for the **laptop-only** case — no phone handy,
-> just a browser. Connect the laptop to the AquaLink AP, open a local
+> just a browser. Connect the laptop to the AkvaLink AP, open a local
 > page, type SSID + password, done. No app install, no Bluetooth.
 >
 > BLE remains the default for phone users (cleaner UX); SoftAP is the
@@ -166,7 +166,7 @@ for the "provisions from both ecosystems" demo story; skip it otherwise.
 > captive-portal mini-browser, Android may drop the AP when it sees no
 > internet — both acceptable for a fallback.
 
-**Why both Espressif *and* Nordic eventually:** AquaLink is a u-blox
+**Why both Espressif *and* Nordic eventually:** AkvaLink is a u-blox
 showcase. Demonstrating that the device is provisionable from *both*
 ecosystems' standard apps is a credible "we sit above the silicon
 politics" story — and it costs us nothing once the BLE GATT
@@ -177,7 +177,7 @@ infrastructure for mode 3 is in place.
 1. Fresh device (or factory reset): boots into **provisioning advertise**
    mode. E-ink shows: `Pair me — open the app`.
 2. User opens the chosen app (Espressif, Nordic, or any GATT browser),
-   sees `AquaLink-XXXX`.
+   sees `AkvaLink-XXXX`.
 3. App writes:
    - **Mode selection** (3 or 4 — BLE-only or Wi-Fi).
    - **Wi-Fi creds** (if mode 4): SSID, PSK, optional static IP.

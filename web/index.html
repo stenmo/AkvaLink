@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AquaLink — battery-powered Matter pool &amp; aquatic temperature sensor</title>
-<meta name="description" content="AquaLink is a single-SoC, battery-powered Matter temperature sensor on u-blox NORA-W40 (ESP32-C6). Multi-year battery life. Local Matter over Thread or Wi-Fi. No cloud, ever." />
+<title>AkvaLink — battery-powered Matter pool &amp; aquatic temperature sensor</title>
+<meta name="description" content="AkvaLink is a single-SoC, battery-powered Matter temperature sensor on u-blox NORA-W40 (ESP32-C6). Multi-year battery life. Local Matter over Thread or Wi-Fi. No cloud, ever." />
 <style>
   :root {
     --deep: #033f63;
@@ -134,12 +134,12 @@
 
 <header class="hero">
   <div class="wrap">
-    <h1 class="logo">AquaLink <span class="drop">🏊 🌊</span></h1>
+    <h1 class="logo">AkvaLink <span class="drop">🏊 🌊</span></h1>
     <p class="tagline">Battery-powered Matter pool &amp; aquatic temperature sensor</p>
     <p class="subtag">Single-SoC on u-blox NORA-W40 (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3).<br />
       Multi-year battery life · Local Matter · <strong>No cloud, ever.</strong></p>
     <p class="cta">
-      <a class="primary" href="https://github.com/stenmo/AquaLink">View on GitHub</a>
+      <a class="primary" href="https://github.com/stenmo/AkvaLink">View on GitHub</a>
       <a class="ghost" href="#how">How it works</a>
     </p>
   </div>
@@ -151,7 +151,7 @@
 <section id="live">
   <div class="wrap">
     <h2>See it live</h2>
-    <p class="lead">Connect straight to a nearby AquaLink over Bluetooth — no app, right in your browser.</p>
+    <p class="lead">Connect straight to a nearby AkvaLink over Bluetooth — no app, right in your browser.</p>
     <div class="live-card">
       <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit">°C</span></div>
       <div id="bleAge" class="age"></div>
@@ -164,7 +164,7 @@
 
 <section id="why">
   <div class="wrap">
-    <h2>Why AquaLink?</h2>
+    <h2>Why AkvaLink?</h2>
     <p class="lead">For pools, spas, aquariums, wine cellars and cold storage — places where the
       temperature barely changes, but you want to know <em>immediately</em> when it does.</p>
     <div class="grid">
@@ -374,7 +374,7 @@
     btn.textContent = 'Reconnect';
   }
 
-  function isAqua(d) { return d && d.name && d.name.indexOf('AquaLink') === 0; }
+  function isAkva(d) { return d && d.name && d.name.indexOf('AkvaLink') === 0; }
 
   // Shared: open GATT, subscribe to the temperature, update the UI.
   async function attach(dev) {
@@ -400,7 +400,7 @@
     if (ageTimer) clearInterval(ageTimer);
     ageTimer = setInterval(renderAge, 1000);   // tick the "updated Ns ago" line
 
-    statusEl.textContent = 'Connected to ' + (dev.name || 'AquaLink');
+    statusEl.textContent = 'Connected to ' + (dev.name || 'AkvaLink');
     statusEl.className = 'status on';
     btn.textContent = 'Disconnect';
   }
@@ -413,7 +413,7 @@
     if (!navigator.bluetooth.getDevices) return false;
     var devs;
     try { devs = await navigator.bluetooth.getDevices(); } catch (e) { return false; }
-    var known = devs.filter(isAqua);
+    var known = devs.filter(isAkva);
     for (var i = 0; i < known.length; i++) {
       try { await attach(known[i]); return true; } catch (e) { /* out of range — try next */ }
     }
@@ -422,10 +422,10 @@
 
   // Fallback: the browser chooser (requires a user gesture / click).
   async function connectViaChooser() {
-    statusEl.textContent = 'Choose your AquaLink\u2026';
+    statusEl.textContent = 'Choose your AkvaLink\u2026';
     statusEl.className = 'status';
     var dev = await navigator.bluetooth.requestDevice({
-      filters: [{ namePrefix: 'AquaLink' }],
+      filters: [{ namePrefix: 'AkvaLink' }],
       optionalServices: [ESS_SERVICE, OTA_SERVICE]
     });
     await attach(dev);
@@ -442,7 +442,7 @@
       await connectViaChooser();          // otherwise pick it once
     } catch (err) {
       statusEl.textContent = (err && err.name === 'NotFoundError')
-        ? 'No AquaLink selected'
+        ? 'No AkvaLink selected'
         : 'Connection failed: ' + ((err && err.message) || err);
       statusEl.className = 'status';
     }
@@ -529,9 +529,9 @@
     otaStatus.textContent = '';
   });
 
-  // On load, silently try a previously-paired AquaLink — no dialog, no gesture.
+  // On load, silently try a previously-paired AkvaLink — no dialog, no gesture.
   (async function () {
-    statusEl.textContent = 'Looking for a paired AquaLink\u2026';
+    statusEl.textContent = 'Looking for a paired AkvaLink\u2026';
     if (!(await connectKnown())) {
       statusEl.textContent = 'Not connected';
       statusEl.className = 'status';

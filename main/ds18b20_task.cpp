@@ -29,7 +29,7 @@
 #include "ds18b20.h"
 #endif
 
-#if !CONFIG_AQUALINK_BLE_ONLY && !CONFIG_AQUALINK_SENSOR_TEST
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST
 #include <esp_matter.h>
 #include <esp_matter_attribute_utils.h>
 
@@ -60,7 +60,7 @@ static esp_err_t sensor_read(float *celsius)
     return ds2482_read_temperature(celsius);
 }
 
-#if CONFIG_AQUALINK_SENSOR_TEST
+#if CONFIG_AKVALINK_SENSOR_TEST
 static void sensor_print_details(void)
 {
     ESP_LOGI(TAG, "──────── DS18B20 sensor details ────────");
@@ -71,7 +71,7 @@ static void sensor_print_details(void)
     ESP_LOGI(TAG, "  Interval  : %d s (sensor test mode)", APP_SENSOR_TEST_PERIOD_MS / 1000);
     ESP_LOGI(TAG, "────────────────────────────────────────");
 }
-#endif // CONFIG_AQUALINK_SENSOR_TEST
+#endif // CONFIG_AKVALINK_SENSOR_TEST
 
 #else
 // ---- Direct GPIO path (RMT bit-bang, default) ------------------------------
@@ -131,7 +131,7 @@ static esp_err_t sensor_read(float *celsius)
     return ds18b20_get_temperature(s_dev, celsius);
 }
 
-#if CONFIG_AQUALINK_SENSOR_TEST
+#if CONFIG_AKVALINK_SENSOR_TEST
 static const char *ds_model_name(uint8_t family_code)
 {
     switch (family_code) {
@@ -172,11 +172,11 @@ static void sensor_print_details(void)
     ESP_LOGI(TAG, "  Interval  : %d s (sensor test mode)", APP_SENSOR_TEST_PERIOD_MS / 1000);
     ESP_LOGI(TAG, "────────────────────────────────────────");
 }
-#endif // CONFIG_AQUALINK_SENSOR_TEST
+#endif // CONFIG_AKVALINK_SENSOR_TEST
 
 #endif // APP_USE_DS2482
 
-#if !CONFIG_AQUALINK_BLE_ONLY && !CONFIG_AQUALINK_SENSOR_TEST
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST
 static void push_to_matter(float celsius)
 {
     if (g_temp_endpoint_id == 0) {
@@ -200,7 +200,7 @@ static void push_to_matter(float celsius)
     ESP_LOGI(TAG, "📈 Pushed MeasuredValue: %.2f °C (raw %d)", celsius, measured);
     s_last_pushed_c = celsius;
 }
-#endif  // !CONFIG_AQUALINK_BLE_ONLY
+#endif  // !CONFIG_AKVALINK_BLE_ONLY
 
 static void sample_task(void *)
 {
@@ -210,7 +210,7 @@ static void sample_task(void *)
         return;
     }
 
-#if CONFIG_AQUALINK_SENSOR_TEST
+#if CONFIG_AKVALINK_SENSOR_TEST
     // Sensor test mode: print the full sensor identity once, then log a rich
     // reading at a steady 30 s cadence. No adaptive rate, no Matter/BLE — this
     // is purely a bench heartbeat for verifying the probe.
@@ -247,8 +247,8 @@ static void sample_task(void *)
         if (sensor_read(&celsius) == ESP_OK &&
             celsius > -55.0f && celsius < 125.0f) {
             ESP_LOGD(TAG, "raw read: %.4f °C", celsius);
-#if CONFIG_AQUALINK_BLE_ONLY
-            aqualink_ble_gatt_set_temperature(celsius);
+#if CONFIG_AKVALINK_BLE_ONLY
+            akvalink_ble_gatt_set_temperature(celsius);
 #else
             push_to_matter(celsius);
 #endif
@@ -279,7 +279,7 @@ static void sample_task(void *)
 
         vTaskDelay(pdMS_TO_TICKS(sample_ms));
     }
-#endif // CONFIG_AQUALINK_SENSOR_TEST
+#endif // CONFIG_AKVALINK_SENSOR_TEST
 }
 
 void ds18b20_task_start(void)

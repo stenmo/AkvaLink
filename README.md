@@ -1,4 +1,4 @@
-# AquaLink 🏊
+# AkvaLink 🏊
 
 **Battery-powered Matter pool & aquatic temperature sensor**
 Single-SoC design on **u-blox NORA-W40** (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3)
@@ -7,7 +7,7 @@ Single-SoC design on **u-blox NORA-W40** (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3)
 
 ---
 
-## Why AquaLink?
+## Why AkvaLink?
 
 Pool, spa, aquarium, wine cellar, or cold-storage temperature monitoring —
 environments where the temperature barely changes, but you want to know
@@ -37,17 +37,17 @@ supported (`--clickboard` build flag).
 
 ```powershell
 # One-time setup (installs ESP-IDF + esp-matter in WSL, ~10 GB)
-.\launch-aqualink-wsl.cmd setup
+.\launch-akvalink-wsl.cmd setup
 
 # Build & flash (Thread variant — needs a Thread Border Router)
-.\launch-aqualink-wsl.cmd build
-.\launch-aqualink-wsl.cmd flash COM62
+.\launch-akvalink-wsl.cmd build
+.\launch-akvalink-wsl.cmd flash COM62
 
 # Or build the Wi-Fi variant (no border router needed)
-.\launch-aqualink-wsl.cmd --wifi build
+.\launch-akvalink-wsl.cmd --wifi build
 
 # Or just bench-test the DS18B20 probe (no Matter/BLE — logs temp every 30 s)
-.\launch-aqualink-wsl.cmd --sensor build
+.\launch-akvalink-wsl.cmd --sensor build
 ```
 
 Commission with the Apple Home, Google Home, or Alexa app — scan the QR code
@@ -99,7 +99,7 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 
 ## Origin & Credits
 
-AquaLink is a clean-room productisation of the
+AkvaLink is a clean-room productisation of the
 `companion/opencpu/nora-w40-thermometer/` NORA-W40 thermometer reference from
 u-blox, tracked at [u-blox/u-connectMatter](https://github.com/u-blox/u-connectMatter)
 (that public repo now hosts prebuilt reference binaries; the source tree is
@@ -114,7 +114,7 @@ Built on:
 ## Contributing & security
 
 - 🤝 [CONTRIBUTING.md](CONTRIBUTING.md) — how to build, test, and submit changes (KISS, battery-first, no cloud)
-- 🔒 [SECURITY.md](SECURITY.md) — report a vulnerability privately (AquaLink is a networked Matter device)
+- 🔒 [SECURITY.md](SECURITY.md) — report a vulnerability privately (AkvaLink is a networked Matter device)
 
 ## License
 

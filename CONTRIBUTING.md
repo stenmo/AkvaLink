@@ -1,11 +1,11 @@
-# Contributing to AquaLink
+# Contributing to AkvaLink
 
-Thanks for your interest! AquaLink is a battery-powered, single-SoC Matter
+Thanks for your interest! AkvaLink is a battery-powered, single-SoC Matter
 pool/aquatic temperature sensor on the u-blox NORA-W40 (ESP32-C6). It
 deliberately does **one thing well**, so contributions are very welcome —
 as long as they keep that focus.
 
-**Project status:** AquaLink is primarily a u-blox reference/demo design,
+**Project status:** AkvaLink is primarily a u-blox reference/demo design,
 maintained by the author. It **is open to outside pull requests** — bug
 fixes, docs, and small focused improvements especially — but the roadmap and
 scope are curated to keep the project simple. For anything large, please open
@@ -24,7 +24,7 @@ By participating you agree to abide by our
 
 ## Project philosophy (KISS)
 
-AquaLink is intentionally small. When contributing, please:
+AkvaLink is intentionally small. When contributing, please:
 
 - **Implement one thing at a time.** No bonus features or drive-by refactors
   bundled into an unrelated change.
@@ -45,11 +45,11 @@ full toolchain setup.
 
 ```powershell
 # Default (Thread, direct-GPIO DS18B20)
-.\launch-aqualink-wsl.cmd --rebuild
-.\launch-aqualink-wsl.cmd --flash --log
+.\launch-akvalink-wsl.cmd --rebuild
+.\launch-akvalink-wsl.cmd --flash --log
 
 # Wi-Fi variant
-.\launch-aqualink-wsl.cmd --wifi --rebuild
+.\launch-akvalink-wsl.cmd --wifi --rebuild
 ```
 
 Please confirm your change **builds cleanly** and, where you can, test it on
@@ -72,7 +72,7 @@ py -3 -m pytest                                 # (python3 on Linux/macOS)
 `version.txt` is the single source of truth for the version (ESP-IDF embeds it
 as the firmware `PROJECT_VER`). [scripts/release.py](scripts/release.py) runs
 the whole pipeline — preflight → pytest → bump → build → commit + tag →
-release notes → publish (GitHub release with `aqualink.bin` attached):
+release notes → publish (GitHub release with `akvalink.bin` attached):
 
 ```powershell
 py -3 scripts/release.py --bump patch --dry-run   # preview, change nothing

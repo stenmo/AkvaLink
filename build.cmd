@@ -1,6 +1,6 @@
 @echo off
 REM ========================================================================
-REM AquaLink -- build entry point (compat shim)
+REM AkvaLink -- build entry point (compat shim)
 REM ========================================================================
 REM Native-Windows esp-matter builds are NOT supported: on Windows Espressif
 REM requires WSL2 for the esp-matter toolchain (the nested connectedhomeip
@@ -15,10 +15,10 @@ REM   build.cmd build --wifi     Build the Matter-over-Wi-Fi variant
 REM   build.cmd menuconfig       idf.py menuconfig
 REM   build.cmd clean            Wipe build/ + sdkconfig
 REM
-REM Canonical launcher (more options): launch-aqualink-wsl.cmd --help
+REM Canonical launcher (more options): launch-akvalink-wsl.cmd --help
 REM ========================================================================
 
 setlocal
 set "SCRIPT_DIR=%~dp0"
-call "%SCRIPT_DIR%launch-aqualink-wsl.cmd" %*
+call "%SCRIPT_DIR%launch-akvalink-wsl.cmd" %*
 exit /b %errorlevel%

@@ -1,4 +1,4 @@
-# Getting Started with AquaLink
+# Getting Started with AkvaLink
 
 ## Prerequisites
 
@@ -13,13 +13,13 @@
 
 **If the repo is on GitHub:**
 ```powershell
-git clone https://github.com/u-blox/AquaLink.git
-cd AquaLink
+git clone https://github.com/u-blox/AkvaLink.git
+cd AkvaLink
 ```
 
 **If you only have the local copy** (current state — May 2026):
 ```powershell
-cd C:\Users\cmag\u-blox\AquaLink
+cd C:\Users\cmag\u-blox\AkvaLink
 ```
 
 Open in VS Code:
@@ -32,7 +32,7 @@ code .
 This installs ESP-IDF v5.4.1 and esp-matter release/v1.5 inside WSL:
 
 ```powershell
-.\launch-aqualink-wsl.cmd setup
+.\launch-akvalink-wsl.cmd setup
 ```
 
 The launcher will:
@@ -48,17 +48,17 @@ You only run `setup` once per machine.
 
 **Default — Matter over Thread, direct GPIO sensor:**
 ```powershell
-.\launch-aqualink-wsl.cmd build
+.\launch-akvalink-wsl.cmd build
 ```
 
 **Wi-Fi variant (no Thread Border Router needed):**
 ```powershell
-.\launch-aqualink-wsl.cmd --wifi build
+.\launch-akvalink-wsl.cmd --wifi build
 ```
 
 **DS2482 Click board variant (I2C bridge for long cable runs):**
 ```powershell
-.\launch-aqualink-wsl.cmd --clickboard build
+.\launch-akvalink-wsl.cmd --clickboard build
 ```
 
 A cold build takes 5–10 min; subsequent incremental builds are < 1 min.
@@ -77,14 +77,14 @@ Note the COM port number (e.g., `COM62`).
 ## 5. Flash and monitor
 
 ```powershell
-.\launch-aqualink-wsl.cmd flash COM62
-.\launch-aqualink-wsl.cmd monitor COM62
+.\launch-akvalink-wsl.cmd flash COM62
+.\launch-akvalink-wsl.cmd monitor COM62
 ```
 
 In the monitor output you should see:
 
 ```
-I (1234) AquaLink: 🏊 AquaLink v0.1.0 starting...
+I (1234) AkvaLink: 🏊 AkvaLink v0.1.0 starting...
 I (1416) ds2482: 1-Wire ROM: 28-0417C4A2D3FF-2A (DS18B20)
 I (1420) ds2482: Power supply: external VDD
 I (1425) ds2482: Resolution: 12-bit
@@ -109,12 +109,12 @@ or a self-hosted OTBR like the ones in the upstream `u-connectMatter/borderroute
 The repo currently has no remote. To back it up to GitHub:
 
 ```powershell
-# 1. Create an empty repo at https://github.com/new (e.g., u-blox/AquaLink)
+# 1. Create an empty repo at https://github.com/new (e.g., u-blox/AkvaLink)
 #    Do NOT initialize with README/license — we already have those.
 
 # 2. Add remote and push
-cd C:\Users\cmag\u-blox\AquaLink
-git remote add origin https://github.com/u-blox/AquaLink.git
+cd C:\Users\cmag\u-blox\AkvaLink
+git remote add origin https://github.com/u-blox/AkvaLink.git
 git push -u origin main
 ```
 

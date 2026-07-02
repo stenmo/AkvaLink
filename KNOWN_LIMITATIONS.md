@@ -1,4 +1,4 @@
-# AquaLink — Known Limitations
+# AkvaLink — Known Limitations
 
 > What doesn't work yet, what isn't measured yet, and where the rough edges
 > are. Read before opening an issue or evaluating for production.
@@ -48,7 +48,7 @@
 
 - **WSL2 only on Windows.** Native Windows build is not supported (esp-matter
   upstream limitation, not ours).
-- **`launch-aqualink-wsl.cmd flash` requires the EVK on a native Windows COM
+- **`launch-akvalink-wsl.cmd flash` requires the EVK on a native Windows COM
   port.** USB pass-through into WSL via `usbipd-win` is not used; we flash
   from Windows-side `esptool` against the WSL-built artifacts.
 - **Build artifacts live in `/mnt/c/...`** which is slower than WSL's native

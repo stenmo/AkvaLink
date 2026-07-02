@@ -24,7 +24,7 @@ if "%PORT%"=="" (
     exit /b 1
 )
 
-if not exist "%IMG_DIR%\aqualink.bin" (
+if not exist "%IMG_DIR%\akvalink.bin" (
     echo ERROR: No firmware in %IMG_DIR%.
     echo Run:  build.cmd build   (or drop the four .bin files in manually)
     exit /b 2
@@ -32,14 +32,14 @@ if not exist "%IMG_DIR%\aqualink.bin" (
 
 REM --- Choose esptool ------------------------------------------------------
 REM Use the user's system esptool.py. The canonical flasher
-REM (launch-aqualink-wsl.cmd --flash) uses the ESP-IDF-bundled esptool.
+REM (launch-akvalink-wsl.cmd --flash) uses the ESP-IDF-bundled esptool.
 set "ESPTOOL="
 where esptool.py >nul 2>&1
 if not errorlevel 1 set "ESPTOOL=esptool.py"
 if "%ESPTOOL%"=="" (
     echo ERROR: esptool not found. Install it with:
     echo   py -m pip install esptool
-    echo Or use the canonical flasher:  launch-aqualink-wsl.cmd --flash %PORT%
+    echo Or use the canonical flasher:  launch-akvalink-wsl.cmd --flash %PORT%
     exit /b 3
 )
 
@@ -55,7 +55,7 @@ echo === Flashing thermometer firmware to %PORT% ===
 "%ESPTOOL%" --chip esp32c6 --port %PORT% --baud 460800 ^
     write_flash --flash_mode dio --flash_size 4MB --flash_freq 80m ^
     0x0       "%IMG_DIR%\bootloader.bin" ^
-    0x20000   "%IMG_DIR%\aqualink.bin" ^
+    0x20000   "%IMG_DIR%\akvalink.bin" ^
     0x8000    "%IMG_DIR%\partition-table.bin" ^
     0xf000    "%IMG_DIR%\ota_data_initial.bin"
 if errorlevel 1 exit /b 5
@@ -69,5 +69,5 @@ exit /b 0
 :monitor
 REM Defer to the canonical launcher's serial monitor (needs the IDF env).
 echo.
-echo Use:  launch-aqualink-wsl.cmd --log %PORT%
+echo Use:  launch-akvalink-wsl.cmd --log %PORT%
 exit /b 0

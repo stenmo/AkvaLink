@@ -319,14 +319,14 @@ Average current depends on report frequency:
 
 ```powershell
 :: First time only — install ESP-IDF v5.4.1 + esp-matter v1.5 in WSL (~10 GB).
-.\launch-aqualink-wsl.cmd setup
+.\launch-akvalink-wsl.cmd setup
 
 :: Build the firmware (≈ 5–10 min cold, < 1 min warm).
-.\launch-aqualink-wsl.cmd build
+.\launch-akvalink-wsl.cmd build
 
 :: Flash and watch the boot log.
-.\launch-aqualink-wsl.cmd --flash COM5
-.\launch-aqualink-wsl.cmd --log COM5
+.\launch-akvalink-wsl.cmd --flash COM5
+.\launch-akvalink-wsl.cmd --log COM5
 ```
 
 Linux / macOS — substitute `.sh` and `/dev/ttyUSB0`.
