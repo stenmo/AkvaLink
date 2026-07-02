@@ -226,13 +226,20 @@ if "%DO_FLASH%"=="1" (
         echo         Pass an explicit port: --flash COM62
         exit /b 3
     )
-    set "BLD=%DEV_DIR%\build"
+    REM Each variant builds into its own dir (build\<variant>) — pick the one
+    REM matching the flags so --flash grabs the right binaries without a rebuild.
+    set "VSLUG=thread"
+    if "!DO_WIFI!"=="1"   set "VSLUG=wifi"
+    if "!DO_BLE!"=="1"    set "VSLUG=ble"
+    if "!DO_SENSOR!"=="1" set "VSLUG=sensor"
+    if "!DO_CLICKBOARD!"=="1" set "VSLUG=!VSLUG!-ds2482"
+    set "BLD=%DEV_DIR%\build\!VSLUG!"
     if not exist "!BLD!\akvalink.bin" (
         echo [ERROR] No firmware to flash. Run with --build first.
         echo         Looked at: !BLD!\akvalink.bin
         exit /b 4
     )
-    echo === --flash: 4 partitions to !PORT_FLASH! ===
+    echo === --flash: 4 partitions ^(!VSLUG!^) to !PORT_FLASH! ===
     pushd "!BLD!" >nul
     py -m esptool --chip esp32c6 -p !PORT_FLASH! -b 460800 ^
         --before default-reset --after hard-reset ^

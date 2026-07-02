@@ -205,6 +205,14 @@ def main(argv: list[str] | None = None) -> int:
                    help="firmware variant to build + name the image (default: thread)")
     args = p.parse_args(argv)
 
+    # Each variant now builds into its own dir (build/<variant>) — point the
+    # merge/flash lookups at the one we're releasing. (Module globals so the
+    # unit tests can still monkeypatch them.)
+    global BUILD_DIR, FIRMWARE_BIN, FLASHER_ARGS
+    BUILD_DIR = REPO_ROOT / "build" / args.variant
+    FIRMWARE_BIN = BUILD_DIR / "akvalink.bin"
+    FLASHER_ARGS = BUILD_DIR / "flasher_args.json"
+
     current = VERSION_FILE.read_text(encoding="utf-8").strip()
     parse_version(current)  # validate
     new_version = args.set_version.strip() if args.set_version else bump_version(current, args.bump)

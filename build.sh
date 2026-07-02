@@ -80,6 +80,42 @@ activate_env() {
     export IDF_CCACHE_ENABLE=1
 }
 
+# Map build sub-options → a variant slug + its sdkconfig defaults, so each
+# variant lives in its OWN build directory (build/<variant>) with its OWN
+# sdkconfig (build/<variant>/sdkconfig). That isolation is what lets you switch
+# variants without a full reconfigure/rebuild — each keeps its own ccache.
+# Sets: VARIANT, SDKCFG, CMAKE_EXTRA, BUILD_DIR, NO_MATTER, BLE_ONLY.
+resolve_variant() {
+    local wifi=0 ble=0 sensor=0 clickboard=0 arg
+    for arg in "$@"; do
+        case "$arg" in
+            --wifi)       wifi=1 ;;
+            --ble)        ble=1 ;;
+            --sensor)     sensor=1 ;;
+            --clickboard) clickboard=1 ;;
+            *) echo "Unknown build option: $arg" >&2; exit 1 ;;
+        esac
+    done
+    if [ "$ble" -eq 1 ]; then
+        VARIANT="ble";    SDKCFG="sdkconfig.defaults;sdkconfig.defaults.ble"
+    elif [ "$sensor" -eq 1 ]; then
+        VARIANT="sensor"; SDKCFG="sdkconfig.defaults;sdkconfig.defaults.sensor"
+    elif [ "$wifi" -eq 1 ]; then
+        VARIANT="wifi";   SDKCFG="sdkconfig.defaults;sdkconfig.defaults.wifi"
+    else
+        VARIANT="thread"; SDKCFG="sdkconfig.defaults"
+    fi
+    CMAKE_EXTRA=""
+    if [ "$clickboard" -eq 1 ]; then
+        CMAKE_EXTRA="-DAPP_USE_DS2482=1"
+        VARIANT="${VARIANT}-ds2482"
+    fi
+    NO_MATTER=0; BLE_ONLY=0
+    [ "$ble" -eq 1 ] && { NO_MATTER=1; BLE_ONLY=1; }
+    [ "$sensor" -eq 1 ] && NO_MATTER=1
+    BUILD_DIR="build/${VARIANT}"
+}
+
 case "$cmd" in
     setup)
         setup_one_time
@@ -88,75 +124,59 @@ case "$cmd" in
     build)
         activate_env
         cd "${SCRIPT_DIR}"
-        # Parse build sub-options (--wifi, --clickboard, combinable)
-        build_wifi=0
-        build_ble=0
-        build_sensor=0
-        build_clickboard=0
-        for arg in "${@:2}"; do
-            case "$arg" in
-                --wifi)        build_wifi=1 ;;
-                --ble)         build_ble=1 ;;
-                --sensor)      build_sensor=1 ;;
-                --clickboard)  build_clickboard=1 ;;
-                *) echo "Unknown build option: $arg"; exit 1 ;;
-            esac
-        done
+        resolve_variant "${@:2}"
 
-        cmake_extra=""
-        if [ "$build_clickboard" -eq 1 ]; then
-            cmake_extra="-DAPP_USE_DS2482=1"
+        if [ -n "$CMAKE_EXTRA" ]; then
             echo "=== Sensor: DS2482 Click board (I2C-to-1-Wire on MikroBUS 1) ==="
         else
             echo "=== Sensor: direct 1-Wire GPIO15 (RMT bit-bang) ==="
         fi
+        case "$VARIANT" in
+            ble*)    echo "=== Network: BLE-only (standalone NimBLE GATT, no Matter) ===" ;;
+            sensor*) echo "=== Sensor-only test: read the sensor, no Matter/BLE ===" ;;
+            wifi*)   echo "=== Network: Matter-over-Wi-Fi ===" ;;
+            *)       echo "=== Network: Matter-over-Thread (SED) — battery target ===" ;;
+        esac
+        [ "$NO_MATTER" -eq 1 ] && export AKVALINK_NO_MATTER=1
+        [ "$BLE_ONLY" -eq 1 ]  && export AKVALINK_BLE=1
 
-        if [ "$build_ble" -eq 1 ]; then
-            echo "=== Network: BLE-only (standalone NimBLE GATT, no Matter) ==="
-            export AKVALINK_NO_MATTER=1
-            export AKVALINK_BLE=1
-            idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.ble" reconfigure
-        elif [ "$build_sensor" -eq 1 ]; then
-            echo "=== Sensor-only test: read the sensor, no Matter/BLE ==="
-            export AKVALINK_NO_MATTER=1
-            idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.sensor" reconfigure
-        elif [ "$build_wifi" -eq 1 ]; then
-            echo "=== Network: Matter-over-Wi-Fi ==="
-            idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.wifi" reconfigure
-        else
-            echo "=== Network: Matter-over-Thread (SED) — battery target ==="
-            idf.py $cmake_extra reconfigure
-        fi
-        idf.py build
-        mkdir -p images
-        cp -f build/bootloader/bootloader.bin           images/bootloader.bin
-        cp -f build/partition_table/partition-table.bin images/partition-table.bin
-        cp -f build/ota_data_initial.bin                images/ota_data_initial.bin
-        cp -f build/akvalink.bin                         images/akvalink.bin
+        echo "=== Build dir: ${BUILD_DIR} (isolated — no rebuild when switching variants) ==="
+        idf.py -B "${BUILD_DIR}" -D SDKCONFIG="${BUILD_DIR}/sdkconfig" \
+            -D SDKCONFIG_DEFAULTS="${SDKCFG}" $CMAKE_EXTRA reconfigure
+        idf.py -B "${BUILD_DIR}" -D SDKCONFIG="${BUILD_DIR}/sdkconfig" build
+
+        mkdir -p "images/${VARIANT}"
+        cp -f "${BUILD_DIR}/bootloader/bootloader.bin"           "images/${VARIANT}/bootloader.bin"
+        cp -f "${BUILD_DIR}/partition_table/partition-table.bin" "images/${VARIANT}/partition-table.bin"
+        cp -f "${BUILD_DIR}/ota_data_initial.bin"                "images/${VARIANT}/ota_data_initial.bin"
+        cp -f "${BUILD_DIR}/akvalink.bin"                         "images/${VARIANT}/akvalink.bin"
         echo
-        echo "=== Build complete. Images in images/ ==="
+        echo "=== Build complete. Images in images/${VARIANT}/ ==="
         ;;
 
     menuconfig)
         activate_env
         cd "${SCRIPT_DIR}"
-        idf.py menuconfig
+        resolve_variant "${@:2}"
+        idf.py -B "${BUILD_DIR}" -D SDKCONFIG="${BUILD_DIR}/sdkconfig" menuconfig
         ;;
 
     flash)
         activate_env
         cd "${SCRIPT_DIR}"
         port="${2:-}"
-        [ -n "$port" ] || { echo "Usage: $0 flash <PORT>  (e.g. /dev/ttyUSB0)"; exit 1; }
-        idf.py -p "$port" flash
+        [ -n "$port" ] || { echo "Usage: $0 flash <PORT> [--wifi|--ble|--sensor] [--clickboard]"; exit 1; }
+        resolve_variant "${@:3}"
+        idf.py -B "${BUILD_DIR}" -D SDKCONFIG="${BUILD_DIR}/sdkconfig" -p "$port" flash
         ;;
 
     monitor)
         activate_env
         cd "${SCRIPT_DIR}"
         port="${2:-}"
-        [ -n "$port" ] || { echo "Usage: $0 monitor <PORT>"; exit 1; }
-        idf.py -p "$port" monitor
+        [ -n "$port" ] || { echo "Usage: $0 monitor <PORT> [--wifi|--ble|--sensor]"; exit 1; }
+        resolve_variant "${@:3}"
+        idf.py -B "${BUILD_DIR}" -p "$port" monitor
         ;;
 
     clean)
@@ -172,12 +192,18 @@ Commands:
   setup                     One-time install of ESP-IDF v5.4.1 + esp-matter v1.5
   build                     Build firmware (default = Thread SED, battery)
   build --wifi              Build the Matter-over-Wi-Fi variant
+  build --ble               Build the standalone BLE GATT variant (no Matter)
+  build --sensor            Build the sensor read test (no Matter/BLE)
   build --clickboard        Build with DS2482 I2C-to-1-Wire Click board (MikroBUS 1)
   build --clickboard --wifi Combine both options
-  menuconfig                Open idf.py menuconfig
-  flash    <PORT>           Flash to NORA-W40 EVK (e.g. /dev/ttyUSB0)
-  monitor  <PORT>           idf.py monitor
+  menuconfig [--wifi|...]   Open idf.py menuconfig for a variant
+  flash    <PORT> [--wifi]  Flash a variant to NORA-W40 EVK (e.g. /dev/ttyUSB0)
+  monitor  <PORT> [--wifi]  idf.py monitor a variant
   clean                     Wipe build/ and sdkconfig
+
+Each variant builds into its OWN directory (build/thread, build/wifi, build/ble,
+build/sensor, +'-ds2482' for the Click board) with its own sdkconfig, so you can
+switch variants without a reconfigure or rebuild.
 
 Paths:
   IDF_PATH         = ${IDF_PATH}

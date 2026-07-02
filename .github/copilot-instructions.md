@@ -68,6 +68,31 @@ Build runs in **WSL Ubuntu-24.04**, sourcing:
 - ESP-IDF v5.4.1 from `~/esp/esp-idf`
 - esp-matter release/v1.5 from `~/esp/esp-matter`
 
+**Per-variant build dirs:** each variant builds into its own isolated directory
+with its own sdkconfig — `build/thread`, `build/wifi`, `build/ble`,
+`build/sensor` (plus a `-ds2482` suffix for the Click board). Switching variants
+therefore needs **no** reconfigure or rebuild; each keeps its own ccache.
+`--flash` picks the directory matching the flags. `clean` wipes all of `build/`.
+
+## Releasing
+
+Two scripts, clean split — `release.py` *prepares*, `publish.py` *ships*:
+
+```powershell
+# 1. Prepare: test, bump version.txt, commit + tag (no push/publish yet)
+py -3 scripts/release.py --bump patch --no-publish
+
+# 2. Ship: build all 3 variants → merged 0x0 images in dist/, push tag,
+#    create the GitHub release and upload the assets (thread, wifi, ble)
+py -3 scripts/publish.py
+```
+
+- `publish.py` needs **no `gh` CLI** — it uses the GitHub REST API with the
+  token Git Credential Manager already holds (override via `GITHUB_TOKEN`).
+- Each release asset is a single image flashable with
+  `esptool --chip esp32c6 write-flash 0x0 akvalink-<variant>-v<ver>.bin`.
+- `dist/` is git-ignored; regenerate it any time with `publish.py`.
+
 ## Power optimisation rules
 
 This is a **battery-powered product**. Every line of code should respect that.
