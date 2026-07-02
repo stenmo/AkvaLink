@@ -5,6 +5,9 @@ Single-SoC design on **u-blox NORA-W40** (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3)
 
 > Multi-year battery life. Local Matter. No cloud, ever.
 
+**🌐 Live demo & landing page: [stenmo.github.io/AkvaLink](https://stenmo.github.io/AkvaLink/)**
+(available in [English](https://stenmo.github.io/AkvaLink/) · [Svenska](https://stenmo.github.io/AkvaLink/index.sv.html) — connect to a nearby sensor live over Bluetooth, right in your browser)
+
 ---
 
 ## Why AkvaLink?
