@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AkvaLink — batteridrivad Matter-sensor för pool och vatten</title>
-<meta name="description" content="AkvaLink är en batteridrivad Matter-temperatursensor på u-blox NORA-W40 (ESP32-C6). Flera års batteritid. Lokal Matter via Thread eller Wi-Fi. Ingen molntjänst, aldrig." />
+<title>AkvaLink — batteridriven Matter-sensor för pool och vatten</title>
+<meta name="description" content="AkvaLink är en batteridriven Matter-temperatursensor på u-blox NORA-W40 (ESP32-C6). Flera års batteritid. Lokal Matter via Thread eller Wi-Fi. Ingen molntjänst, aldrig." />
 <style>
   :root {
     --deep: #033f63;
@@ -138,6 +138,12 @@
     border-radius: 999px; font-weight: 600; font-size: .9rem; }
   .dl-card:hover .dl-btn { background: var(--deep); }
 
+  /* Wiring schematic */
+  .schematic { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 8px; margin-top: 16px; }
+  .schematic svg { width: 100%; height: auto; max-width: 560px; display: block; margin: 0 auto; }
+  .schematic .cap { text-align: center; color: var(--muted); font-size: .95rem; margin: 10px 0 4px; }
+  .schematic .cap strong { color: var(--deep); }
+
   footer { background: var(--deep); color: #cfe6ee; padding: 40px 0; font-size: .92rem; }
   footer a { color: #fff; }
   footer .muted { opacity: .7; }
@@ -157,9 +163,9 @@
   </div>
   <div class="wrap">
     <h1 class="logo">AkvaLink <span class="drop">🏊 🌊</span></h1>
-    <p class="tagline">Batteridrivad Matter-temperatursensor för pool och vatten</p>
-    <p class="subtag">Single-SoC på u-blox NORA-W40 (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3).<br />
-      Flera års batteritid · Lokal Matter · <strong>Ingen molntjänst, aldrig.</strong></p>
+    <p class="tagline">Batteridriven Matter-temperatursensor för pool och vatten</p>
+    <p class="subtag">Single-SoC baserad på u-blox NORA-W40 (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3).<br />
+      Batteritid på flera år · Lokal Matter-kommunikation · <strong>Ingen molnanslutning, någonsin.</strong></p>
     <p class="cta">
       <a class="primary" href="https://github.com/stenmo/AkvaLink">Visa på GitHub</a>
       <a class="ghost" href="#download">Ladda ner firmware</a>
@@ -222,7 +228,40 @@
         </tbody>
       </table>
     </div>
-    <p class="lead" style="margin-top:16px"><strong>Kopplingsschema:</strong> GPIO15 → DS18B20 DQ, 4,7 kΩ pull-up till +3V3. Det är allt.</p>
+    <div class="schematic">
+      <svg viewBox="0 0 620 230" role="img"
+           aria-label="Koppling: NORA-W40 GPIO15 till DS18B20 DQ, med en 4,7 kohm pull-up från DQ till 3V3, samt gemensam 3V3 och GND."
+           xmlns="http://www.w3.org/2000/svg">
+        <line x1="200" y1="70"  x2="420" y2="70"  stroke="#e05a5a" stroke-width="3" />
+        <line x1="200" y1="130" x2="420" y2="130" stroke="#0aa2c0" stroke-width="3" />
+        <line x1="200" y1="175" x2="420" y2="175" stroke="#16323f" stroke-width="3" />
+        <line x1="310" y1="130" x2="310" y2="112" stroke="#0aa2c0" stroke-width="3" />
+        <polyline points="310,112 299,107 321,99 299,91 321,83 310,78" fill="none" stroke="#5b7280" stroke-width="3" stroke-linejoin="round" />
+        <line x1="310" y1="78" x2="310" y2="70" stroke="#e05a5a" stroke-width="3" />
+        <circle cx="310" cy="70"  r="4.5" fill="#e05a5a" />
+        <circle cx="310" cy="130" r="4.5" fill="#0aa2c0" />
+        <text x="332" y="99" font-size="13" font-weight="700" fill="#033f63">4,7 kΩ</text>
+        <rect x="40" y="35" width="160" height="170" rx="16" fill="#ffffff" stroke="#d9e6ec" stroke-width="2" />
+        <text x="120" y="26" text-anchor="middle" font-size="14" font-weight="700" fill="#033f63">NORA-W40</text>
+        <text x="120" y="126" text-anchor="middle" font-size="12" fill="#5b7280">ESP32-C6</text>
+        <circle cx="200" cy="70"  r="4.5" fill="#e05a5a" />
+        <text x="192" y="74"  text-anchor="end" font-size="12" fill="#16323f">3V3</text>
+        <circle cx="200" cy="130" r="4.5" fill="#0aa2c0" />
+        <text x="192" y="134" text-anchor="end" font-size="12" fill="#16323f">GPIO15</text>
+        <circle cx="200" cy="175" r="4.5" fill="#16323f" />
+        <text x="192" y="179" text-anchor="end" font-size="12" fill="#16323f">GND</text>
+        <rect x="420" y="35" width="160" height="170" rx="16" fill="#ffffff" stroke="#d9e6ec" stroke-width="2" />
+        <text x="500" y="26" text-anchor="middle" font-size="14" font-weight="700" fill="#033f63">DS18B20</text>
+        <text x="500" y="126" text-anchor="middle" font-size="11" fill="#5b7280">one wire sensor</text>
+        <circle cx="420" cy="70"  r="4.5" fill="#e05a5a" />
+        <text x="428" y="74"  font-size="12" fill="#16323f">VDD</text>
+        <circle cx="420" cy="130" r="4.5" fill="#0aa2c0" />
+        <text x="428" y="134" font-size="12" fill="#16323f">DQ</text>
+        <circle cx="420" cy="175" r="4.5" fill="#16323f" />
+        <text x="428" y="179" font-size="12" fill="#16323f">GND</text>
+      </svg>
+      <p class="cap"><strong>Det är hela kopplingsschemat.</strong> GPIO15 → DQ, ett 4,7 kΩ pull-up till +3V3 — inget annat.</p>
+    </div>
     <div class="live-card ota-card" id="otaCard">
       <h3 class="ota-title">Firmware-uppdatering via Bluetooth</h3>
       <p class="ota-hint">Ett klick — sidan hämtar senaste firmware och flashar den via BLE (Chrome/Edge).</p>
@@ -378,7 +417,6 @@
 
   var device = null;
   var tempChar = null;
-  var pollTimer = null;
   var ageTimer = null;
   var lastUpdate = 0;
 
@@ -399,17 +437,7 @@
     setTemp(event.target.value.getInt16(0, true) / 100);   // little-endian sint16
   }
 
-  // Keep-alive: läs värdet på en timer så displayen hålls uppdaterad även om
-  // enheten rapporterar glest eller plattformen inte levererar notifikationer pålitligt.
-  async function pollTemp() {
-    if (!tempChar || !device || !device.gatt.connected) return;
-    try { setTemp((await tempChar.readValue()).getInt16(0, true) / 100); } catch (e) { /* ignorera */ }
-  }
-
-  function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
-
   function onDisconnected() {
-    stopPolling();
     if (ageTimer) { clearInterval(ageTimer); ageTimer = null; }
     lastUpdate = 0;
     ageEl.textContent = '';
@@ -436,14 +464,11 @@
     var ch = await service.getCharacteristic(TEMP_CHAR);
 
     setTemp((await ch.readValue()).getInt16(0, true) / 100);
-    try {
-      await ch.startNotifications();
-      ch.addEventListener('characteristicvaluechanged', onTemp);
-    } catch (e) { /* notifikationer stöds ej — pollningen nedan håller det live */ }
+    // Händelsestyrt: enheten notifierar vid varje nytt värde — ingen pollning.
+    await ch.startNotifications();
+    ch.addEventListener('characteristicvaluechanged', onTemp);
 
     tempChar = ch;
-    stopPolling();
-    pollTimer = setInterval(pollTemp, 3000);   // håll avläsningen färsk (~3 s)
     if (ageTimer) clearInterval(ageTimer);
     ageTimer = setInterval(renderAge, 1000);   // ticka "uppdaterad för Ns sedan"
 
