@@ -60,11 +60,25 @@ static esp_err_t sensor_read(float *celsius)
     return ds2482_read_temperature(celsius);
 }
 
+#if CONFIG_AQUALINK_SENSOR_TEST
+static void sensor_print_details(void)
+{
+    ESP_LOGI(TAG, "──────── DS18B20 sensor details ────────");
+    ESP_LOGI(TAG, "  Interface : DS2482-800 I2C→1-Wire @ 0x%02X ch%d (SDA=%d SCL=%d)",
+             APP_DS2482_ADDR, APP_DS2482_CHANNEL, APP_DS2482_SDA, APP_DS2482_SCL);
+    ESP_LOGI(TAG, "  ROM ID    : (not exposed by the DS2482 driver)");
+    ESP_LOGI(TAG, "  Resolution: 12-bit · 0.0625 °C/LSB · ~750 ms conversion");
+    ESP_LOGI(TAG, "  Interval  : %d s (sensor test mode)", APP_SENSOR_TEST_PERIOD_MS / 1000);
+    ESP_LOGI(TAG, "────────────────────────────────────────");
+}
+#endif // CONFIG_AQUALINK_SENSOR_TEST
+
 #else
 // ---- Direct GPIO path (RMT bit-bang, default) ------------------------------
 
 static onewire_bus_handle_t    s_bus = nullptr;
 static ds18b20_device_handle_t s_dev = nullptr;
+static uint64_t                s_rom_addr = 0;
 
 static esp_err_t sensor_init(void)
 {
@@ -87,6 +101,7 @@ static esp_err_t sensor_init(void)
     while (onewire_device_iter_get_next(iter, &dev) == ESP_OK) {
         ds18b20_config_t ds_cfg = {};
         if (ds18b20_new_device(&dev, &ds_cfg, &s_dev) == ESP_OK) {
+            s_rom_addr = dev.address;
             ESP_LOGI(TAG, "Found DS18B20 ROM=0x%016llX", dev.address);
             found++;
             break;
@@ -114,6 +129,49 @@ static esp_err_t sensor_read(float *celsius)
     vTaskDelay(pdMS_TO_TICKS(800));
     return ds18b20_get_temperature(s_dev, celsius);
 }
+
+#if CONFIG_AQUALINK_SENSOR_TEST
+static const char *ds_model_name(uint8_t family_code)
+{
+    switch (family_code) {
+    case 0x28: return "DS18B20";
+    case 0x22: return "DS1822";
+    case 0x3B: return "MAX31820 / DS1825";
+    case 0x10: return "DS18S20 / DS1820";
+    default:   return "unknown 1-Wire temp sensor";
+    }
+}
+
+// Read Power Supply (0xB4): a parasitically-powered device holds the bus low
+// (reads 0) during the following time slot; an externally-powered one lets it
+// float high (reads 1).
+static const char *sensor_power_mode(void)
+{
+    if (!s_bus || onewire_bus_reset(s_bus) != ESP_OK) return "unknown";
+    uint8_t cmd[2] = { 0xCC /*Skip ROM*/, 0xB4 /*Read Power Supply*/ };
+    if (onewire_bus_write_bytes(s_bus, cmd, sizeof(cmd)) != ESP_OK) return "unknown";
+    uint8_t bit = 1;
+    if (onewire_bus_read_bit(s_bus, &bit) != ESP_OK) return "unknown";
+    return bit ? "external (VDD)" : "parasitic";
+}
+
+static void sensor_print_details(void)
+{
+    uint8_t  family = (uint8_t)(s_rom_addr & 0xFF);
+    uint8_t  crc    = (uint8_t)((s_rom_addr >> 56) & 0xFF);
+    uint64_t serial = (s_rom_addr >> 8) & 0xFFFFFFFFFFFFULL;
+
+    ESP_LOGI(TAG, "──────── DS18B20 sensor details ────────");
+    ESP_LOGI(TAG, "  Interface : direct 1-Wire GPIO%d (RMT bit-bang)", APP_DS18B20_GPIO);
+    ESP_LOGI(TAG, "  Model     : %s (family 0x%02X)", ds_model_name(family), family);
+    ESP_LOGI(TAG, "  ROM ID    : 0x%016llX", s_rom_addr);
+    ESP_LOGI(TAG, "  Serial    : 0x%012llX   ROM CRC 0x%02X", serial, crc);
+    ESP_LOGI(TAG, "  Power     : %s", sensor_power_mode());
+    ESP_LOGI(TAG, "  Resolution: 12-bit · 0.0625 °C/LSB · ~750 ms conversion");
+    ESP_LOGI(TAG, "  Interval  : %d s (sensor test mode)", APP_SENSOR_TEST_PERIOD_MS / 1000);
+    ESP_LOGI(TAG, "────────────────────────────────────────");
+}
+#endif // CONFIG_AQUALINK_SENSOR_TEST
 
 #endif // APP_USE_DS2482
 
@@ -149,6 +207,31 @@ static void sample_task(void *)
         return;
     }
 
+#if CONFIG_AQUALINK_SENSOR_TEST
+    // Sensor test mode: print the full sensor identity once, then log a rich
+    // reading at a steady 30 s cadence. No adaptive rate, no Matter/BLE — this
+    // is purely a bench heartbeat for verifying the probe.
+    sensor_print_details();
+
+    float prev_celsius = NAN;
+    while (true) {
+        float celsius = NAN;
+        if (sensor_read(&celsius) == ESP_OK &&
+            celsius > -55.0f && celsius < 125.0f) {
+            float fahrenheit = celsius * 9.0f / 5.0f + 32.0f;
+            if (isnanf(prev_celsius)) {
+                ESP_LOGI(TAG, "🌡 %.4f °C  (%.2f °F)", celsius, fahrenheit);
+            } else {
+                ESP_LOGI(TAG, "🌡 %.4f °C  (%.2f °F)  Δ%+.4f °C since last",
+                         celsius, fahrenheit, celsius - prev_celsius);
+            }
+            prev_celsius = celsius;
+        } else {
+            ESP_LOGW(TAG, "Sensor read failed or out of range — skipping");
+        }
+        vTaskDelay(pdMS_TO_TICKS(APP_SENSOR_TEST_PERIOD_MS));
+    }
+#else
     float prev_celsius = NAN;
     int stable_count = APP_FAST_COUNT;  // start in slow mode
     uint32_t sample_ms = APP_SAMPLE_PERIOD_SLOW_MS;
@@ -161,9 +244,7 @@ static void sample_task(void *)
         if (sensor_read(&celsius) == ESP_OK &&
             celsius > -55.0f && celsius < 125.0f) {
             ESP_LOGD(TAG, "raw read: %.4f °C", celsius);
-#if CONFIG_AQUALINK_SENSOR_TEST
-            ESP_LOGI(TAG, "🌡 DS18B20: %.2f °C", celsius);
-#elif CONFIG_AQUALINK_BLE_ONLY
+#if CONFIG_AQUALINK_BLE_ONLY
             aqualink_ble_gatt_set_temperature(celsius);
 #else
             push_to_matter(celsius);
@@ -195,6 +276,7 @@ static void sample_task(void *)
 
         vTaskDelay(pdMS_TO_TICKS(sample_ms));
     }
+#endif // CONFIG_AQUALINK_SENSOR_TEST
 }
 
 void ds18b20_task_start(void)

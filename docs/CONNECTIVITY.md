@@ -99,7 +99,12 @@ within multi-year on 2× AA, similar envelope to Thread SED.
 
 We don't write one for v1. The expectation is:
 
-- **nRF Connect** (free) reads everything raw — fine for demo and debug.
+- **u-connectXplorer** (u-blox's own BLE app, iOS + Android) — reads the
+  GATT services and notifications raw. First choice for the demo: it's a
+  u-blox app talking to a u-blox module, so it keeps the whole showcase
+  in-ecosystem.
+- **nRF Connect** (free, iOS + Android) — equivalent raw BLE explorer, handy
+  as a cross-check / for engineers who already have it.
 - **A tiny PWA / web-Bluetooth page** served from the AquaLink GitHub Pages
   (or the device's own Wi-Fi AP in mode 4) — opens in any browser, talks
   GATT directly, no install.

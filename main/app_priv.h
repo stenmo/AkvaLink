@@ -39,6 +39,10 @@ extern "C" {
 #define APP_FAST_COUNT              5         // stable reads before slowing down
 #define APP_REPORT_THRESHOLD_C      0.25f     // °C — report gate (4× the 12-bit 0.0625 °C LSB); power lever, tune vs PPK2
 
+// --sensor-only test build: fixed cadence, no adaptive logic — just a steady
+// heartbeat with full sensor detail for bench verification of the probe.
+#define APP_SENSOR_TEST_PERIOD_MS   30000     // 30 s
+
 // Endpoint id of the Matter Temperature Sensor (assigned in app_main.cpp).
 extern uint16_t g_temp_endpoint_id;
 

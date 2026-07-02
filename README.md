@@ -45,6 +45,9 @@ supported (`--clickboard` build flag).
 
 # Or build the Wi-Fi variant (no border router needed)
 .\launch-aqualink-wsl.cmd --wifi build
+
+# Or just bench-test the DS18B20 probe (no Matter/BLE — logs temp every 30 s)
+.\launch-aqualink-wsl.cmd --sensor-only build
 ```
 
 Commission with the Apple Home, Google Home, or Alexa app — scan the QR code
