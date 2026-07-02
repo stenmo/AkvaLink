@@ -120,3 +120,12 @@ def test_lang_attribute_matches_file():
 def test_no_old_project_name(path):
     # Regression guard: the pre-rename "AquaLink" spelling must never come back.
     assert "AquaLink" not in path.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("path", [EN, SV], ids=["en", "sv"])
+def test_ios_bluefy_fallback(path):
+    # iOS has no Web Bluetooth — both pages must point iPhone users at Apple
+    # Home (Matter) and the Bluefy browser instead of a dead "use Chrome" note.
+    text = path.read_text(encoding="utf-8")
+    assert "apps.apple.com/app/bluefy-web-ble-browser/id1492822055" in text
+    assert "Apple Home" in text

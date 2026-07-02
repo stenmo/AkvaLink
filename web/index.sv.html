@@ -410,8 +410,17 @@
   if (!supported) {
     btn.style.display = 'none';
     if (otaCard) otaCard.style.display = 'none';
-    statusEl.textContent = 'Bluetooth är inte tillgängligt i den här webbläsaren';
-    noteEl.textContent = 'Öppna sidan i Chrome eller Edge (dator eller Android) för att ansluta live via Bluetooth.';
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS) {
+      statusEl.textContent = 'På iPhone/iPad: använd Apple Home eller Bluefy';
+      noteEl.innerHTML = 'Web Bluetooth finns inte i Safari eller Chrome på iOS. ' +
+        'Lägg till AkvaLink i <strong>Apple Home</strong> via Matter (ingen app behövs) — eller, för direkt BLE, ' +
+        'öppna sidan i den kostnadsfria webbläsaren <a href="https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055" target="_blank" rel="noopener">Bluefy</a>.';
+    } else {
+      statusEl.textContent = 'Bluetooth är inte tillgängligt i den här webbläsaren';
+      noteEl.textContent = 'Öppna sidan i Chrome eller Edge (dator eller Android) för att ansluta live via Bluetooth.';
+    }
     return;
   }
 
