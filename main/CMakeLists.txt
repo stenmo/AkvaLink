@@ -13,27 +13,29 @@ if(APP_USE_DS2482)
 endif()
 
 # Standalone BLE-only variant (no Matter): NimBLE GATT server.
-# Activated by CONFIG_AQUALINK_BLE_ONLY (launcher: --ble-only).
-if(CONFIG_AQUALINK_BLE_ONLY)
+# Gated on the AQUALINK_BLE *environment* var (build.sh --ble-only), NOT a
+# CONFIG_ value nor a -D cache var: component SRCS/REQUIRES are expanded before
+# Kconfig loads, and -D cache vars aren't visible during that expansion.
+if(DEFINED ENV{AQUALINK_BLE})
     list(APPEND SRCS "ble_gatt.cpp")
+endif()
+
+# The --ble-only / --sensor-only variants drop the whole Matter stack (with no
+# Thread/Wi-Fi transport esp-matter's NetworkCommissioning static_assert fails).
+# Gate on env vars for the same expansion-timing reason as above.
+set(AQ_PRIV_REQ nvs_flash driver esp_timer
+    espressif__ds18b20 espressif__onewire_bus)
+if(DEFINED ENV{AQUALINK_BLE})
+    list(APPEND AQ_PRIV_REQ bt esp_app_format)
+elseif(NOT DEFINED ENV{AQUALINK_NO_MATTER})
+    list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)
 endif()
 
 idf_component_register(
     SRCS ${SRCS}
     INCLUDE_DIRS
         "."
-    PRIV_REQUIRES
-        nvs_flash
-        driver
-        esp_timer
-        esp_matter
-        esp_matter_console
-        chip
-        bt
-        openthread
-        mbedtls
-        espressif__ds18b20
-        espressif__onewire_bus
+    PRIV_REQUIRES ${AQ_PRIV_REQ}
 )
 
 if(APP_USE_DS2482)

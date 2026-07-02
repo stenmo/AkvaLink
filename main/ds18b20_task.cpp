@@ -29,11 +29,13 @@
 #include "ds18b20.h"
 #endif
 
+#if !CONFIG_AQUALINK_BLE_ONLY && !CONFIG_AQUALINK_SENSOR_TEST
 #include <esp_matter.h>
 #include <esp_matter_attribute_utils.h>
 
 using namespace esp_matter;
 using namespace chip::app::Clusters;
+#endif
 
 static const char * TAG = "ds18b20";
 
@@ -115,7 +117,8 @@ static esp_err_t sensor_read(float *celsius)
 
 #endif // APP_USE_DS2482
 
-static void __attribute__((unused)) push_to_matter(float celsius)
+#if !CONFIG_AQUALINK_BLE_ONLY && !CONFIG_AQUALINK_SENSOR_TEST
+static void push_to_matter(float celsius)
 {
     if (g_temp_endpoint_id == 0) {
         return;                                 // Matter not yet up
@@ -136,6 +139,7 @@ static void __attribute__((unused)) push_to_matter(float celsius)
     ESP_LOGI(TAG, "📈 Pushed MeasuredValue: %.2f °C (raw %d)", celsius, measured);
     s_last_pushed_c = celsius;
 }
+#endif  // !CONFIG_AQUALINK_BLE_ONLY
 
 static void sample_task(void *)
 {
@@ -157,7 +161,9 @@ static void sample_task(void *)
         if (sensor_read(&celsius) == ESP_OK &&
             celsius > -55.0f && celsius < 125.0f) {
             ESP_LOGD(TAG, "raw read: %.4f °C", celsius);
-#if CONFIG_AQUALINK_BLE_ONLY
+#if CONFIG_AQUALINK_SENSOR_TEST
+            ESP_LOGI(TAG, "🌡 DS18B20: %.2f °C", celsius);
+#elif CONFIG_AQUALINK_BLE_ONLY
             aqualink_ble_gatt_set_temperature(celsius);
 #else
             push_to_matter(celsius);

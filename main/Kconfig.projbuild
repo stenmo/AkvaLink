@@ -12,4 +12,13 @@ menu "AquaLink"
             connects directly over BLE. Select via the launcher's --ble-only flag
             (which layers sdkconfig.defaults.ble on top of sdkconfig.defaults).
 
+    config AQUALINK_SENSOR_TEST
+        bool "Build the sensor-only test variant (no Matter, no BLE)"
+        default n
+        help
+            Build the --sensor-only test variant: skip Matter and BLE entirely
+            and just read the sensor (DS18B20) over 1-Wire, logging the
+            temperature. Use it to verify probe wiring and the sensor before
+            building the full app.
+
 endmenu

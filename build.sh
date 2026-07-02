@@ -91,12 +91,14 @@ case "$cmd" in
         # Parse build sub-options (--wifi, --clickboard, combinable)
         build_wifi=0
         build_ble=0
+        build_sensor=0
         build_clickboard=0
         for arg in "${@:2}"; do
             case "$arg" in
-                --wifi)       build_wifi=1 ;;
-                --ble-only)   build_ble=1 ;;
-                --clickboard) build_clickboard=1 ;;
+                --wifi)        build_wifi=1 ;;
+                --ble-only)    build_ble=1 ;;
+                --sensor-only) build_sensor=1 ;;
+                --clickboard)  build_clickboard=1 ;;
                 *) echo "Unknown build option: $arg"; exit 1 ;;
             esac
         done
@@ -111,7 +113,13 @@ case "$cmd" in
 
         if [ "$build_ble" -eq 1 ]; then
             echo "=== Network: BLE-only (standalone NimBLE GATT, no Matter) ==="
+            export AQUALINK_NO_MATTER=1
+            export AQUALINK_BLE=1
             idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.ble" reconfigure
+        elif [ "$build_sensor" -eq 1 ]; then
+            echo "=== Sensor-only test: read the sensor, no Matter/BLE ==="
+            export AQUALINK_NO_MATTER=1
+            idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.sensor" reconfigure
         elif [ "$build_wifi" -eq 1 ]; then
             echo "=== Network: Matter-over-Wi-Fi ==="
             idf.py $cmake_extra -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.wifi" reconfigure

@@ -13,6 +13,7 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 
+#if !CONFIG_AQUALINK_BLE_ONLY && !CONFIG_AQUALINK_SENSOR_TEST
 #include <esp_matter.h>
 #include <esp_matter_console.h>
 #include <esp_matter_ota.h>
@@ -44,6 +45,7 @@
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
+#endif  // !CONFIG_AQUALINK_BLE_ONLY
 
 static const char * TAG = "app_main";
 
@@ -66,6 +68,8 @@ static void print_banner(void)
     ESP_LOGI(TAG, "  \033[37minspired by \033[96mpoolmicke.se\033[37m — tack Micke! \xF0\x9F\x87\xB8\xF0\x9F\x87\xAA\033[0m");
     ESP_LOGI(TAG, "");
 }
+
+#if !CONFIG_AQUALINK_BLE_ONLY && !CONFIG_AQUALINK_SENSOR_TEST
 
 // ---------------------------------------------------------------------------
 // Matter event callback. Mostly informational — we just log lifecycle events
@@ -120,6 +124,8 @@ static esp_err_t on_attribute_update(attribute::callback_type_t /*type*/,
     return ESP_OK;
 }
 
+#endif  // !CONFIG_AQUALINK_BLE_ONLY
+
 extern "C" void app_main()
 {
     print_banner();
@@ -133,7 +139,13 @@ extern "C" void app_main()
     }
     ESP_ERROR_CHECK(err);
 
-#if CONFIG_AQUALINK_BLE_ONLY
+#if CONFIG_AQUALINK_SENSOR_TEST
+    // --- DS18B20 test variant: read the 1-Wire sensor and log it. No Matter,
+    // no BLE, no networking — for verifying probe wiring / the sensor.
+    ESP_LOGI(TAG, "🌡 DS18B20 test — reading sensor only (no Matter/BLE)");
+    ds18b20_task_start();
+    ESP_LOGI(TAG, "✨ Sensor test up — watch the log for temperature");
+#elif CONFIG_AQUALINK_BLE_ONLY
     // --- BLE-only variant: no Matter, no Thread, no Wi-Fi. Just a standalone
     // NimBLE GATT server + the sensor task feeding it. For homes with no hub.
     ESP_LOGI(TAG, "\xF0\x9F\x94\xB5 BLE-only variant — standalone GATT server (no Matter)");
