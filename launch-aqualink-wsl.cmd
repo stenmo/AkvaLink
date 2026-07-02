@@ -140,6 +140,10 @@ exit /b 2
 REM Default: no args = show help (KISS — no implicit action)
 if "%ANY_FLAG%"=="0" goto :show_help
 
+REM A bare variant/modifier flag (e.g. --ble-only, --wifi, --sensor-only) with
+REM no explicit action defaults to --build, matching --sensor-only ergonomics.
+if not "%DO_BUILD%"=="1" if not "%DO_CLEAN%"=="1" if not "%DO_FLASH%"=="1" if not "%DO_ERASE%"=="1" if not "%DO_LOG%"=="1" if not "%DO_SETUP%"=="1" if not "%DO_MENUCONFIG%"=="1" set "DO_BUILD=1"
+
 REM --- Setup / menuconfig short-circuits (mutually exclusive) ---------------
 if "%DO_SETUP%"=="1" (
     echo === setup: ESP-IDF v5.4.1 + esp-matter v1.5 ===
