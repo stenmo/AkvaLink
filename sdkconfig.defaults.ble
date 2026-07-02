@@ -25,6 +25,12 @@ CONFIG_ENABLE_CHIPOBLE=n
 CONFIG_BT_ENABLED=y
 CONFIG_BT_NIMBLE_ENABLED=y
 
+# Max ATT MTU — bigger GATT writes mean fewer round-trips, so faster BLE OTA.
+# Chrome / modern phones negotiate up to 517; the peripheral advertises this and
+# the link settles on min(peer, 517). Pairs with 2M PHY (set on connect in
+# ble_gatt.cpp) for the best firmware-update throughput.
+CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=517
+
 # Extended advertising — REQUIRED for Coded PHY (long range). The GATT server
 # rotates two advertising instances: legacy 1M (phone-friendly) + Coded S=8
 # (long range). Needs at least 2 instances.

@@ -8,8 +8,11 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-set(PROJECT_VER "3.4.0")
-set(PROJECT_VER_NUMBER 3)
+# PROJECT_VER is deliberately NOT hard-coded here — ESP-IDF reads it from
+# version.txt at the repo root (the single source of truth). A release.py bump
+# then flows straight into the firmware image AND the BLE Device Information
+# Service "firmware revision" (0x2A26), so "flash latest" can compare the
+# running version against the newest GitHub release.
 
 # The --ble and --sensor variants set AKVALINK_NO_MATTER in the
 # environment (via build.sh). They must NOT pull in the esp-matter component

@@ -96,6 +96,7 @@ static StreamBufferHandle_t  s_ota_stream = nullptr;
 static TaskHandle_t          s_ota_task   = nullptr;
 static volatile bool         s_ota_finish = false;
 static volatile bool         s_ota_abort  = false;
+static uint16_t              s_att_mtu    = 23;   // ATT MTU, updated on negotiation
 
 static void adv_configure(void);
 static void adv_rotate_start(uint8_t instance);
@@ -170,26 +171,45 @@ static void ota_task(void * /*arg*/)
         vTaskDelete(NULL);
         return;
     }
-    ESP_LOGI(TAG, "\xF0\x9F\x9A\x80 BLE OTA started → slot '%s'", part->label);
+    ESP_LOGI(TAG, "\xF0\x9F\x9A\x80 BLE OTA started → slot '%s' (ATT MTU %u)",
+             part->label, s_att_mtu);
     ota_notify(0x01, 0);
 
     uint8_t  buf[512];
-    uint32_t total  = 0;
-    bool     failed = false;
+    uint32_t total    = 0;
+    uint32_t last_log = 0;
+    int64_t  t_start  = esp_timer_get_time();
+    bool     failed   = false;
 
     while (true) {
         size_t n = xStreamBufferReceive(s_ota_stream, buf, sizeof(buf), pdMS_TO_TICKS(100));
         if (n > 0) {
-            if (esp_ota_write(handle, buf, n) != ESP_OK) { failed = true; }
+            esp_err_t werr = esp_ota_write(handle, buf, n);
+            if (werr != ESP_OK) {
+                ESP_LOGE(TAG, "esp_ota_write failed at %lu B: %s",
+                         (unsigned long)total, esp_err_to_name(werr));
+                failed = true;
+            }
             total += n;
+            if (total - last_log >= 32768) {
+                uint32_t dt_ms = (uint32_t)((esp_timer_get_time() - t_start) / 1000);
+                uint32_t kbps  = dt_ms ? (uint32_t)((uint64_t)total * 1000 / dt_ms / 1024) : 0;
+                ESP_LOGI(TAG, "OTA progress: %lu B, %lu ms, ~%lu kB/s",
+                         (unsigned long)total, (unsigned long)dt_ms, (unsigned long)kbps);
+                last_log = total;
+            }
         }
         if (s_ota_abort || failed) {
             esp_ota_abort(handle);
-            ESP_LOGW(TAG, "BLE OTA aborted (%lu bytes)", (unsigned long)total);
+            ESP_LOGW(TAG, "BLE OTA aborted at %lu B (%s)", (unsigned long)total,
+                     failed ? "write error" : "disconnect/host-abort");
             ota_notify(failed ? 0x02 : 0x03, failed ? 6 : 0);
             break;
         }
         if (s_ota_finish && xStreamBufferIsEmpty(s_ota_stream)) {
+            uint32_t dt_ms = (uint32_t)((esp_timer_get_time() - t_start) / 1000);
+            ESP_LOGI(TAG, "OTA received %lu B in %lu ms — finalising",
+                     (unsigned long)total, (unsigned long)dt_ms);
             if (esp_ota_end(handle) == ESP_OK &&
                 esp_ota_set_boot_partition(part) == ESP_OK) {
                 ESP_LOGI(TAG, "\xE2\x9C\x85 BLE OTA complete (%lu bytes) — rebooting",
@@ -259,8 +279,13 @@ static int ota_access(uint16_t /*conn*/, uint16_t /*attr*/,
         uint8_t  chunk[512];
         uint16_t len = 0;
         ble_hs_mbuf_to_flat(ctxt->om, chunk, sizeof(chunk), &len);
-        // Flash is faster than BLE, so this rarely blocks — it just paces bursts.
-        xStreamBufferSend(s_ota_stream, chunk, len, pdMS_TO_TICKS(200));
+        // Flash is usually faster than BLE, but if the stream buffer fills we
+        // drop bytes — log it, because silent drops corrupt the image.
+        size_t sent = xStreamBufferSend(s_ota_stream, chunk, len, pdMS_TO_TICKS(200));
+        if (sent < len) {
+            ESP_LOGW(TAG, "OTA stream full — dropped %u/%u B (flash slower than BLE)",
+                     (unsigned)(len - sent), (unsigned)len);
+        }
         return 0;
     }
 
@@ -322,22 +347,37 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
             if (event->connect.status == 0) {
                 s_conn_handle = event->connect.conn_handle;
                 ESP_LOGI(TAG, "central connected (handle %u)", s_conn_handle);
-                // Prefer Coded S=8 when the peer supports it; fall back to 1M.
+                // Prefer 2M PHY for throughput (BLE OTA: 2 Mbps vs 125 kbps on
+                // Coded S=8), falling back to 1M. Connections are close-range
+                // (OTA / config); long-range discovery still uses Coded advertising.
                 ble_gap_set_prefered_le_phy(
                     s_conn_handle,
-                    BLE_GAP_LE_PHY_1M_MASK | BLE_GAP_LE_PHY_CODED_MASK,
-                    BLE_GAP_LE_PHY_1M_MASK | BLE_GAP_LE_PHY_CODED_MASK,
-                    BLE_GAP_LE_PHY_CODED_S8);
+                    BLE_GAP_LE_PHY_2M_MASK | BLE_GAP_LE_PHY_1M_MASK,
+                    BLE_GAP_LE_PHY_2M_MASK | BLE_GAP_LE_PHY_1M_MASK,
+                    0);
             } else {
                 adv_rotate_start(ADV_INST_LEGACY);  // failed → resume rotation
             }
             break;
         case BLE_GAP_EVENT_DISCONNECT:
-            ESP_LOGI(TAG, "central disconnected (reason %d)", event->disconnect.reason);
+            // NimBLE encodes the HCI reason in the low byte (0x200 + hci).
+            // 0x13 = remote/host terminated, 0x08 = supervision timeout,
+            // 0x3d = connection-event/MIC failure, 0x22 = LMP timeout.
+            ESP_LOGW(TAG, "central disconnected (reason %d, HCI 0x%02x)",
+                     event->disconnect.reason, event->disconnect.reason & 0xFF);
             s_conn_handle = BLE_HS_CONN_HANDLE_NONE;
+            s_att_mtu = 23;
             s_temp_subscribed = false;
             s_ota_abort = true;   // cancel any OTA in flight
             adv_rotate_start(ADV_INST_LEGACY);
+            break;
+        case BLE_GAP_EVENT_MTU:
+            s_att_mtu = event->mtu.value;
+            ESP_LOGI(TAG, "ATT MTU negotiated: %u", s_att_mtu);
+            break;
+        case BLE_GAP_EVENT_PHY_UPDATE:
+            ESP_LOGI(TAG, "PHY updated: tx=%u rx=%u (1=1M, 2=2M, 3=Coded/125k)",
+                     event->phy_updated.tx_phy, event->phy_updated.rx_phy);
             break;
         case BLE_GAP_EVENT_SUBSCRIBE:
             if (event->subscribe.attr_handle == s_temp_val_handle) {
