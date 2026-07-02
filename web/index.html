@@ -67,6 +67,20 @@
   .card h3 { margin: 8px 0 4px; font-size: 1.08rem; }
   .card p { margin: 0; color: var(--muted); font-size: .96rem; }
 
+  /* Live BLE card */
+  .live-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 30px; text-align: center; max-width: 420px; margin: 0 auto;
+    box-shadow: 0 8px 28px rgba(3,63,99,.07);
+  }
+  .temp-readout { font-size: 3.6rem; font-weight: 800; color: var(--deep); line-height: 1; }
+  .temp-readout .unit { font-size: 1.6rem; color: var(--water); margin-left: 4px; }
+  #tempVal.idle { color: #c6d9e0; }
+  .status { color: var(--muted); margin: 12px 0 18px; font-size: .95rem; min-height: 1.2em; }
+  .status.on { color: var(--ok); font-weight: 600; }
+  .live-card .cta a { cursor: pointer; }
+  .ble-note { color: var(--muted); font-size: .84rem; margin: 14px 0 0; }
+
   /* Tables */
   .tbl-scroll { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
@@ -120,6 +134,19 @@
     <path fill="#eaf7fb" d="M0,40 C240,80 480,0 720,24 C960,48 1200,80 1440,40 L1440,80 L0,80 Z"></path>
   </svg>
 </header>
+
+<section id="live">
+  <div class="wrap">
+    <h2>See it live</h2>
+    <p class="lead">Connect straight to a nearby AquaLink over Bluetooth — no app, right in your browser.</p>
+    <div class="live-card">
+      <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit">°C</span></div>
+      <div id="bleStatus" class="status">Not connected</div>
+      <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
+      <p id="bleNote" class="ble-note"></p>
+    </div>
+  </div>
+</section>
 
 <section id="why">
   <div class="wrap">
@@ -224,6 +251,7 @@
       <li class="done"><span class="mark">✓</span>DS2482 Click board (long-cable variant)</li>
       <li class="done"><span class="mark">✓</span>Scannable setup QR in the boot log</li>
       <li class="done"><span class="mark">✓</span>Standalone BLE GATT variant (no hub)</li>
+      <li class="done"><span class="mark">✓</span>Live temperature in the browser (Web Bluetooth)</li>
       <li class="todo"><span class="mark">▹</span>Real power measurement + deep sleep</li>
       <li class="todo"><span class="mark">▹</span>E-ink display (big-digit, battery, trend)</li>
       <li class="todo"><span class="mark">▹</span>BLE firmware update (Espressif BLE OTA)</li>
@@ -245,6 +273,88 @@
       Apache-2.0 · Last updated July 2026.</p>
   </div>
 </footer>
+
+<script>
+(function () {
+  var btn = document.getElementById('bleBtn');
+  var statusEl = document.getElementById('bleStatus');
+  var tempEl = document.getElementById('tempVal');
+  var noteEl = document.getElementById('bleNote');
+
+  var ESS_SERVICE = 0x181a;   // Environmental Sensing
+  var TEMP_CHAR   = 0x2a6e;   // Temperature (sint16, 0.01 °C, little-endian)
+
+  // Web Bluetooth is Chromium-only (Chrome/Edge desktop, Chrome Android).
+  var supported = typeof navigator !== 'undefined' && !!navigator.bluetooth;
+  if (!supported) {
+    btn.style.display = 'none';
+    statusEl.textContent = 'Bluetooth not available in this browser';
+    noteEl.textContent = 'Open this page in Chrome or Edge (desktop or Android) to connect live over Bluetooth.';
+    return;
+  }
+
+  var device = null;
+
+  function setTemp(celsius) { tempEl.textContent = celsius.toFixed(2); tempEl.classList.remove('idle'); }
+
+  function onTemp(event) {
+    var dv = event.target.value;                 // DataView
+    setTemp(dv.getInt16(0, true) / 100);         // little-endian sint16
+  }
+
+  function onDisconnected() {
+    statusEl.textContent = 'Disconnected';
+    statusEl.className = 'status';
+    tempEl.textContent = '\u2014';
+    tempEl.classList.add('idle');
+    btn.textContent = 'Connect via Bluetooth';
+  }
+
+  async function connect() {
+    try {
+      statusEl.textContent = 'Choose your AquaLink\u2026';
+      statusEl.className = 'status';
+      // The browser shows a chooser (a security requirement — a page can't
+      // silently pick a device). Filtering by name limits it to AquaLinks;
+      // the chooser lists them by signal, so the nearest is at the top.
+      device = await navigator.bluetooth.requestDevice({
+        filters: [{ name: 'AquaLink' }],
+        optionalServices: [ESS_SERVICE]
+      });
+      device.addEventListener('gattserverdisconnected', onDisconnected);
+
+      statusEl.textContent = 'Connecting\u2026';
+      var server = await device.gatt.connect();
+      var service = await server.getPrimaryService(ESS_SERVICE);
+      var ch = await service.getCharacteristic(TEMP_CHAR);
+
+      var first = await ch.readValue();
+      setTemp(first.getInt16(0, true) / 100);
+
+      await ch.startNotifications();
+      ch.addEventListener('characteristicvaluechanged', onTemp);
+
+      statusEl.textContent = 'Connected to ' + (device.name || 'AquaLink');
+      statusEl.className = 'status on';
+      btn.textContent = 'Disconnect';
+    } catch (err) {
+      statusEl.textContent = (err && err.name === 'NotFoundError')
+        ? 'No AquaLink selected'
+        : 'Connection failed: ' + ((err && err.message) || err);
+      statusEl.className = 'status';
+    }
+  }
+
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    if (device && device.gatt && device.gatt.connected) {
+      device.gatt.disconnect();
+    } else {
+      connect();
+    }
+  });
+})();
+</script>
 
 </body>
 </html>

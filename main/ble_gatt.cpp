@@ -206,6 +206,18 @@ static int build_adv_data(struct os_mbuf **out)
     fields.num_uuids16 = 1;
     fields.uuids16_is_complete = 1;
 
+    // Beacon the latest temperature as ESS (0x181A) service data:
+    // [UUID_lo, UUID_hi, temp_lo, temp_hi] — sint16, 0.01 °C, little-endian.
+    // Lets an app glance at the value without connecting; refreshed on each
+    // rotation (see adv_rotate_start). Local buffer is fine — ble_hs_adv_set_
+    // fields() serialises it synchronously below.
+    uint8_t svc_data[4] = {
+        0x1A, 0x18,
+        (uint8_t)(s_temp_centi & 0xFF), (uint8_t)((s_temp_centi >> 8) & 0xFF),
+    };
+    fields.svc_data_uuid16     = svc_data;
+    fields.svc_data_uuid16_len = sizeof(svc_data);
+
     uint8_t buf[BLE_HS_ADV_MAX_SZ];
     uint8_t buf_len = 0;
     int rc = ble_hs_adv_set_fields(&fields, buf, &buf_len, sizeof(buf));
@@ -264,6 +276,12 @@ static void adv_rotate_start(uint8_t instance)
 {
     if (ble_gap_ext_adv_active(instance)) {
         return;  // already advertising on this instance
+    }
+    // Refresh the payload before (re)starting so the beacon carries the latest
+    // temperature — rebuilt each rotation, so it updates every ADV_ROTATE_MS.
+    struct os_mbuf *om;
+    if (build_adv_data(&om) == 0) {
+        ble_gap_ext_adv_set_data(instance, om);
     }
     // duration is in 10 ms units; stop after ADV_ROTATE_MS so we rotate.
     int rc = ble_gap_ext_adv_start(instance, ADV_ROTATE_MS / 10, 0);
