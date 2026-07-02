@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AquaLink — battery-powered Matter pool &amp; aquatic temperature sensor</title>
+<meta name="description" content="AquaLink is a single-SoC, battery-powered Matter temperature sensor on u-blox NORA-W40 (ESP32-C6). Multi-year battery life. Local Matter over Thread or Wi-Fi. No cloud, ever." />
+<style>
+  :root {
+    --deep: #033f63;
+    --water: #0aa2c0;
+    --water-2: #28c2d6;
+    --foam: #eaf7fb;
+    --ink: #16323f;
+    --muted: #5b7280;
+    --card: #ffffff;
+    --line: #d9e6ec;
+    --ok: #1a9e6a;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--foam);
+    line-height: 1.6;
+  }
+  a { color: var(--water); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+
+  /* Hero */
+  header.hero {
+    background: linear-gradient(160deg, var(--deep) 0%, var(--water) 90%);
+    color: #fff;
+    padding: 72px 0 88px;
+    position: relative;
+    overflow: hidden;
+  }
+  header.hero .wrap { position: relative; z-index: 1; }
+  .logo { font-size: 3.2rem; margin: 0; font-weight: 800; letter-spacing: -1px; }
+  .logo .drop { filter: drop-shadow(0 2px 6px rgba(0,0,0,.25)); }
+  .tagline { font-size: 1.35rem; font-weight: 600; margin: 8px 0 4px; }
+  .subtag { font-size: 1.05rem; opacity: .9; margin: 0 0 28px; }
+  .cta a {
+    display: inline-block; margin: 6px 10px 0 0; padding: 11px 20px;
+    border-radius: 999px; font-weight: 600;
+  }
+  .cta .primary { background: #fff; color: var(--deep); }
+  .cta .ghost { border: 1.5px solid rgba(255,255,255,.7); color: #fff; }
+  .cta a:hover { text-decoration: none; transform: translateY(-1px); }
+  .wave { position: absolute; bottom: -1px; left: 0; width: 100%; display: block; }
+
+  /* Sections */
+  section { padding: 54px 0; }
+  section h2 { font-size: 1.6rem; margin: 0 0 6px; color: var(--deep); }
+  section .lead { color: var(--muted); margin: 0 0 26px; }
+
+  /* Cards */
+  .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 20px 22px;
+  }
+  .card .ico { font-size: 1.6rem; }
+  .card h3 { margin: 8px 0 4px; font-size: 1.08rem; }
+  .card p { margin: 0; color: var(--muted); font-size: .96rem; }
+
+  /* Tables */
+  .tbl-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); font-size: .95rem; }
+  th { background: var(--deep); color: #fff; font-weight: 600; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.hi { font-weight: 700; color: var(--deep); }
+
+  /* How it works */
+  .flow { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .step .n { display: inline-block; width: 26px; height: 26px; border-radius: 50%; background: var(--water); color: #fff; text-align: center; line-height: 26px; font-weight: 700; margin-bottom: 8px; }
+
+  /* Variants */
+  code { background: #e5f2f6; color: var(--deep); padding: 1px 7px; border-radius: 6px; font-size: .9em; }
+
+  /* Roadmap */
+  ul.roadmap { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 30px; }
+  ul.roadmap li { margin: 0 0 8px; break-inside: avoid; color: var(--ink); }
+  ul.roadmap li.done { color: var(--muted); }
+  ul.roadmap li .mark { font-weight: 700; margin-right: 8px; }
+  ul.roadmap li.done .mark { color: var(--ok); }
+  ul.roadmap li.todo .mark { color: var(--water); }
+
+  .band { background: linear-gradient(160deg, #eaf7fb, #d5eef4); }
+
+  footer { background: var(--deep); color: #cfe6ee; padding: 40px 0; font-size: .92rem; }
+  footer a { color: #fff; }
+  footer .muted { opacity: .7; }
+
+  @media (max-width: 620px) {
+    .logo { font-size: 2.4rem; }
+    ul.roadmap { columns: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1 class="logo">AquaLink <span class="drop">🏊 🌊</span></h1>
+    <p class="tagline">Battery-powered Matter pool &amp; aquatic temperature sensor</p>
+    <p class="subtag">Single-SoC on u-blox NORA-W40 (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3).<br />
+      Multi-year battery life · Local Matter · <strong>No cloud, ever.</strong></p>
+    <p class="cta">
+      <a class="primary" href="https://github.com/stenmo/AquaLink">View on GitHub</a>
+      <a class="ghost" href="#how">How it works</a>
+    </p>
+  </div>
+  <svg class="wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#eaf7fb" d="M0,40 C240,80 480,0 720,24 C960,48 1200,80 1440,40 L1440,80 L0,80 Z"></path>
+  </svg>
+</header>
+
+<section id="why">
+  <div class="wrap">
+    <h2>Why AquaLink?</h2>
+    <p class="lead">For pools, spas, aquariums, wine cellars and cold storage — places where the
+      temperature barely changes, but you want to know <em>immediately</em> when it does.</p>
+    <div class="grid">
+      <div class="card"><div class="ico">🔋</div><h3>Years on 2× AA</h3>
+        <p>Adaptive sampling, Matter Sleepy End Device, and threshold reporting keep the radio asleep.</p></div>
+      <div class="card"><div class="ico">📱</div><h3>Apple / Google / Alexa</h3>
+        <p>A standard Matter Temperature Sensor — commission by scanning a QR, no app to install.</p></div>
+      <div class="card"><div class="ico">🌐</div><h3>No cloud</h3>
+        <p>Local Matter over Thread or Wi-Fi. Your data never leaves your home network.</p></div>
+      <div class="card"><div class="ico">💧</div><h3>Waterproof probe</h3>
+        <p>DS18B20 in stainless steel, 10 m+ cable possible — drop it in and forget it.</p></div>
+      <div class="card"><div class="ico">🛠️</div><h3>Open source</h3>
+        <p>Built on esp-matter, Apache-2.0 licensed. Single-SoC — no companion MCU.</p></div>
+      <div class="card"><div class="ico">🩺</div><h3>Honest engineering</h3>
+        <p>Battery math, RF rules and known limitations are documented, not hand-waved.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="hardware">
+  <div class="wrap">
+    <h2>Hardware</h2>
+    <p class="lead">One tiny module, one sensor, one pull-up resistor.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Component</th><th>Part</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Module</td><td>NORA-W401 / NORA-W406</td><td>Wi-Fi 6 + Thread + BLE in one module</td></tr>
+          <tr><td>MCU</td><td>ESP32-C6 (RISC-V @ 160 MHz)</td><td>Inside NORA-W40</td></tr>
+          <tr><td>Sensor</td><td>DS18B20 (stainless probe)</td><td>±0.5 °C, 12-bit (0.0625 °C), 1-Wire, ~$3</td></tr>
+          <tr><td>Power</td><td>2× AA alkaline (or 18650 Li)</td><td>~12 years on 2× AA in pool conditions</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lead" style="margin-top:16px"><strong>Schematic:</strong> GPIO15 → DS18B20 DQ, 4.7 kΩ pull-up to +3V3. That's it.</p>
+  </div>
+</section>
+
+<section id="battery">
+  <div class="wrap">
+    <h2>Battery life</h2>
+    <p class="lead">Heated pool at 28–29 °C with a 0.25 °C report threshold.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Battery</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (disconnect)</th></tr></thead>
+        <tbody>
+          <tr><td>CR2477 (1000 mAh)</td><td>~5 years</td><td>~6 months</td><td>~3.3 years</td></tr>
+          <tr><td>2× AAA (1200 mAh)</td><td>~6 years</td><td>~8 months</td><td>~4 years</td></tr>
+          <tr><td class="hi">2× AA (2800 mAh)</td><td class="hi">~12 years</td><td class="hi">~1.8 years</td><td class="hi">~9 years</td></tr>
+          <tr><td>18650 (3400 mAh)</td><td>~15+ years</td><td>~2.2 years</td><td>~11 years</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lead" style="margin-top:14px">Estimates from the power model — real measurement (PPK2/Joulescope) is on the roadmap.</p>
+  </div>
+</section>
+
+<section class="band" id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="lead">Everything runs on the one ESP32-C6 inside NORA-W40 — no companion MCU.</p>
+    <div class="flow">
+      <div class="step"><span class="n">1</span><h3>Sense</h3><p>Read the DS18B20 over 1-Wire with adaptive sampling — fast while changing, slow when stable.</p></div>
+      <div class="step"><span class="n">2</span><h3>Gate</h3><p>Only report when the temperature moves past a threshold, so the radio stays asleep.</p></div>
+      <div class="step"><span class="n">3</span><h3>Report</h3><p>Push the reading over Matter — Thread (Sleepy End Device) or Wi-Fi (TWT).</p></div>
+      <div class="step"><span class="n">4</span><h3>Show</h3><p>It appears in Apple Home, Google Home or Alexa as a standard temperature sensor.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="variants">
+  <div class="wrap">
+    <h2>Build variants</h2>
+    <p class="lead">One codebase, one SoC — pick the network at build time.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Variant</th><th>Flag</th><th>Stack</th></tr></thead>
+        <tbody>
+          <tr><td>Matter / Thread <em>(default)</em></td><td><code>(none)</code></td><td>esp-matter, OpenThread, BLE commissioning</td></tr>
+          <tr><td>Matter / Wi-Fi</td><td><code>--wifi</code></td><td>esp-matter, Wi-Fi, BLE commissioning</td></tr>
+          <tr><td>BLE-only</td><td><code>--ble</code></td><td>NimBLE GATT — no hub, no router</td></tr>
+          <tr><td>Sensor test</td><td><code>--sensor</code></td><td>Read &amp; log the probe only</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="status">
+  <div class="wrap">
+    <h2>Status &amp; roadmap</h2>
+    <p class="lead">Working today, and where it's headed.</p>
+    <ul class="roadmap">
+      <li class="done"><span class="mark">✓</span>Matter Temperature Sensor over Thread (single-SoC)</li>
+      <li class="done"><span class="mark">✓</span>Matter Temperature Sensor over Wi-Fi</li>
+      <li class="done"><span class="mark">✓</span>Adaptive sampling + threshold reporting</li>
+      <li class="done"><span class="mark">✓</span>Light sleep + DFS + flash power-down</li>
+      <li class="done"><span class="mark">✓</span>DS2482 Click board (long-cable variant)</li>
+      <li class="done"><span class="mark">✓</span>Scannable setup QR in the boot log</li>
+      <li class="done"><span class="mark">✓</span>Standalone BLE GATT variant (no hub)</li>
+      <li class="todo"><span class="mark">▹</span>Real power measurement + deep sleep</li>
+      <li class="todo"><span class="mark">▹</span>E-ink display (big-digit, battery, trend)</li>
+      <li class="todo"><span class="mark">▹</span>BLE firmware update (Espressif BLE OTA)</li>
+      <li class="todo"><span class="mark">▹</span>Battery voltage + low-battery Matter event</li>
+      <li class="todo"><span class="mark">▹</span>Waterproof production enclosure (IP67)</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Built on
+      <a href="https://github.com/espressif/esp-matter">esp-matter</a>,
+      <a href="https://github.com/espressif/esp-idf">ESP-IDF</a>,
+      <a href="https://github.com/project-chip/connectedhomeip">connectedhomeip</a>, and the
+      <a href="https://www.u-blox.com/en/product/nora-w40-series">u-blox NORA-W40</a>.</p>
+    <p class="muted">A clean-room productisation of the u-blox NORA-W40 thermometer reference.
+      Inspired by <a href="https://poolmicke.se/">poolmicke.se</a> — tack Micke! 🇸🇪 ·
+      Apache-2.0 · Last updated July 2026.</p>
+  </div>
+</footer>
+
+</body>
+</html>

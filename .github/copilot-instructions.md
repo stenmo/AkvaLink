@@ -114,6 +114,20 @@ compiler; treat it as such.
   clear existing ones in code you're already editing.
 - Check the tail of every build for `warning:` before calling a build "done".
 
+## Project web page
+
+A product landing page lives in [web/index.html](../web/index.html) — a single,
+self-contained static file (inline CSS, no build step, no dependencies,
+publishable as-is via GitHub Pages).
+
+- **Keep it in sync with reality.** When product facts change — specs, battery
+  numbers, build variants/flags, roadmap status — update the page too. It
+  mirrors the README's tables and the roadmap; they should not drift apart.
+- **Stay self-contained.** No frameworks, no external CSS/JS/build tooling. One
+  file that opens by double-clicking. Bump the "Last updated" line on changes.
+- **On brand:** water/pool theme (cyan/teal), plain-spoken, honest — same voice
+  as the README. No cloud claims, no vaporware presented as shipping.
+
 ## Future direct-to-app path (planned)
 
 A non-Matter path is planned for direct app integration without a hub:
