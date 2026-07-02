@@ -213,6 +213,10 @@ extern "C" void app_main()
         return;
     }
 
+    // Quiet OpenThread's per-packet mesh logging (keeps our own INFO logs).
+    // Raise to ESP_LOG_INFO when debugging Thread routing.
+    esp_log_level_set("OPENTHREAD", ESP_LOG_WARN);
+
     // --- Scannable QR straight into the log (no "open this URL" round-trip) --
     // esp-matter only logs the MT: payload + a link to the online QR viewer;
     // render the real thing so you can scan it from the serial monitor.
