@@ -20,6 +20,12 @@ if(DEFINED ENV{AKVALINK_BLE})
     list(APPEND SRCS "ble_gatt.cpp")
 endif()
 
+# Wi-Fi AP variant (build.sh --ap): open SoftAP + captive web page. Env-var
+# gated for the same expansion-timing reason as AKVALINK_BLE above.
+if(DEFINED ENV{AKVALINK_AP})
+    list(APPEND SRCS "ap_web.cpp")
+endif()
+
 # QR-in-console for Matter commissioning: renders the "MT:..." setup payload as
 # a scannable ASCII QR (Nayuki qrcodegen, MIT). Needs CHIP's GetQRCode, so it's
 # Matter-only — i.e. neither the BLE nor the no-Matter env var is set.
@@ -34,6 +40,8 @@ set(AQ_PRIV_REQ nvs_flash driver esp_timer
     espressif__ds18b20 espressif__onewire_bus)
 if(DEFINED ENV{AKVALINK_BLE})
     list(APPEND AQ_PRIV_REQ bt esp_app_format app_update)
+elseif(DEFINED ENV{AKVALINK_AP})
+    list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip)
 elseif(NOT DEFINED ENV{AKVALINK_NO_MATTER})
     list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)
 endif()

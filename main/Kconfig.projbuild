@@ -21,4 +21,17 @@ menu "AkvaLink"
             temperature. Use it to verify probe wiring and the sensor before
             building the full app.
 
+    config AKVALINK_AP
+        bool "Build the Wi-Fi AP variant (SoftAP + web page, no Matter/BLE)"
+        default n
+        help
+            Build the --ap AkvaLink variant: run an OPEN Wi-Fi SoftAP named
+            "AkvaLink" hosting a captive web page that shows the live DS18B20
+            temperature. No Matter, no BLE, no home network — any phone or
+            laptop joins the AP and the page opens.
+
+            NOTE: an always-on SoftAP keeps the Wi-Fi radio awake and is NOT
+            battery friendly (days, not years) — for mains/USB-powered use.
+            Select via the launcher's --ap flag.
+
 endmenu

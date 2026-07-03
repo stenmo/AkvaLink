@@ -1,0 +1,39 @@
+# AkvaLink Wi-Fi AP variant (--ap) — open SoftAP "AkvaLink" + captive web page.
+#
+# Layer on top of the base defaults:
+#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.ap" reconfigure
+# or via the launcher:  launch-akvalink-wsl.cmd --ap --rebuild
+#
+# NO Matter, NO BLE, NO home network. Any phone/laptop joins the open "AkvaLink"
+# Wi-Fi and a captive page shows the live temperature. See main/ap_web.cpp.
+#
+# POWER: an always-on SoftAP keeps the Wi-Fi radio awake — this variant is NOT
+# battery friendly (days, not years). Intended for mains/USB power, so the
+# aggressive light-sleep from the base defaults is turned OFF below.
+
+# Select the AP app path (main/Kconfig.projbuild).
+CONFIG_AKVALINK_AP=y
+
+# No Matter network stacks.
+CONFIG_OPENTHREAD_ENABLED=n
+CONFIG_OPENTHREAD_MTD=n
+CONFIG_OPENTHREAD_SRP_CLIENT=n
+CONFIG_OPENTHREAD_DNS_CLIENT=n
+CONFIG_OPENTHREAD_JOINER=n
+
+# No BLE — this variant is Wi-Fi SoftAP only.
+CONFIG_BT_ENABLED=n
+CONFIG_BT_NIMBLE_ENABLED=n
+CONFIG_ENABLE_CHIPOBLE=n
+
+# Wi-Fi: SoftAP on; station off (the device hosts its own network).
+CONFIG_ESP_WIFI_SOFTAP_SUPPORT=y
+CONFIG_ENABLE_WIFI_STATION=n
+
+# POWER: an AP must stay awake to beacon + serve clients, so disable the light
+# sleep / power management the base enables for the Thread SED.
+CONFIG_PM_ENABLE=n
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=n
+CONFIG_ESP_SLEEP_POWER_DOWN_FLASH=n
+CONFIG_PM_POWER_DOWN_CPU_IN_LIGHT_SLEEP=n
+CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP=n

@@ -9,13 +9,14 @@
 #include "app_priv.h"
 #include "ds18b20_task.h"
 #include "ble_gatt.h"
+#include "ap_web.h"
 #include "qr_console.h"
 
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "nvs_flash.h"
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP
 #include <esp_matter.h>
 #include <esp_matter_console.h>
 #include <esp_matter_ota.h>
@@ -72,7 +73,7 @@ static void print_banner(void)
     ESP_LOGI(TAG, "");
 }
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP
 
 // ---------------------------------------------------------------------------
 // Matter event callback. Mostly informational — we just log lifecycle events
@@ -166,6 +167,14 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(akvalink_ble_gatt_start());
     ds18b20_task_start();
     ESP_LOGI(TAG, "✨ AkvaLink BLE-only up — connect to \"AkvaLink\" over BLE");
+#elif CONFIG_AKVALINK_AP
+    // --- Wi-Fi AP variant: open SoftAP "AkvaLink" + a captive web page showing
+    // the live temperature. No Matter, no BLE. NEEDS EXTERNAL POWER (the Wi-Fi
+    // radio stays awake for the AP — not battery friendly).
+    ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi AP variant — SoftAP \"AkvaLink\" + web page (needs external power)");
+    ESP_ERROR_CHECK(akvalink_ap_start());
+    ds18b20_task_start();
+    ESP_LOGI(TAG, "✨ AkvaLink AP up — join open Wi-Fi \"AkvaLink\", the page opens (or http://192.168.4.1)");
 #else
 
     // --- Matter node + Temperature Sensor endpoint --------------------------
