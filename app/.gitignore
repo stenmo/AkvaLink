@@ -1,0 +1,12 @@
+node_modules/
+dist/
+
+# Generated from ../web by scripts/build-web.mjs — regenerated on every build.
+/index.html
+/src/page.js
+
+# Native platform projects (created locally via `npx cap add ios|android`).
+/ios/
+/android/
+
+.DS_Store

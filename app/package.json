@@ -1,0 +1,25 @@
+{
+  "name": "akvalink-app",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "AkvaLink native app (Capacitor) — reuses the web/ UI with native BLE on iOS/Android.",
+  "scripts": {
+    "sync-web": "node scripts/build-web.mjs",
+    "dev": "npm run sync-web && vite",
+    "build": "npm run sync-web && vite build",
+    "cap:sync": "npm run build && cap sync",
+    "cap:ios": "npm run build && cap sync ios && cap open ios",
+    "cap:android": "npm run build && cap sync android && cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor-community/bluetooth-le": "^6.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2",
+    "vite": "^5.4.0"
+  }
+}

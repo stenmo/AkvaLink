@@ -1,0 +1,8 @@
+{
+  "appId": "com.akvalink.app",
+  "appName": "AkvaLink",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
