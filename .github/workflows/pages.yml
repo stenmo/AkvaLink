@@ -8,11 +8,12 @@ on:
     branches: [main]
     paths:
       - 'web/**'
+      - 'version.txt'
       - '.github/workflows/pages.yml'
-  # Re-deploy when a release is published so web/firmware/ tracks the newest
-  # firmware for the page's one-click 'flash latest' over BLE.
-  release:
-    types: [published]
+  # Redeploys after a release are triggered by deploy-on-release.yml, which
+  # dispatches THIS workflow on `main`. (A `release: published` run executes at
+  # the tag ref, which the github-pages environment's branch policy rejects —
+  # the job fails before any step. Dispatching on main avoids that.)
   workflow_dispatch:
 
 permissions:

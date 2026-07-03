@@ -1,0 +1,24 @@
+name: Redeploy Pages on release
+
+# A `release: published` run executes at the tag ref (refs/tags/vX.Y.Z), which
+# the github-pages environment's deployment branch policy rejects — so running
+# the Pages deploy directly on the release event fails before any step.
+# Instead, this workflow (which needs no environment) dispatches the Pages
+# workflow on `main` (a branch ref), so it passes the gate, stamps the new
+# version.txt, and stages the freshly-published BLE app image for one-click OTA.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  actions: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch the Pages deploy on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main
