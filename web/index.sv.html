@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <title>AkvaLink — batteridriven Matter-sensor för pool och vatten</title>
 <meta name="description" content="AkvaLink är en batteridriven Matter-temperatursensor på u-blox NORA-W40 (ESP32-C6). Flera års batteritid. Lokal Matter via Thread eller Wi-Fi. Ingen molntjänst, aldrig." />
 <style>
@@ -152,6 +153,38 @@
     .logo { font-size: 2.4rem; }
     ul.roadmap { columns: 1; }
   }
+
+  /* Dark theme — follows the OS/browser setting (kind to a midnight pool check) */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --deep: #7bd1e6;
+      --water: #24b7d6;
+      --water-2: #3fd0e6;
+      --foam: #0b1922;
+      --ink: #e7f1f5;
+      --muted: #93a7b0;
+      --card: #12232d;
+      --line: #223a45;
+      --ok: #34c88a;
+    }
+    header.hero { background: linear-gradient(160deg, #061e29 0%, #0a4a5a 90%); }
+    header.hero .wave path { fill: var(--foam); }
+    header.hero .cta .primary { color: #06303f; }
+    .band { background: linear-gradient(160deg, #0e2029, #0a171f); }
+    th { background: #0a3a48; }
+    code { background: #0e2a33; color: #9fe3f2; }
+    footer { background: #061e29; }
+    #tempVal.idle { color: #33505c; }
+    /* SVG schematic: retarget its light-mode hex to the theme vars */
+    .schematic svg [fill="#ffffff"] { fill: var(--card); }
+    .schematic svg [stroke="#d9e6ec"] { stroke: var(--line); }
+    .schematic svg [fill="#033f63"] { fill: var(--deep); }
+    .schematic svg [fill="#5b7280"] { fill: var(--muted); }
+    .schematic svg [fill="#16323f"] { fill: var(--ink); }
+    .schematic svg [stroke="#16323f"] { stroke: var(--ink); }
+    .schematic svg [stroke="#0aa2c0"] { stroke: var(--water); }
+    .schematic svg [fill="#0aa2c0"] { fill: var(--water); }
+  }
 </style>
 </head>
 <body>
@@ -185,6 +218,7 @@
       <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit">°C</span></div>
       <div id="bleAge" class="age"></div>
       <div id="bleStatus" class="status">Inte ansluten</div>
+      <div id="bleFw" class="age"></div>
       <p class="cta"><a id="bleBtn" class="primary" role="button">Anslut via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
     </div>
@@ -332,16 +366,17 @@
   <div class="wrap">
     <h2>Ladda ner firmware</h2>
     <p class="lead">Förbyggda enfilsbinärer för NORA-W40 (ESP32-C6) — alltid senaste releasen.</p>
+    <p class="lead">Osäker på vilken? Alla tre läser samma givare — de skiljer sig i hur du når den. <strong>Thread</strong> och <strong>Wi-Fi</strong> dyker upp i Apple / Google / Alexa som en vanlig Matter-givare; <strong>Endast BLE</strong> pratar direkt med din telefon, ingen hub och ingen appbutik.</p>
     <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Senaste release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=senaste&amp;logo=github"></a></p>
     <div class="grid">
       <a class="dl-card" id="dlThread" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🧵</span><h3>Thread</h3><p>Matter via Thread · batteri</p><span class="dl-btn">Ladda ner .bin</span>
+        <span class="ico">🧵</span><h3>Thread</h3><p>Matter via Thread · bäst batteri. Kräver en hub — HomePod, Apple TV, Nest eller Echo.</p><span class="dl-btn">Ladda ner .bin</span>
       </a>
       <a class="dl-card" id="dlWifi" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">📶</span><h3>Wi-Fi</h3><p>Matter via Wi-Fi</p><span class="dl-btn">Ladda ner .bin</span>
+        <span class="ico">📶</span><h3>Wi-Fi</h3><p>Matter via Wi-Fi · ingen Thread-hub. Går också på batteri — men färre år. Din router + valfri Matter-app.</p><span class="dl-btn">Ladda ner .bin</span>
       </a>
       <a class="dl-card" id="dlBle" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🔵</span><h3>Endast BLE</h3><p>Fristående GATT · ingen hub</p><span class="dl-btn">Ladda ner .bin</span>
+        <span class="ico">🔵</span><h3>Endast BLE</h3><p>Ingen hub, inget moln · direkt till din telefon via Bluetooth.</p><span class="dl-btn">Ladda ner .bin</span>
       </a>
     </div>
     <p class="ble-note">Flasha till <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
@@ -390,6 +425,7 @@
   var tempEl = document.getElementById('tempVal');
   var ageEl = document.getElementById('bleAge');
   var noteEl = document.getElementById('bleNote');
+  var fwEl = document.getElementById('bleFw');
   var otaCard = document.getElementById('otaCard');
   var otaFile = document.getElementById('otaFile');
   var otaBtn = document.getElementById('otaBtn');
@@ -401,6 +437,8 @@
 
   var ESS_SERVICE = 0x181a;   // Environmental Sensing
   var TEMP_CHAR   = 0x2a6e;   // Temperature (sint16, 0.01 °C, little-endian)
+  var DIS_SERVICE = 0x180a;   // Device Information
+  var FW_CHAR     = 0x2a26;   // Firmware Revision String
   var OTA_SERVICE = 'f0a00001-6e40-4a71-9b2c-6b6e696c0010';
   var OTA_CTRL    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0011';   // write + notify status
   var OTA_DATA    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0012';   // write firmware chunks
@@ -436,7 +474,7 @@
   }
 
   function setTemp(celsius) {
-    tempEl.textContent = celsius.toFixed(2);
+    tempEl.textContent = celsius.toFixed(1);
     tempEl.classList.remove('idle');
     lastUpdate = Date.now();
     renderAge();
@@ -451,11 +489,26 @@
     lastUpdate = 0;
     ageEl.textContent = '';
     tempChar = null;
+    if (fwEl) fwEl.textContent = '';
     statusEl.textContent = 'Frånkopplad';
     statusEl.className = 'status';
     tempEl.textContent = '\u2014';
     tempEl.classList.add('idle');
     btn.textContent = 'Återanslut';
+  }
+
+  // Bäst möjliga: läs körande programvaruversion från Device Information
+  // Service (0x180A / 0x2A26) och visa den på live-kortet, så du ser den
+  // installerade versionen innan du väljer att uppdatera.
+  async function showFwVersion(server) {
+    if (!fwEl) return;
+    try {
+      var dis = await server.getPrimaryService(DIS_SERVICE);
+      var c = await dis.getCharacteristic(FW_CHAR);
+      var fw = new TextDecoder().decode(await c.readValue()).replace(/\0+$/, '');
+      fwEl.textContent = 'Firmware v' + fw + (otaLatestTag ? '  \u00b7  senaste ' + otaLatestTag : '');
+      if (otaFwLine && !otaFwLine.textContent) otaFwLine.textContent = 'På enheten: v' + fw + otaLatestSuffix();
+    } catch (e) { console.warn('[BLE] firmware read failed', e); }
   }
 
   function isAkva(d) { return d && d.name && d.name.indexOf('AkvaLink') === 0; }
@@ -480,6 +533,8 @@
     tempChar = ch;
     if (ageTimer) clearInterval(ageTimer);
     ageTimer = setInterval(renderAge, 1000);   // ticka "uppdaterad för Ns sedan"
+
+    showFwVersion(server);   // best-effort: läs + visa körande programvaruversion
 
     statusEl.textContent = 'Ansluten till ' + (dev.name || 'AkvaLink');
     statusEl.className = 'status on';
@@ -506,7 +561,7 @@
     statusEl.className = 'status';
     var dev = await navigator.bluetooth.requestDevice({
       filters: [{ namePrefix: 'AkvaLink' }],
-      optionalServices: [ESS_SERVICE, OTA_SERVICE]
+      optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
     });
     await attach(dev);
   }
@@ -628,10 +683,12 @@
       console.error('[OTA] failed:', err && err.name, err && err.message, err);
       otaStatus.textContent = 'Uppdatering misslyckades: ' +
         ((err && err.name ? err.name + ': ' : '') + ((err && err.message) || err));
-      try {   // försök avbryta på enheten
-        var s = await device.gatt.getPrimaryService(OTA_SERVICE);
-        await (await s.getCharacteristic(OTA_CTRL)).writeValue(new Uint8Array([0x03]));
-        console.log('[OTA] ABORT sent to device');
+      try {   // försök avbryta — bara om vi faktiskt anslöt
+        if (device && device.gatt && device.gatt.connected) {
+          var s = await device.gatt.getPrimaryService(OTA_SERVICE);
+          await (await s.getCharacteristic(OTA_CTRL)).writeValue(new Uint8Array([0x03]));
+          console.log('[OTA] ABORT sent to device');
+        }
       } catch (e) { console.warn('[OTA] abort failed', e); }
     }
   }
@@ -651,14 +708,22 @@
   // Ett klick: hämta senaste firmware som Pages-sidan hostar same-origin
   // (från nyaste GitHub-releasen) och flasha den — ingen nedladdning/sparning.
   async function runOtaLatest() {
-    otaLatestBtn.textContent = 'Uppdaterar\u2026';
-    await doOta(async function () {
+    // Hämta den hostade avbilden FÖRST. Finns den inte ännu (lokal förhandsvisning,
+    // eller en release utan app-avbild) är det ett förväntat läge — inte en
+    // misslyckad uppdatering. Visa väljaren och anslut inte.
+    var bytes;
+    try {
       var r = await fetch('firmware/akvalink-ble-app.bin', { cache: 'no-store' });
-      if (!r.ok) throw new Error('ingen hostad firmware än (HTTP ' + r.status + ') — använd “Välj .bin”');
-      var buf = await r.arrayBuffer();
-      console.log('[OTA] fetched latest firmware:', buf.byteLength, 'bytes');
-      return new Uint8Array(buf);
-    });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      bytes = new Uint8Array(await r.arrayBuffer());
+      console.log('[OTA] fetched latest firmware:', bytes.byteLength, 'bytes');
+    } catch (e) {
+      console.warn('[OTA] no hosted firmware:', e && e.message);
+      otaStatus.textContent = 'Ingen publicerad firmware att flasha ännu — välj en .bin nedan.';
+      return;
+    }
+    otaLatestBtn.textContent = 'Uppdaterar\u2026';
+    await doOta(async function () { return bytes; });
     otaLatestBtn.textContent = otaLatestTag ? 'Flasha senaste firmware (' + otaLatestTag + ')' : 'Flasha senaste firmware';
   }
 

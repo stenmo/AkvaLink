@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="AkvaLink">
+  <!-- AkvaLink mark: a water drop in the brand cyan, matching the site theme. -->
+  <defs>
+    <linearGradient id="drop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#28c2d6"/>
+      <stop offset="1" stop-color="#0aa2c0"/>
+    </linearGradient>
+  </defs>
+  <path d="M16 2C16 2 5 15 5 22a11 11 0 0 0 22 0C27 15 16 2 16 2Z" fill="url(#drop)"/>
+  <!-- cool pool guy: sunglasses + relaxed smirk -->
+  <g fill="#16323f" stroke="#16323f" stroke-linecap="round">
+    <rect x="8.3" y="16.4" width="6.7" height="4.9" rx="1.8" stroke="none"/>
+    <rect x="17" y="16.4" width="6.7" height="4.9" rx="1.8" stroke="none"/>
+    <line x1="15" y1="18.1" x2="17" y2="18.1" stroke-width="1.5"/>
+    <line x1="8.3" y1="17.9" x2="6.2" y2="17.1" stroke-width="1.4"/>
+    <line x1="23.7" y1="17.9" x2="25.8" y2="17.1" stroke-width="1.4"/>
+  </g>
+  <!-- lens shine -->
+  <path d="M9.7 20.3 12.5 17.3M18.3 20.3 21.1 17.3" fill="none" stroke="#eaf7fb" stroke-width="1" stroke-linecap="round" opacity=".5"/>
+  <!-- relaxed smirk -->
+  <path d="M12.6 25.1Q16 26.7 19.8 24.7" fill="none" stroke="#eaf7fb" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
