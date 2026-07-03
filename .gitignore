@@ -2,6 +2,7 @@
 build/
 build.log
 build_*.log
+release_*.log
 sdkconfig
 sdkconfig.old
 managed_components/
