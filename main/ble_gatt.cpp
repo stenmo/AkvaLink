@@ -375,7 +375,7 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
             s_att_mtu = event->mtu.value;
             ESP_LOGI(TAG, "ATT MTU negotiated: %u", s_att_mtu);
             break;
-        case BLE_GAP_EVENT_PHY_UPDATE:
+        case BLE_GAP_EVENT_PHY_UPDATE_COMPLETE:
             ESP_LOGI(TAG, "PHY updated: tx=%u rx=%u (1=1M, 2=2M, 3=Coded/125k)",
                      event->phy_updated.tx_phy, event->phy_updated.rx_phy);
             break;
