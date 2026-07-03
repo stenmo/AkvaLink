@@ -304,19 +304,6 @@
       </svg>
       <p class="cap"><strong>Det är hela kopplingsschemat.</strong> GPIO15 → DQ, ett 4,7 kΩ pull-up till +3V3 — inget annat.</p>
     </div>
-    <div class="live-card ota-card" id="otaCard">
-      <h3 class="ota-title">Firmware-uppdatering via Bluetooth</h3>
-      <p class="ota-hint">Ett klick — sidan hämtar senaste firmware och flashar den via BLE (Chrome/Edge).</p>
-      <div id="otaFwLine" class="file-name"></div>
-      <p class="cta"><a id="otaLatestBtn" class="primary" role="button">Flasha senaste firmware</a></p>
-      <p class="ble-note" style="margin:6px 0 10px">…eller välj en .bin manuellt:</p>
-      <label class="file-btn" for="otaFile">Välj .bin-fil</label>
-      <input type="file" id="otaFile" accept=".bin" hidden />
-      <span id="otaFileName" class="file-name">Ingen fil vald</span>
-      <div class="progress"><div id="otaBar" class="bar"></div></div>
-      <div id="otaStatus" class="status"></div>
-      <p class="cta"><a id="otaBtn" class="primary" role="button">Uppdatera firmware</a></p>
-    </div>
   </div>
 </section>
 
@@ -388,6 +375,19 @@
       </a>
     </div>
     <p class="ble-note">Flasha till <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
+    <div class="live-card ota-card" id="otaCard">
+      <h3 class="ota-title">Firmware-uppdatering via Bluetooth</h3>
+      <p class="ota-hint">Ett klick — sidan hämtar senaste firmware och flashar den via BLE (Chrome/Edge).</p>
+      <div id="otaFwLine" class="file-name"></div>
+      <p class="cta"><a id="otaLatestBtn" class="primary" role="button">Flasha senaste firmware</a></p>
+      <p class="ble-note" style="margin:6px 0 10px">…eller välj en .bin manuellt:</p>
+      <label class="file-btn" for="otaFile">Välj .bin-fil</label>
+      <input type="file" id="otaFile" accept=".bin" hidden />
+      <span id="otaFileName" class="file-name">Ingen fil vald</span>
+      <div class="progress"><div id="otaBar" class="bar"></div></div>
+      <div id="otaStatus" class="status"></div>
+      <p class="cta"><a id="otaBtn" class="primary" role="button">Uppdatera firmware</a></p>
+    </div>
   </div>
 </section>
 
