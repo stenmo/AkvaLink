@@ -1,0 +1,14 @@
+{
+  "name": "AkvaLink — Matter pool & aquatic temperature sensor",
+  "short_name": "AkvaLink",
+  "description": "Battery-powered single-SoC Matter temperature sensor on u-blox NORA-W40 (ESP32-C6). Live temperature over Bluetooth, local-only, no cloud.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#033f63",
+  "theme_color": "#033f63",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
