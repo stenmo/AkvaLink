@@ -134,6 +134,15 @@ above has happened.
     near the house sidesteps it.
   Reuses the BLE stack already present for commissioning; pairs with the beacon
   fallback above (beacon = zero-connect glance, GATT = full detail on connect).
+  - **Future: multi-client + advertise-while-connected** (deferred — *power*).
+    ESP32-C6/NimBLE supports several simultaneous peripheral connections; the
+    `--ble` build deliberately stays **single-client and stops advertising on
+    connect** to save battery (`CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1`, one
+    `s_conn_handle`, adv restarts only on disconnect). To let several phones
+    watch live temp at once: raise max connections + the C6 controller max,
+    restart advertising while a slot is free, notify **all** subscribed handles,
+    keep OTA single-client. Only worth it if a "multiple viewers" demo need
+    outweighs the extra radio-on power — power wins by default for this project.
 - Standalone Wi-Fi (`--wifi-standalone` build, mDNS + HTTP/JSON).
 - **Espressif Unified Provisioning — chosen provisioner** (BLE default,
   SoftAP fallback for the laptop-only case — no phone, no app, just a
