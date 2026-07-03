@@ -47,7 +47,10 @@ emulator).
 
 ## Good to know
 
-- **App icon** isn't set yet — add later with `@capacitor/assets`.
+- **App icon** is generated from [`../web/favicon.svg`](../web/favicon.svg) by
+  `scripts/android-icon.mjs` (runs inside `add:android` and `cap:android`) — it
+  writes all launcher densities plus the adaptive icon, matching the iOS app.
+  Change the favicon and re-run `npm run android:icon` to refresh it.
 - **"Flash latest firmware"** needs same-origin firmware the app doesn't bundle;
   **live temperature** and **manual `.bin` OTA** are the app's BLE paths.
 - Re-run `npm run cap:android` after any change in `../web/**` (it regenerates
