@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "esp_event.h"
+#include "esp_http_server.h"   // for httpd_handle_t + httpd_register_uri_handler
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
@@ -26,6 +27,10 @@
 #include "mqtt_client.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+
+// Defined in web_page.cpp; declared here rather than in web_page.h to avoid
+// pulling esp_http_server.h into non-web (thread/wifi/ble) variants.
+httpd_handle_t akvalink_web_get_server(void);
 
 #include "wifi_provisioning/manager.h"
 #include "wifi_provisioning/scheme_ble.h"

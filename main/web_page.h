@@ -2,7 +2,6 @@
 #pragma once
 
 #include "esp_err.h"
-#include "esp_http_server.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,10 +15,6 @@ esp_err_t akvalink_web_start_server(void);
 // Push the latest temperature (deg C) for the page to serve. Called by the
 // DS18B20 sampling task on each reading.
 void akvalink_web_set_temperature(float celsius);
-
-// Return the running httpd handle so variant-specific code (e.g. station) can
-// register additional URI handlers (e.g. /mqtt-status) after start.
-httpd_handle_t akvalink_web_get_server(void);
 
 #ifdef __cplusplus
 }
