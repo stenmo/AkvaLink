@@ -55,6 +55,12 @@ jobs:
             echo "will fall back to manual file-pick until one is published."
           fi
 
+      - name: Stamp site version from version.txt
+        run: |
+          ver=$(tr -d ' \t\r\n' < version.txt)
+          echo "Stamping deployed site version: $ver"
+          sed -i -E "s#(<span id=\"siteVer\">)[^<]*#\1${ver}#g" web/index.html web/index.sv.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

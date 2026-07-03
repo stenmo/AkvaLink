@@ -415,6 +415,7 @@
     <p class="muted">En renrumsproduktifiering av u-blox NORA-W40 termometerreferensen.
       Inspirerad av <a href="https://poolmicke.se/">poolmicke.se</a> — tack Micke! 🇸🇪 ·
       Apache-2.0 · Senast uppdaterad juli 2026.</p>
+    <p class="muted" id="siteVerLine">Sida v<span id="siteVer">0.1.4</span></p>
   </div>
 </footer>
 
@@ -735,6 +736,18 @@
     otaStatus.textContent = '';
   });
 
+  // Jämför den driftsatta sidversionen (stämplad från version.txt vid deploy)
+  // med nyaste GitHub-releasen, så en gammal/cachad driftsättning syns direkt.
+  function showSiteSync(relTag) {
+    var line = document.getElementById('siteVerLine');
+    var verEl = document.getElementById('siteVer');
+    if (!line || !verEl) return;
+    var site = verEl.textContent.trim().replace(/^v/, '');
+    var rel = String(relTag).replace(/^v/, '');
+    if (site === rel) line.innerHTML = 'Sida v' + site + ' \u00b7 i synk med senaste releasen \u2713';
+    else line.innerHTML = 'Sida v' + site + ' \u00b7 senaste release v' + rel + ' \u2014 ladda om om sidan verkar cachad';
+  }
+
   // Märk ett-klick-knappen med nyaste release-versionen.
   fetch('https://api.github.com/repos/stenmo/AkvaLink/releases/latest', {
     headers: { 'Accept': 'application/vnd.github+json' }
@@ -744,6 +757,7 @@
         otaLatestTag = rel.tag_name;
         otaLatestBtn.textContent = 'Flasha senaste firmware (' + rel.tag_name + ')';
         if (otaFwLine && !otaFwLine.textContent) otaFwLine.textContent = 'Senaste release: ' + rel.tag_name;
+        showSiteSync(rel.tag_name);
       }
     }).catch(function () { /* offline / gränsad — knappen fungerar ändå */ });
 

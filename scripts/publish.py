@@ -310,12 +310,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"• creating release {tag}")
         release = create_release(token, tag, f"AkvaLink {tag}", notes, commitish, args.draft)
 
-    for variant in VARIANTS:
-        for suffix in ("", ".sha256"):
-            path = DIST_DIR / (asset_name(variant, version) + suffix)
-            if path.is_file():
-                print(f"• uploading {path.name}")
-                upload_asset(token, release, path)
+    for path in assets:
+        print(f"• uploading {path.name}")
+        upload_asset(token, release, path)
 
     url = release.get("html_url", f"https://github.com/{REPO_SLUG}/releases/tag/{tag}")
     print(f"\nPublished {tag} ✔  {url}")
