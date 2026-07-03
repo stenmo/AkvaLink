@@ -5,7 +5,7 @@
 **Battery-powered Matter pool & aquatic temperature sensor**
 Single-SoC design on **u-blox NORA-W40** (ESP32-C6, Wi-Fi 6 + Thread + BLE 5.3)
 
-> Multi-year battery life. Local Matter. No cloud, ever.
+> Multi-year battery life. Local Matter connectivity. No cloud, ever.
 
 **🌐 Live demo & landing page: [stenmo.github.io/AkvaLink](https://stenmo.github.io/AkvaLink/)**
 (available in [English](https://stenmo.github.io/AkvaLink/) · [Svenska](https://stenmo.github.io/AkvaLink/index.sv.html) — connect to a nearby sensor live over Bluetooth, right in your browser)
@@ -94,10 +94,11 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 - [x] Light sleep + DFS + flash power-down
 - [x] DS2482 Click board (long cable variant)
 - [x] BLE firmware update over the air (custom GATT over `esp_ota`, `--ble` variant)
+- [x] Standalone BLE GATT variant — live temperature direct-to-app, no hub (`--ble`)
+- [x] Live temperature in the browser over Web Bluetooth — on the [landing page](https://stenmo.github.io/AkvaLink/)
 - [ ] **Real power measurement (Joulescope/PPK2) + deep sleep** — see [TODO.md](TODO.md)
 - [ ] **E-ink display** (big-digit, battery, trend) — see [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md)
 - [ ] Wi-Fi 6 TWT integration in code (currently DTIM only)
-- [ ] **Direct-to-app BLE GATT path** (no hub needed)
 - [ ] **Local Wi-Fi mDNS + JSON path** (offline LAN, no hub)
 - [ ] Battery voltage monitoring + low-battery Matter event
 - [ ] OTA via Matter

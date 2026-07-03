@@ -24,8 +24,9 @@
 - **No keepalive report.** If temperature is genuinely flat for hours,
   controllers (especially Apple Home) may mark the device offline.
   Mitigation today: lower the threshold or wait for the keepalive feature.
-- **No OTA.** `esp_matter_ota` is linked but not wired into a working
-  update path. Manual reflash is the only update mechanism.
+- **No Matter OTA.** `esp_matter_ota` is linked but not wired into a
+  working update path. (The `--ble` variant *does* have a working BLE OTA
+  over a custom GATT service; Matter-transport OTA is still TODO.)
 - **No factory data partition.** Commissioning uses esp-matter's
   default test PAA/PAI/DAC. Fine for the demo, not for shipping product.
 - **No Matter certification.** This is a demo, not a certified device.
@@ -54,16 +55,22 @@
 - **Build artifacts live in `/mnt/c/...`** which is slower than WSL's native
   ext4. Acceptable cost for the simpler workflow; expect ~2× slower
   incremental builds vs. a pure-WSL project layout.
-- **Repo is local-only on purpose** (no GitHub/GitLab remote). This is a
-  private side project. If you fork it, set up your own remote.
+- **Public repo, but not a supported product.** Source, CI, releases and
+  the landing page live on GitHub ([stenmo/AkvaLink](https://github.com/stenmo/AkvaLink)).
+  It's a demo / side project — not a supported or certified product.
 
 ## Software
 
-- **No tests.** Zero unit tests, zero hardware-in-loop tests. The sensor
-  driver and Matter glue are exercised only by running the firmware.
+- **No firmware unit tests.** The Python tooling (`release`, `publish`, the
+  web pages, port-detect, serial monitor) is covered by a pytest suite, but
+  the sensor driver and Matter/BLE glue are exercised only by running the
+  firmware — no on-target or hardware-in-loop tests.
 - **No structured logging.** All logs are `ESP_LOGI/W/E` text. No JSON
   output, no metrics export. Fine for a demo, painful for a fleet.
-- **No BLE direct-to-app path** (planned, see TODO).
+- **BLE direct-to-app path is early.** The `--ble` variant exposes
+  temperature over standard ESS GATT (plus a custom OTA service) — enough
+  for the in-browser live demo — but the richer app service (battery %,
+  thresholds, history) is still planned.
 - **No Thread commissioning UX assist.** If commissioning fails you get
   raw esp-matter logs and have to dig.
 
