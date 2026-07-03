@@ -565,7 +565,9 @@
     statusEl.textContent = 'Välj din AkvaLink\u2026';
     statusEl.className = 'status';
     var dev = await navigator.bluetooth.requestDevice({
-      filters: [{ namePrefix: 'AkvaLink' }],
+      // Match by the advertised ESS service (reliable in Chrome AND iOS/Bluefy)
+      // OR the device name. The firmware advertises 0x181A in its adv packet.
+      filters: [{ services: [ESS_SERVICE] }, { namePrefix: 'AkvaLink' }],
       optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
     });
     await attach(dev);

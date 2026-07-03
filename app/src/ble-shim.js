@@ -143,9 +143,14 @@ function installShim() {
     async requestDevice(options = {}) {
       await ensureInit();
       const filters = options.filters || [];
-      const namePrefix = filters.length ? filters[0].namePrefix : undefined;
+      let namePrefix;
+      let services;
+      for (const f of filters) {
+        if (!namePrefix && f && f.namePrefix) namePrefix = f.namePrefix;
+        if (!services && f && f.services && f.services.length) services = f.services.map(uuid);
+      }
       const optionalServices = (options.optionalServices || []).map(uuid);
-      const res = await BleClient.requestDevice({ namePrefix, optionalServices });
+      const res = await BleClient.requestDevice({ services, namePrefix, optionalServices });
       try { localStorage.setItem(STORE_KEY, res.deviceId); } catch (_) { /* ignore */ }
       return new Device(res.deviceId, res.name);
     },
