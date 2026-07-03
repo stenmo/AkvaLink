@@ -48,4 +48,16 @@ menu "AkvaLink"
             than the SoftAP variant but still not multi-year on a coin cell.
             Select via the launcher's --station flag.
 
+    config AKVALINK_MQTT_BROKER_URL
+        string "MQTT broker URL for Home Assistant autodiscovery"
+        depends on AKVALINK_STATION
+        default "mqtt://homeassistant.local:1883"
+        help
+            The MQTT broker the station variant connects to for publishing
+            Home Assistant MQTT autodiscovery config and live temperature
+            readings. Defaults to the Mosquitto add-on address on a standard
+            Home Assistant install (homeassistant.local:1883). Change if your
+            broker runs on a different host, port, or scheme (e.g.
+            mqtt://192.168.1.10:1883 or mqtts://... for TLS).
+
 endmenu

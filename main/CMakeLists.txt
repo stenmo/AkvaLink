@@ -51,7 +51,7 @@ elseif(DEFINED ENV{AKVALINK_AP})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip)
 elseif(DEFINED ENV{AKVALINK_STATION})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip
-        wifi_provisioning mdns bt)
+        wifi_provisioning mdns bt mqtt)
 elseif(NOT DEFINED ENV{AKVALINK_NO_MATTER})
     list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)
 endif()

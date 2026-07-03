@@ -12,6 +12,7 @@
 #include "app_priv.h"
 #include "ble_gatt.h"
 #include "ap_web.h"
+#include "station_web.h"
 #include "web_page.h"
 
 #include <math.h>
@@ -251,8 +252,10 @@ static void sample_task(void *)
             ESP_LOGD(TAG, "raw read: %.4f °C", celsius);
 #if CONFIG_AKVALINK_BLE_ONLY
             akvalink_ble_gatt_set_temperature(celsius);
-#elif CONFIG_AKVALINK_AP || CONFIG_AKVALINK_STATION
+#elif CONFIG_AKVALINK_AP
             akvalink_web_set_temperature(celsius);
+#elif CONFIG_AKVALINK_STATION
+            akvalink_station_set_temperature(celsius);
 #else
             push_to_matter(celsius);
 #endif

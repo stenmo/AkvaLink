@@ -379,7 +379,7 @@
         <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Open hotspot "AkvaLink" · join it, the page opens automatically. No router, no app, any phone. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
       </a>
       <a class="dl-card" id="dlStation" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink.local</strong> in any browser on your LAN. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
+        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink.local</strong> in any browser on your LAN. Auto-discovered by <strong>Home Assistant</strong> via MQTT. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
       </a>
     </div>
     <p class="ble-note">Flash to <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>
@@ -414,7 +414,7 @@
       <li class="done"><span class="mark">✓</span>Live temperature in the browser (Web Bluetooth)</li>
       <li class="done"><span class="mark">✓</span>BLE firmware update (custom GATT over esp_ota)</li>
       <li class="done"><span class="mark">✓</span>Wi-Fi AP variant — open hotspot + captive page, any phone (mains/USB)</li>
-      <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-provisioned, joins home Wi-Fi, page at akvalink.local (mains/USB)</li>
+      <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-provisioned, joins home Wi-Fi, page at akvalink.local, Home Assistant MQTT autodiscovery (mains/USB)</li>
       <li class="todo"><span class="mark">▹</span>Real power measurement + deep sleep</li>
       <li class="todo"><span class="mark">▹</span>E-ink display (big-digit, battery, trend)</li>
       <li class="todo"><span class="mark">▹</span>Battery voltage + low-battery Matter event</li>

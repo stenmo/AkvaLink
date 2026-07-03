@@ -2,8 +2,10 @@
 //
 // Standalone Wi-Fi station variant (--station): join the home Wi-Fi as a
 // client, provisioned over BLE with Espressif Unified Provisioning (the free
-// "ESP BLE Provisioning" app). Once online it advertises mDNS "akvalink.local"
-// and serves the shared temperature page (web_page.cpp). No Matter, no hub.
+// "ESP BLE Provisioning" app). Once online it:
+//   - advertises mDNS "akvalink.local" and serves the shared temp page
+//   - connects to the configured MQTT broker and publishes Home Assistant
+//     MQTT autodiscovery config + live temperature readings
 //
 // POWER: staying associated to an AP keeps the Wi-Fi radio reachable — lighter
 // than SoftAP but still not multi-year on a coin cell. For mains/USB or a
@@ -12,6 +14,8 @@
 #include "station_web.h"
 #include "web_page.h"
 
+#include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "esp_event.h"
@@ -19,6 +23,7 @@
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include "mdns.h"
+#include "mqtt_client.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 
@@ -31,15 +36,146 @@ static const char *TAG = "station";
 #define PROV_POP          "akvalink"   // proof-of-possession the app must enter
 #define MDNS_HOSTNAME     "akvalink"   // → http://akvalink.local
 
+// MQTT broker URL from Kconfig (default: Mosquitto add-on on Home Assistant).
+#define MQTT_BROKER_URL   CONFIG_AKVALINK_MQTT_BROKER_URL
+
 #define WIFI_CONNECTED_BIT BIT0
 static EventGroupHandle_t s_events;
 static bool s_web_up = false;
+
+// --- MQTT state -------------------------------------------------------------
+static esp_mqtt_client_handle_t s_mqtt = NULL;
+static bool s_mqtt_connected = false;
+
+// Per-device topics built from the STA MAC (set once on first IP event).
+static char s_mac[13];          // "aabbccddeeff"
+static char s_state_topic[48];  // "akvalink/<mac>/temperature"
+static char s_avail_topic[44];  // "akvalink/<mac>/status"
+
+// Publish the HA MQTT discovery config (retain=1) and an "online" availability
+// message. Called once when the MQTT connection is established.
+static void mqtt_publish_discovery(void)
+{
+    char disc_topic[80];
+    snprintf(disc_topic, sizeof(disc_topic),
+             "homeassistant/sensor/akvalink_%s/temperature/config", s_mac);
+
+    // Discovery payload: one retained JSON message tells HA everything it needs
+    // to create a temperature entity with availability tracking.
+    char payload[768];
+    snprintf(payload, sizeof(payload),
+        "{\"name\":\"AkvaLink temperature\","
+        "\"unique_id\":\"akvalink_%s_temp\","
+        "\"device\":{"
+            "\"identifiers\":[\"akvalink_%s\"],"
+            "\"name\":\"AkvaLink\","
+            "\"model\":\"Wi-Fi station\","
+            "\"manufacturer\":\"u-blox NORA-W40\""
+        "},"
+        "\"state_topic\":\"%s\","
+        "\"availability_topic\":\"%s\","
+        "\"payload_available\":\"online\","
+        "\"payload_not_available\":\"offline\","
+        "\"unit_of_measurement\":\"\\u00b0C\","
+        "\"device_class\":\"temperature\","
+        "\"state_class\":\"measurement\","
+        "\"value_template\":\"{{ value_json.celsius }}\"}",
+        s_mac, s_mac, s_state_topic, s_avail_topic);
+
+    // qos=1 + retain=1: HA picks up the entity even if it restarted while the
+    // device was already online.
+    esp_mqtt_client_publish(s_mqtt, disc_topic, payload, 0, 1, 1);
+    esp_mqtt_client_publish(s_mqtt, s_avail_topic, "online", 0, 1, 1);
+    ESP_LOGI(TAG, "MQTT HA discovery published — entity: akvalink_%s_temp", s_mac);
+}
+
+static void mqtt_event_handler(void *arg, esp_event_base_t base, int32_t id, void *data)
+{
+    (void)arg; (void)base; (void)data;
+    switch ((esp_mqtt_event_id_t)id) {
+    case MQTT_EVENT_CONNECTED:
+        s_mqtt_connected = true;
+        mqtt_publish_discovery();
+        break;
+    case MQTT_EVENT_DISCONNECTED:
+        s_mqtt_connected = false;
+        ESP_LOGW(TAG, "MQTT disconnected — will retry");
+        break;
+    case MQTT_EVENT_ERROR:
+        ESP_LOGW(TAG, "MQTT error — check broker URL: %s", MQTT_BROKER_URL);
+        break;
+    default:
+        break;
+    }
+}
+
+static void start_mqtt(void)
+{
+    // Build per-device topics from the STA MAC address so multiple AkvaLink
+    // devices on the same network get distinct MQTT topics and HA entity IDs.
+    uint8_t mac[6];
+    esp_wifi_get_mac(WIFI_IF_STA, mac);
+    snprintf(s_mac, sizeof(s_mac), "%02x%02x%02x%02x%02x%02x",
+             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    snprintf(s_state_topic, sizeof(s_state_topic), "akvalink/%s/temperature", s_mac);
+    snprintf(s_avail_topic, sizeof(s_avail_topic), "akvalink/%s/status", s_mac);
+
+    esp_mqtt_client_config_t cfg = {};
+    cfg.broker.address.uri            = MQTT_BROKER_URL;
+    // LWT: broker publishes "offline" on unclean disconnect — HA marks the
+    // entity unavailable so dashboards don’t show a stale value.
+    cfg.session.last_will.topic       = s_avail_topic;
+    cfg.session.last_will.msg         = "offline";
+    cfg.session.last_will.msg_len     = 7;
+    cfg.session.last_will.qos         = 1;
+    cfg.session.last_will.retain      = 1;
+
+    s_mqtt = esp_mqtt_client_init(&cfg);
+    esp_mqtt_client_register_event(s_mqtt, MQTT_EVENT_ANY, mqtt_event_handler, NULL);
+    esp_mqtt_client_start(s_mqtt);
+    ESP_LOGI(TAG, "MQTT client started — broker %s", MQTT_BROKER_URL);
+}
+
+// Push the latest temperature for the web page AND publish to MQTT.
+// Called by the DS18B20 task on each sample.
+void akvalink_station_set_temperature(float celsius)
+{
+    akvalink_web_set_temperature(celsius);          // update the /temp endpoint
+
+    if (!s_mqtt_connected) {
+        return;
+    }
+    char buf[32];
+    int n;
+    if (isnan(celsius)) {
+        n = snprintf(buf, sizeof(buf), "{\"celsius\":null}");
+    } else {
+        // Integer-safe formatting — CONFIG_NEWLIB_NANO_FORMAT drops %f.
+        int centi = (int)lroundf(celsius * 100.0f);
+        const char *sign = centi < 0 ? "-" : "";
+        int a = abs(centi);
+        n = snprintf(buf, sizeof(buf), "{\"celsius\":%s%d.%02d}", sign, a / 100, a % 100);
+    }
+    // qos=0, no retain: state updates are frequent; HA only needs the latest.
+    esp_mqtt_client_publish(s_mqtt, s_state_topic, buf, n, 0, 0);
+}
+
+static esp_err_t mqtt_status_get(httpd_req_t *req)
+{
+    char buf[32];
+    int n = snprintf(buf, sizeof(buf), "{\"connected\":%s}",
+                     s_mqtt_connected ? "true" : "false");
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    return httpd_resp_send(req, buf, n);
+}
 
 static void start_mdns_and_web(void)
 {
     if (s_web_up) {
         return;                                 // reconnect — already serving
     }
+    s_web_up = true;                            // set early — prevent double-init on rapid IP events
     if (mdns_init() == ESP_OK) {
         mdns_hostname_set(MDNS_HOSTNAME);
         mdns_instance_name_set("AkvaLink temperature");
@@ -49,7 +185,17 @@ static void start_mdns_and_web(void)
         ESP_LOGW(TAG, "mDNS init failed — reach the page by IP instead");
     }
     akvalink_web_start_server();
-    s_web_up = true;
+
+    // Register the /mqtt-status endpoint (station-only — the web page polls
+    // this silently and shows MQTT connection state in the card).
+    httpd_handle_t httpd = akvalink_web_get_server();
+    if (httpd) {
+        httpd_uri_t ms = {};
+        ms.uri = "/mqtt-status"; ms.method = HTTP_GET; ms.handler = mqtt_status_get;
+        httpd_register_uri_handler(httpd, &ms);
+    }
+
+    start_mqtt();
 }
 
 static void event_handler(void *arg, esp_event_base_t base, int32_t id, void *data)

@@ -44,11 +44,13 @@ static const char PAGE_HTML[] = R"HTML(<!doctype html>
   .t{font-size:4.5rem;font-weight:800;color:#28c2d6;line-height:1}
   .u{font-size:1.6rem;color:#28c2d6}
   .s{opacity:.7;margin-top:10px;font-size:.95rem}
+  .m{opacity:.45;margin-top:6px;font-size:.75rem}
 </style></head>
 <body><div class="c">
   <h1>AkvaLink &#127754;</h1>
   <div><span class="t" id="t">&ndash;</span><span class="u">&nbsp;&deg;C</span></div>
   <div class="s" id="s">reading&hellip;</div>
+  <div class="m" id="m"></div>
 </div>
 <script>
 function u(){fetch('/temp',{cache:'no-store'}).then(r=>r.json()).then(d=>{
@@ -56,7 +58,13 @@ function u(){fetch('/temp',{cache:'no-store'}).then(r=>r.json()).then(d=>{
   if(d.celsius==null){t.textContent='\u2013';s.textContent='no reading yet';}
   else{t.textContent=Number(d.celsius).toFixed(1);s.textContent='live \u00b7 updates every 2s';}
 }).catch(function(){document.getElementById('s').textContent='disconnected';});}
+function mq(){fetch('/mqtt-status',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+  if(!d)return;
+  var m=document.getElementById('m');
+  m.textContent=d.connected?'MQTT \u2713 Home Assistant':'MQTT \u2013 no broker';
+}).catch(function(){});}
 u();setInterval(u,2000);
+mq();setInterval(mq,10000);
 </script></body></html>)HTML";
 
 static esp_err_t root_get(httpd_req_t *req)
@@ -117,4 +125,9 @@ esp_err_t akvalink_web_start_server(void)
     httpd_register_uri_handler(s_httpd, &any);
 
     return ESP_OK;
+}
+
+httpd_handle_t akvalink_web_get_server(void)
+{
+    return s_httpd;
 }

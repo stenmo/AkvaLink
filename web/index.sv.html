@@ -379,7 +379,7 @@
         <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Öppet nätverk "AkvaLink" · anslut, sidan öppnas automatiskt. Ingen router, ingen app, vilken telefon som helst. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
       </a>
       <a class="dl-card" id="dlStation" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink.local</strong> i valfri webbläsare på ditt LAN. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
+        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink.local</strong> i valfri webbläsare på ditt LAN. Autodetekteras av <strong>Home Assistant</strong> via MQTT. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
       </a>
     </div>
     <p class="ble-note">Flasha till <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
@@ -414,7 +414,7 @@
       <li class="done"><span class="mark">✓</span>Live-temperatur i webbläsaren (Web Bluetooth)</li>
       <li class="done"><span class="mark">✓</span>BLE firmware-uppdatering (egen GATT över esp_ota)</li>
       <li class="done"><span class="mark">✓</span>Wi-Fi AP-variant — öppet nätverk + webbsida, vilken telefon (nät/USB)</li>
-      <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-driftsätts, ansluter till hemma-Wi-Fi, sida på akvalink.local (nät/USB)</li>
+      <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-driftsätts, ansluter till hemma-Wi-Fi, sida på akvalink.local, Home Assistant MQTT-autodetektering (nät/USB)</li>
       <li class="todo"><span class="mark">▹</span>Riktig effektmätning + djupt viloläge</li>
       <li class="todo"><span class="mark">▹</span>E-ink-display (stora siffror, batteri, trend)</li>
       <li class="todo"><span class="mark">▹</span>Batterispänning + låg-batteri Matter-händelse</li>

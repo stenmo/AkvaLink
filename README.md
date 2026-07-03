@@ -59,7 +59,8 @@ supported (`--clickboard` build flag).
 
 # Or the Wi-Fi station variant — joins your home Wi-Fi (provisioned once over
 # BLE with the free "ESP BLE Provisioning" app), then serves the temperature
-# page at http://akvalink.local. No Matter hub needed.
+# page at http://akvalink.local. Also publishes to MQTT for Home Assistant
+# autodiscovery (broker: mqtt://homeassistant.local:1883 by default).
 .\launch-akvalink-wsl.cmd --station build
 
 # Or just bench-test the DS18B20 probe (no Matter/BLE — logs temp every 30 s)
@@ -108,11 +109,10 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 - [x] Standalone BLE GATT variant — live temperature direct-to-app, no hub (`--ble`)
 - [x] Live temperature in the browser over Web Bluetooth — on the [landing page](https://stenmo.github.io/AkvaLink/)
 - [x] Wi-Fi AP variant (`--ap`) — open hotspot + captive web page, any phone incl. iPhone (needs external power)
-- [x] Wi-Fi station variant (`--station`) — joins home Wi-Fi (BLE-provisioned), page at `akvalink.local`, no hub
+- [x] Wi-Fi station variant (`--station`) — BLE-provisioned, `akvalink.local`, **Home Assistant MQTT autodiscovery**, no hub
 - [ ] **Real power measurement (Joulescope/PPK2) + deep sleep** — see [TODO.md](TODO.md)
 - [ ] **E-ink display** (big-digit, battery, trend) — see [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md)
 - [ ] Wi-Fi 6 TWT integration in code (currently DTIM only)
-- [ ] **Local Wi-Fi mDNS + JSON path** (offline LAN, no hub)
 - [ ] Battery voltage monitoring + low-battery Matter event
 - [ ] OTA via Matter
 - [ ] Production enclosure design (waterproof, IP67)
