@@ -437,10 +437,13 @@
   var otaLatestBtn = document.getElementById('otaLatestBtn');
   var otaFwLine = document.getElementById('otaFwLine');
 
-  var ESS_SERVICE = 0x181a;   // Environmental Sensing
-  var TEMP_CHAR   = 0x2a6e;   // Temperature (sint16, 0.01 °C, little-endian)
-  var DIS_SERVICE = 0x180a;   // Device Information
-  var FW_CHAR     = 0x2a26;   // Firmware Revision String
+  // Full 128-bit UUID strings (not 16-bit ints) so iOS Web Bluetooth polyfills
+  // like Bluefy/WebBLE accept them in filters + service discovery. Chrome/Edge
+  // treat these identically to the 0x… short forms.
+  var ESS_SERVICE = '0000181a-0000-1000-8000-00805f9b34fb';   // Environmental Sensing
+  var TEMP_CHAR   = '00002a6e-0000-1000-8000-00805f9b34fb';   // Temperature (sint16, 0.01 °C, little-endian)
+  var DIS_SERVICE = '0000180a-0000-1000-8000-00805f9b34fb';   // Device Information
+  var FW_CHAR     = '00002a26-0000-1000-8000-00805f9b34fb';   // Firmware Revision String
   var OTA_SERVICE = 'f0a00001-6e40-4a71-9b2c-6b6e696c0010';
   var OTA_CTRL    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0011';   // write + notify status
   var OTA_DATA    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0012';   // write firmware chunks
