@@ -30,6 +30,11 @@ CONFIG_ENABLE_CHIPOBLE=n
 CONFIG_ESP_WIFI_SOFTAP_SUPPORT=y
 CONFIG_ENABLE_WIFI_STATION=n
 
+# HTTP server needs more LWIP sockets than the Thread-tuned base (8): httpd uses
+# a listen + control socket + several client sockets, and the captive DNS task
+# needs one more. With only 8, httpd_start() fails and no page is served.
+CONFIG_LWIP_MAX_SOCKETS=16
+
 # POWER: an AP must stay awake to beacon + serve clients, so disable the light
 # sleep / power management the base enables for the Thread SED.
 CONFIG_PM_ENABLE=n

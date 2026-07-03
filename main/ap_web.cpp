@@ -96,13 +96,12 @@ static esp_err_t temp_get(httpd_req_t *req)
     return httpd_resp_send(req, buf, n);
 }
 
-// Catch-all: bounce every other path to the portal root. Combined with the DNS
-// hijack below, this makes phones pop the captive page automatically.
+// Catch-all: serve the page for every path. A 200 with HTML (rather than a 302
+// redirect) is what reliably pops the OS captive-portal sheet on join.
 static esp_err_t captive_get(httpd_req_t *req)
 {
-    httpd_resp_set_status(req, "302 Found");
-    httpd_resp_set_hdr(req, "Location", "http://" AP_IP_STR "/");
-    return httpd_resp_send(req, NULL, 0);
+    httpd_resp_set_type(req, "text/html");
+    return httpd_resp_send(req, PAGE_HTML, HTTPD_RESP_USE_STRLEN);
 }
 
 static void start_http(void)
@@ -110,6 +109,7 @@ static void start_http(void)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;   // enables the "/*" catch-all
     config.lru_purge_enable = true;
+    config.max_open_sockets = 4;                      // a few phones at once is plenty
 
     if (httpd_start(&s_httpd, &config) != ESP_OK) {
         ESP_LOGE(TAG, "httpd_start failed");
