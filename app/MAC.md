@@ -8,16 +8,24 @@ because it needs Apple's toolchain (Xcode).
 
 1. **Tools**
    - **Xcode** (App Store) — open it once to accept the license.
-   - **CocoaPods**: `sudo gem install cocoapods`
-   - **Node LTS**: `nvm install --lts` (or from nodejs.org)
+   - **CocoaPods**: `sudo gem install cocoapods` (or `brew install cocoapods`)
+   - **Node LTS** — any one of:
+     - `brew install node` (simplest if you have Homebrew), or
+     - `nvm install --lts` (respects `.nvmrc`), or
+     - the installer from nodejs.org.
+
+   Verify with `node -v` and `npm -v` before continuing.
 
 2. **Code + native project**
    ```bash
    cd app
-   nvm use                # Node LTS (.nvmrc)
+   nvm use                # only if you use nvm — pins Node LTS from .nvmrc
    npm install
    npm run add:ios        # cap add ios + auto-adds the Bluetooth Info.plist keys
    ```
+
+   > `nvm use` is optional — skip it if you installed Node via Homebrew or the
+   > nodejs.org installer. Any Node LTS on your `PATH` works.
 
 ## Build & run (repeat each time)
 
@@ -46,7 +54,9 @@ Watch the **Xcode console** for `[BLE] …` and `[OTA] …` log lines.
 
 ## Good to know
 
-- **App icon** isn't set yet — add later with `@capacitor/assets`.
+- **App icon** is generated from [`../web/favicon.svg`](../web/favicon.svg) by
+  `scripts/ios-icon.mjs` (runs inside `add:ios` and `cap:ios`). Change the
+  favicon and re-run `npm run ios:icon` to refresh it.
 - **"Flash latest firmware"** needs same-origin firmware the app doesn't bundle;
   **live temperature** and **manual `.bin` OTA** are the app's BLE paths.
 - Re-run `npm run cap:ios` after any change in `../web/**` (it regenerates and

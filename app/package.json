@@ -8,21 +8,23 @@
     "sync-web": "node scripts/build-web.mjs",
     "dev": "npm run sync-web && vite",
     "build": "npm run sync-web && vite build",
-    "add:ios": "cap add ios && npm run ios:permissions",
+    "add:ios": "cap add ios && npm run ios:permissions && npm run ios:icon",
     "add:android": "cap add android",
     "ios:permissions": "node scripts/ios-permissions.mjs",
+    "ios:icon": "node scripts/ios-icon.mjs",
     "cap:sync": "npm run build && cap sync",
-    "cap:ios": "npm run build && cap sync ios && npm run ios:permissions && cap open ios",
+    "cap:ios": "npm run build && cap sync ios && npm run ios:permissions && npm run ios:icon && cap open ios",
     "cap:android": "npm run build && cap sync android && cap open android"
   },
   "dependencies": {
+    "@capacitor-community/bluetooth-le": "^6.0.1",
     "@capacitor/android": "^6.1.2",
     "@capacitor/core": "^6.1.2",
-    "@capacitor/ios": "^6.1.2",
-    "@capacitor-community/bluetooth-le": "^6.0.1"
+    "@capacitor/ios": "^6.1.2"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.1.2",
+    "sharp": "^0.35.3",
     "vite": "^5.4.0"
   }
 }
