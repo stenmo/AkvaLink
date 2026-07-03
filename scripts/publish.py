@@ -44,10 +44,11 @@ REPO_SLUG = os.environ.get("AKVALINK_REPO", "stenmo/AkvaLink")
 API = "https://api.github.com"
 
 # The variants shipped as release assets (slug → human label).
+# All three run on battery; Wi-Fi just has the shortest life of the three.
 VARIANTS = {
-    "thread": "Matter over Thread (Sleepy End Device — battery target)",
-    "wifi": "Matter over Wi-Fi",
-    "ble": "Standalone BLE GATT (no hub, no Matter)",
+    "thread": "Matter over Thread — battery-powered, longest life (Sleepy End Device)",
+    "wifi": "Matter over Wi-Fi — battery-powered, shorter life than Thread",
+    "ble": "Standalone BLE GATT — battery-powered, no hub, no Matter",
 }
 
 
@@ -95,6 +96,9 @@ def format_notes(version: str, digests: dict) -> str:
         "```",
         "",
         "## Variants",
+        "",
+        "**All three variants are battery-powered.** Thread lasts longest,",
+        "Wi-Fi the shortest of the three — pick by how you reach the sensor.",
         "",
         "| Asset | What it is |",
         "|-------|------------|",
