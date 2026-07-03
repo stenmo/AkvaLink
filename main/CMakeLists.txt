@@ -21,9 +21,16 @@ if(DEFINED ENV{AKVALINK_BLE})
 endif()
 
 # Wi-Fi AP variant (build.sh --ap): open SoftAP + captive web page. Env-var
-# gated for the same expansion-timing reason as AKVALINK_BLE above.
+# gated for the same expansion-timing reason as AKVALINK_BLE above. web_page.cpp
+# is the shared page/HTTP server, also used by the station variant.
 if(DEFINED ENV{AKVALINK_AP})
-    list(APPEND SRCS "ap_web.cpp")
+    list(APPEND SRCS "ap_web.cpp" "web_page.cpp")
+endif()
+
+# Wi-Fi station variant (build.sh --station): join home Wi-Fi as a client,
+# BLE-provisioned, mDNS akvalink.local, shared web page.
+if(DEFINED ENV{AKVALINK_STATION})
+    list(APPEND SRCS "station_web.cpp" "web_page.cpp")
 endif()
 
 # QR-in-console for Matter commissioning: renders the "MT:..." setup payload as
@@ -42,6 +49,9 @@ if(DEFINED ENV{AKVALINK_BLE})
     list(APPEND AQ_PRIV_REQ bt esp_app_format app_update)
 elseif(DEFINED ENV{AKVALINK_AP})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip)
+elseif(DEFINED ENV{AKVALINK_STATION})
+    list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip
+        wifi_provisioning mdns bt)
 elseif(NOT DEFINED ENV{AKVALINK_NO_MATTER})
     list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)
 endif()

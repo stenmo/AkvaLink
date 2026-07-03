@@ -143,6 +143,21 @@ above has happened.
     restart advertising while a slot is free, notify **all** subscribed handles,
     keep OTA single-client. Only worth it if a "multiple viewers" demo need
     outweighs the extra radio-on power — power wins by default for this project.
+- **Universal BLE side-channel — name + temperature + OTA on EVERY variant**
+  (Thread / Wi-Fi / AP), not just `--ble`. Always-advertise the name + ESS
+  temperature and keep the custom OTA GATT service reachable, so any unit is
+  glanceable *and* firmware-updatable over BLE regardless of its main transport.
+  - Power is fine: a **slow** advertising interval (1–2 s+) is µA-scale average,
+    on par with the Thread SED's own wakeups — "a slow advertise doesn't add much."
+  - OTA-entry gating (pick per variant): **always-on** for powered variants
+    (`--ap`/`--wifi`), **button-to-enter** (hold button → OTA window), or the
+    **first ~2 min after power-up** (battery variants — power-cycle to update).
+  - Hard part: **Matter-over-Thread coexistence.** esp-matter owns the NimBLE
+    host for CHIPoBLE commissioning and tears BLE down afterwards; keeping our
+    GATT alive alongside Thread means adding our chars to the CHIPoBLE GATT DB
+    or re-owning BLE post-commissioning. RF coexistence itself is fine (C6 has a
+    separate 802.15.4 radio for Thread + a shared 2.4 GHz radio for BLE/Wi-Fi).
+  - Refactor `ble_gatt.cpp` into a shared "BLE side-channel" module first.
 - Standalone Wi-Fi (`--wifi-standalone` build, mDNS + HTTP/JSON).
 - **Espressif Unified Provisioning — chosen provisioner** (BLE default,
   SoftAP fallback for the laptop-only case — no phone, no app, just a

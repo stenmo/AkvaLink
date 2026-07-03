@@ -10,13 +10,14 @@
 #include "ds18b20_task.h"
 #include "ble_gatt.h"
 #include "ap_web.h"
+#include "station_web.h"
 #include "qr_console.h"
 
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "nvs_flash.h"
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
 #include <esp_matter.h>
 #include <esp_matter_console.h>
 #include <esp_matter_ota.h>
@@ -73,7 +74,7 @@ static void print_banner(void)
     ESP_LOGI(TAG, "");
 }
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
 
 // ---------------------------------------------------------------------------
 // Matter event callback. Mostly informational — we just log lifecycle events
@@ -175,6 +176,14 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(akvalink_ap_start());
     ds18b20_task_start();
     ESP_LOGI(TAG, "✨ AkvaLink AP up — join open Wi-Fi \"AkvaLink\", the page opens (or http://192.168.4.1)");
+#elif CONFIG_AKVALINK_STATION
+    // --- Wi-Fi station variant: join the home Wi-Fi as a client (BLE-
+    // provisioned), advertise mDNS "akvalink.local", serve the temperature
+    // page. No Matter, no hub — the phone/app talks to it on the LAN.
+    ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi station variant — BLE-provisioned client + akvalink.local");
+    ESP_ERROR_CHECK(akvalink_station_start());
+    ds18b20_task_start();
+    ESP_LOGI(TAG, "✨ AkvaLink station up — provision over BLE, then open http://akvalink.local");
 #else
 
     // --- Matter node + Temperature Sensor endpoint --------------------------

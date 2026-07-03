@@ -1,0 +1,46 @@
+# AkvaLink Wi-Fi station variant (--station) — join home Wi-Fi as a client,
+# provisioned over BLE (Espressif Unified Provisioning), page at akvalink.local.
+#
+# Layer on top of the base defaults:
+#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.station" reconfigure
+# or via the launcher:  launch-akvalink-wsl.cmd --station --rebuild
+#
+# NO Matter, NO hub. BLE is used ONCE to hand over Wi-Fi credentials (via the
+# free "ESP BLE Provisioning" app), then the radio is freed. See
+# main/station_web.cpp.
+#
+# POWER: staying associated keeps the Wi-Fi radio reachable — lighter than the
+# SoftAP variant but still not multi-year on a coin cell. Intended for mains/USB
+# or a generous battery; Wi-Fi 6 TWT tuning is a future power task.
+
+# Select the station app path (main/Kconfig.projbuild).
+CONFIG_AKVALINK_STATION=y
+
+# No Matter network stacks.
+CONFIG_OPENTHREAD_ENABLED=n
+CONFIG_OPENTHREAD_MTD=n
+CONFIG_OPENTHREAD_SRP_CLIENT=n
+CONFIG_OPENTHREAD_DNS_CLIENT=n
+CONFIG_OPENTHREAD_JOINER=n
+
+# BLE is needed for provisioning (hand over Wi-Fi credentials once). Use NimBLE
+# (lighter than Bluedroid); CHIPoBLE stays off since there is no Matter here.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_ENABLE_CHIPOBLE=n
+
+# Wi-Fi: station on; no SoftAP (the device joins an existing network).
+CONFIG_ESP_WIFI_SOFTAP_SUPPORT=n
+
+# HTTP server needs more LWIP sockets than the Thread-tuned base (8): httpd uses
+# a listen + control socket + several client sockets. With only 8, httpd_start()
+# fails and no page is served.
+CONFIG_LWIP_MAX_SOCKETS=16
+
+# POWER: keep the station reachable for the demo (no deep light-sleep). Modem
+# sleep still applies; TWT / deeper tuning is a future power task.
+CONFIG_PM_ENABLE=n
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=n
+CONFIG_ESP_SLEEP_POWER_DOWN_FLASH=n
+CONFIG_PM_POWER_DOWN_CPU_IN_LIGHT_SLEEP=n
+CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP=n

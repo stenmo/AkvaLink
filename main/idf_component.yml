@@ -26,3 +26,9 @@ dependencies:
   # DS18B20 driver built on top of onewire_bus.
   espressif/ds18b20:
     version: "^0.1.1"
+
+  # mDNS — moved out of the IDF core into the registry in 5.x. Only linked into
+  # the --station variant (akvalink.local); GC'd out of the other variants.
+  espressif/mdns:
+    version: "^1.2.0"
+

@@ -19,6 +19,7 @@ REM   --wifi               Build the Matter-over-Wi-Fi variant
 REM   --ble                Build the standalone BLE GATT variant (no Matter)
 REM   --sensor             Build the sensor read test (no Matter/BLE)
 REM   --ap                 Build the Wi-Fi SoftAP + web page variant (needs power)
+REM   --station            Build the Wi-Fi client variant (BLE-provisioned, akvalink.local)
 REM   --help               Show this help
 REM
 REM COM port is autodetected by VID_303A&PID_1001 if not supplied.
@@ -77,6 +78,7 @@ set "DO_WIFI=0"
 set "DO_BLE=0"
 set "DO_SENSOR=0"
 set "DO_AP=0"
+set "DO_STATION=0"
 set "DO_CLICKBOARD=0"
 set "DO_SETUP=0"
 set "DO_MENUCONFIG=0"
@@ -102,6 +104,7 @@ if /I "%A%"=="--wifi"       ( set "DO_WIFI=1"       & set "ANY_FLAG=1" & shift &
 if /I "%A%"=="--ble"        ( set "DO_BLE=1"        & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--sensor"     ( set "DO_SENSOR=1"     & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--ap"         ( set "DO_AP=1"         & set "ANY_FLAG=1" & shift & goto parse_args )
+if /I "%A%"=="--station"    ( set "DO_STATION=1"    & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--clickboard" ( set "DO_CLICKBOARD=1" & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="setup"        ( set "DO_SETUP=1"      & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="menuconfig"   ( set "DO_MENUCONFIG=1" & set "ANY_FLAG=1" & shift & goto parse_args )
@@ -174,6 +177,7 @@ if "%DO_BUILD%"=="1" (
     if "%DO_BLE%"=="1"        set "BUILD_ARGS=!BUILD_ARGS! --ble"
     if "%DO_SENSOR%"=="1"     set "BUILD_ARGS=!BUILD_ARGS! --sensor"
     if "%DO_AP%"=="1"         set "BUILD_ARGS=!BUILD_ARGS! --ap"
+    if "%DO_STATION%"=="1"    set "BUILD_ARGS=!BUILD_ARGS! --station"
     if "%DO_CLICKBOARD%"=="1" set "BUILD_ARGS=!BUILD_ARGS! --clickboard"
     if "%DO_CLICKBOARD%"=="1" (
         echo === --build --clickboard: DS2482 Click board ^(I2C-to-1-Wire, MikroBUS 1^) ===
@@ -181,6 +185,8 @@ if "%DO_BUILD%"=="1" (
         echo === --build --sensor: DS18B20 read test ^(no Matter/BLE^) ===
     ) else if "%DO_AP%"=="1" (
         echo === --build --ap: Wi-Fi SoftAP + web page ^(needs external power^) ===
+    ) else if "%DO_STATION%"=="1" (
+        echo === --build --station: Wi-Fi client + BLE provisioning + akvalink.local ===
     ) else if "%DO_BLE%"=="1" (
         echo === --build --ble: standalone BLE GATT variant ^(no Matter^) ===
     ) else if "%DO_WIFI%"=="1" (
@@ -239,6 +245,7 @@ if "%DO_FLASH%"=="1" (
     if "!DO_BLE!"=="1"    set "VSLUG=ble"
     if "!DO_SENSOR!"=="1" set "VSLUG=sensor"
     if "!DO_AP!"=="1"     set "VSLUG=ap"
+    if "!DO_STATION!"=="1" set "VSLUG=station"
     if "!DO_CLICKBOARD!"=="1" set "VSLUG=!VSLUG!-ds2482"
     set "BLD=%DEV_DIR%\build\!VSLUG!"
     if not exist "!BLD!\akvalink.bin" (

@@ -57,6 +57,11 @@ supported (`--clickboard` build flag).
 # external (mains/USB) power.
 .\launch-akvalink-wsl.cmd --ap build
 
+# Or the Wi-Fi station variant — joins your home Wi-Fi (provisioned once over
+# BLE with the free "ESP BLE Provisioning" app), then serves the temperature
+# page at http://akvalink.local. No Matter hub needed.
+.\launch-akvalink-wsl.cmd --station build
+
 # Or just bench-test the DS18B20 probe (no Matter/BLE — logs temp every 30 s)
 .\launch-akvalink-wsl.cmd --sensor build
 ```
@@ -103,6 +108,7 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 - [x] Standalone BLE GATT variant — live temperature direct-to-app, no hub (`--ble`)
 - [x] Live temperature in the browser over Web Bluetooth — on the [landing page](https://stenmo.github.io/AkvaLink/)
 - [x] Wi-Fi AP variant (`--ap`) — open hotspot + captive web page, any phone incl. iPhone (needs external power)
+- [x] Wi-Fi station variant (`--station`) — joins home Wi-Fi (BLE-provisioned), page at `akvalink.local`, no hub
 - [ ] **Real power measurement (Joulescope/PPK2) + deep sleep** — see [TODO.md](TODO.md)
 - [ ] **E-ink display** (big-digit, battery, trend) — see [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md)
 - [ ] Wi-Fi 6 TWT integration in code (currently DTIM only)

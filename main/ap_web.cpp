@@ -1,23 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Standalone Wi-Fi AP variant (--ap): open SoftAP "AkvaLink" + captive-portal
-// DNS + an HTTP server serving a self-contained page that shows the live
-// DS18B20 temperature. No Matter, no BLE, no home network.
-//
-// The HTTP page + /temp JSON handler are written to be reused by the planned
-// --station variant (same page, Wi-Fi client + mDNS instead of SoftAP).
+// DNS so any phone/laptop that joins is pushed straight to the temperature
+// page (served by the shared web server in web_page.cpp). No Matter, no BLE,
+// no home network.
 //
 // POWER: an always-on SoftAP keeps the Wi-Fi radio awake — NOT battery
 // friendly (days, not years). This variant is for mains/USB-powered use.
 
 #include "ap_web.h"
+#include "web_page.h"
 
-#include <math.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "esp_event.h"
-#include "esp_http_server.h"
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
@@ -29,104 +25,6 @@ static const char *TAG = "ap";
 
 #define AP_SSID        "AkvaLink"
 #define AP_IP_STR      "192.168.4.1"   // ESP-IDF default SoftAP gateway IP
-
-// Latest temperature (°C). volatile: written by the sensor task, read by the
-// HTTP handler on another task. A single 32-bit float store/load is atomic on
-// the C6, so no lock is needed for a display value.
-static volatile float s_temp_c = NAN;
-static httpd_handle_t s_httpd = NULL;
-
-void akvalink_ap_set_temperature(float celsius)
-{
-    s_temp_c = celsius;
-}
-
-// --- Web page (self-contained, no external assets) --------------------------
-static const char PAGE_HTML[] = R"HTML(<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AkvaLink</title>
-<style>
-  :root{color-scheme:dark}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-       font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;text-align:center;
-       background:linear-gradient(160deg,#033f63,#0a4a5a);color:#eaf7fb}
-  .c{padding:24px}
-  h1{font-weight:800;margin:0 0 18px;font-size:1.6rem}
-  .t{font-size:4.5rem;font-weight:800;color:#28c2d6;line-height:1}
-  .u{font-size:1.6rem;color:#28c2d6}
-  .s{opacity:.7;margin-top:10px;font-size:.95rem}
-</style></head>
-<body><div class="c">
-  <h1>AkvaLink &#127754;</h1>
-  <div><span class="t" id="t">&ndash;</span><span class="u">&nbsp;&deg;C</span></div>
-  <div class="s" id="s">reading&hellip;</div>
-</div>
-<script>
-function u(){fetch('/temp',{cache:'no-store'}).then(r=>r.json()).then(d=>{
-  var t=document.getElementById('t'),s=document.getElementById('s');
-  if(d.celsius==null){t.textContent='\u2013';s.textContent='no reading yet';}
-  else{t.textContent=Number(d.celsius).toFixed(1);s.textContent='live \u00b7 updates every 2s';}
-}).catch(function(){document.getElementById('s').textContent='disconnected';});}
-u();setInterval(u,2000);
-</script></body></html>)HTML";
-
-static esp_err_t root_get(httpd_req_t *req)
-{
-    httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, PAGE_HTML, HTTPD_RESP_USE_STRLEN);
-}
-
-static esp_err_t temp_get(httpd_req_t *req)
-{
-    char buf[48];
-    float t = s_temp_c;
-    int n;
-    if (isnan(t)) {
-        n = snprintf(buf, sizeof(buf), "{\"celsius\":null}");
-    } else {
-        // Integer formatting only — CONFIG_NEWLIB_NANO_FORMAT drops %f.
-        int centi = (int)lroundf(t * 100.0f);
-        const char *sign = centi < 0 ? "-" : "";
-        int a = abs(centi);
-        n = snprintf(buf, sizeof(buf), "{\"celsius\":%s%d.%02d}", sign, a / 100, a % 100);
-    }
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
-    return httpd_resp_send(req, buf, n);
-}
-
-// Catch-all: serve the page for every path. A 200 with HTML (rather than a 302
-// redirect) is what reliably pops the OS captive-portal sheet on join.
-static esp_err_t captive_get(httpd_req_t *req)
-{
-    httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, PAGE_HTML, HTTPD_RESP_USE_STRLEN);
-}
-
-static void start_http(void)
-{
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.uri_match_fn = httpd_uri_match_wildcard;   // enables the "/*" catch-all
-    config.lru_purge_enable = true;
-    config.max_open_sockets = 4;                      // a few phones at once is plenty
-
-    if (httpd_start(&s_httpd, &config) != ESP_OK) {
-        ESP_LOGE(TAG, "httpd_start failed");
-        return;
-    }
-    httpd_uri_t root = {};
-    root.uri = "/"; root.method = HTTP_GET; root.handler = root_get;
-    httpd_register_uri_handler(s_httpd, &root);
-
-    httpd_uri_t temp = {};
-    temp.uri = "/temp"; temp.method = HTTP_GET; temp.handler = temp_get;
-    httpd_register_uri_handler(s_httpd, &temp);
-
-    httpd_uri_t any = {};
-    any.uri = "/*"; any.method = HTTP_GET; any.handler = captive_get;
-    httpd_register_uri_handler(s_httpd, &any);
-}
 
 // --- Captive-portal DNS hijack ---------------------------------------------
 // Answer EVERY A query with the SoftAP IP so the OS captive-portal check fails
@@ -200,7 +98,7 @@ esp_err_t akvalink_ap_start(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wc));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    start_http();
+    akvalink_web_start_server();
     xTaskCreate(dns_hijack_task, "dns_hijack", 3072, NULL, 5, NULL);
 
     ESP_LOGI(TAG, "SoftAP \"%s\" (open) up — page at http://%s", AP_SSID, AP_IP_STR);

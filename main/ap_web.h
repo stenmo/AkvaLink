@@ -14,11 +14,10 @@ extern "C" {
 //
 // NOTE: an always-on SoftAP keeps the Wi-Fi radio awake — this variant is NOT
 // battery-friendly (days, not years). Intended for mains/USB-powered use.
+//
+// The temperature the page serves is pushed via akvalink_web_set_temperature()
+// (see web_page.h), shared with the --station variant.
 esp_err_t akvalink_ap_start(void);
-
-// Push the latest temperature (°C) for the web page to serve. Called by the
-// DS18B20 task on each sample.
-void akvalink_ap_set_temperature(float celsius);
 
 #ifdef __cplusplus
 }

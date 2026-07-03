@@ -86,13 +86,14 @@ activate_env() {
 # variants without a full reconfigure/rebuild — each keeps its own ccache.
 # Sets: VARIANT, SDKCFG, CMAKE_EXTRA, BUILD_DIR, NO_MATTER, BLE_ONLY.
 resolve_variant() {
-    local wifi=0 ble=0 sensor=0 ap=0 clickboard=0 arg
+    local wifi=0 ble=0 sensor=0 ap=0 station=0 clickboard=0 arg
     for arg in "$@"; do
         case "$arg" in
             --wifi)       wifi=1 ;;
             --ble)        ble=1 ;;
             --sensor)     sensor=1 ;;
             --ap)         ap=1 ;;
+            --station)    station=1 ;;
             --clickboard) clickboard=1 ;;
             *) echo "Unknown build option: $arg" >&2; exit 1 ;;
         esac
@@ -103,6 +104,8 @@ resolve_variant() {
         VARIANT="sensor"; SDKCFG="sdkconfig.defaults;sdkconfig.defaults.sensor"
     elif [ "$ap" -eq 1 ]; then
         VARIANT="ap";     SDKCFG="sdkconfig.defaults;sdkconfig.defaults.ap"
+    elif [ "$station" -eq 1 ]; then
+        VARIANT="station"; SDKCFG="sdkconfig.defaults;sdkconfig.defaults.station"
     elif [ "$wifi" -eq 1 ]; then
         VARIANT="wifi";   SDKCFG="sdkconfig.defaults;sdkconfig.defaults.wifi"
     else
@@ -113,10 +116,11 @@ resolve_variant() {
         CMAKE_EXTRA="-DAPP_USE_DS2482=1"
         VARIANT="${VARIANT}-ds2482"
     fi
-    NO_MATTER=0; BLE_ONLY=0; AP_ONLY=0
+    NO_MATTER=0; BLE_ONLY=0; AP_ONLY=0; STATION_ONLY=0
     [ "$ble" -eq 1 ] && { NO_MATTER=1; BLE_ONLY=1; }
     [ "$sensor" -eq 1 ] && NO_MATTER=1
     [ "$ap" -eq 1 ] && { NO_MATTER=1; AP_ONLY=1; }
+    [ "$station" -eq 1 ] && { NO_MATTER=1; STATION_ONLY=1; }
     BUILD_DIR="build/${VARIANT}"
 }
 
@@ -139,12 +143,14 @@ case "$cmd" in
             ble*)    echo "=== Network: BLE-only (standalone NimBLE GATT, no Matter) ===" ;;
             sensor*) echo "=== Sensor-only test: read the sensor, no Matter/BLE ===" ;;
             ap*)     echo "=== Network: Wi-Fi SoftAP + captive web page (needs external power) ===" ;;
+            station*) echo "=== Network: Wi-Fi client (BLE-provisioned) + akvalink.local web page ===" ;;
             wifi*)   echo "=== Network: Matter-over-Wi-Fi ===" ;;
             *)       echo "=== Network: Matter-over-Thread (SED) — battery target ===" ;;
         esac
         [ "$NO_MATTER" -eq 1 ] && export AKVALINK_NO_MATTER=1
         [ "$BLE_ONLY" -eq 1 ]  && export AKVALINK_BLE=1
         [ "$AP_ONLY" -eq 1 ]   && export AKVALINK_AP=1
+        [ "$STATION_ONLY" -eq 1 ] && export AKVALINK_STATION=1
 
         echo "=== Build dir: ${BUILD_DIR} (isolated — no rebuild when switching variants) ==="
         idf.py -B "${BUILD_DIR}" -D SDKCONFIG="${BUILD_DIR}/sdkconfig" \

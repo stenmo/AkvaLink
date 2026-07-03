@@ -12,6 +12,7 @@
 #include "app_priv.h"
 #include "ble_gatt.h"
 #include "ap_web.h"
+#include "web_page.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -30,7 +31,7 @@
 #include "ds18b20.h"
 #endif
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
 #include <esp_matter.h>
 #include <esp_matter_attribute_utils.h>
 
@@ -177,7 +178,7 @@ static void sensor_print_details(void)
 
 #endif // APP_USE_DS2482
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
 static void push_to_matter(float celsius)
 {
     if (g_temp_endpoint_id == 0) {
@@ -250,8 +251,8 @@ static void sample_task(void *)
             ESP_LOGD(TAG, "raw read: %.4f °C", celsius);
 #if CONFIG_AKVALINK_BLE_ONLY
             akvalink_ble_gatt_set_temperature(celsius);
-#elif CONFIG_AKVALINK_AP
-            akvalink_ap_set_temperature(celsius);
+#elif CONFIG_AKVALINK_AP || CONFIG_AKVALINK_STATION
+            akvalink_web_set_temperature(celsius);
 #else
             push_to_matter(celsius);
 #endif

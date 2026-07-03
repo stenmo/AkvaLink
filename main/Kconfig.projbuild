@@ -34,4 +34,18 @@ menu "AkvaLink"
             battery friendly (days, not years) — for mains/USB-powered use.
             Select via the launcher's --ap flag.
 
+    config AKVALINK_STATION
+        bool "Build the Wi-Fi station variant (BLE-provisioned client, no Matter)"
+        default n
+        help
+            Build the --station AkvaLink variant: join the home Wi-Fi as a
+            client, provisioned over BLE with Espressif Unified Provisioning
+            (the free "ESP BLE Provisioning" app). Once online it advertises
+            mDNS "akvalink.local" and serves the temperature page. No Matter,
+            no hub — the phone/app talks to it directly on the LAN.
+
+            NOTE: staying associated keeps the Wi-Fi radio reachable — lighter
+            than the SoftAP variant but still not multi-year on a coin cell.
+            Select via the launcher's --station flag.
+
 endmenu

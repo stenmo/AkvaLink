@@ -1,6 +1,7 @@
 # Local build & venv outputs (do NOT commit).
 build/
 build.log
+build_*.log
 sdkconfig
 sdkconfig.old
 managed_components/
