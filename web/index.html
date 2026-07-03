@@ -350,6 +350,8 @@
           <tr><td>Matter / Thread <em>(default)</em></td><td><code>(none)</code></td><td>esp-matter, OpenThread, BLE commissioning</td></tr>
           <tr><td>Matter / Wi-Fi</td><td><code>--wifi</code></td><td>esp-matter, Wi-Fi, BLE commissioning</td></tr>
           <tr><td>BLE-only</td><td><code>--ble</code></td><td>NimBLE GATT — no hub, no router</td></tr>
+          <tr><td>Wi-Fi AP <em>(mains/USB)</em></td><td><code>--ap</code></td><td>SoftAP “AkvaLink” + captive web page, any phone; no router needed</td></tr>
+          <tr><td>Wi-Fi station <em>(mains/USB)</em></td><td><code>--station</code></td><td>Joins home Wi-Fi (BLE-provisioned), page at akvalink.local; no hub</td></tr>
           <tr><td>Sensor test</td><td><code>--sensor</code></td><td>Read &amp; log the probe only</td></tr>
         </tbody>
       </table>
@@ -361,7 +363,7 @@
   <div class="wrap">
     <h2>Download firmware</h2>
     <p class="lead">Prebuilt single-image binaries for the NORA-W40 (ESP32-C6) — always the latest release.</p>
-    <p class="lead">Not sure which? All three read the same probe — they differ in how you reach it. <strong>Thread</strong> and <strong>Wi-Fi</strong> join Apple / Google / Alexa as a standard Matter sensor; <strong>BLE-only</strong> talks straight to your phone, no hub and no app store.</p>
+    <p class="lead">Not sure which? <strong>Thread</strong> and <strong>Wi-Fi</strong> join Apple / Google / Alexa as a standard Matter sensor. <strong>BLE-only</strong> talks straight to your phone. <strong>AP</strong> and <strong>Station</strong> serve a live web page — no hub, no app, just a browser (need mains/USB power).</p>
     <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=latest&amp;logo=github"></a></p>
     <div class="grid">
       <a class="dl-card" id="dlThread" href="https://github.com/stenmo/AkvaLink/releases">
@@ -372,6 +374,12 @@
       </a>
       <a class="dl-card" id="dlBle" href="https://github.com/stenmo/AkvaLink/releases">
         <span class="ico">🔵</span><h3>BLE-only</h3><p>No hub, no cloud · straight to your phone over Bluetooth.</p><span class="dl-btn">Download .bin</span>
+      </a>
+      <a class="dl-card" id="dlAp" href="https://github.com/stenmo/AkvaLink/releases">
+        <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Open hotspot "AkvaLink" · join it, the page opens automatically. No router, no app, any phone. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
+      </a>
+      <a class="dl-card" id="dlStation" href="https://github.com/stenmo/AkvaLink/releases">
+        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink.local</strong> in any browser on your LAN. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
       </a>
     </div>
     <p class="ble-note">Flash to <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>
@@ -405,6 +413,8 @@
       <li class="done"><span class="mark">✓</span>Standalone BLE GATT variant (no hub)</li>
       <li class="done"><span class="mark">✓</span>Live temperature in the browser (Web Bluetooth)</li>
       <li class="done"><span class="mark">✓</span>BLE firmware update (custom GATT over esp_ota)</li>
+      <li class="done"><span class="mark">✓</span>Wi-Fi AP variant — open hotspot + captive page, any phone (mains/USB)</li>
+      <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-provisioned, joins home Wi-Fi, page at akvalink.local (mains/USB)</li>
       <li class="todo"><span class="mark">▹</span>Real power measurement + deep sleep</li>
       <li class="todo"><span class="mark">▹</span>E-ink display (big-digit, battery, trend)</li>
       <li class="todo"><span class="mark">▹</span>Battery voltage + low-battery Matter event</li>
@@ -795,7 +805,7 @@
 // links and show the version. Always tracks the newest release.
 (function () {
   var REPO = 'stenmo/AkvaLink';
-  var cards = { thread: 'dlThread', wifi: 'dlWifi', ble: 'dlBle' };
+  var cards = { thread: 'dlThread', wifi: 'dlWifi', ble: 'dlBle', ap: 'dlAp', station: 'dlStation' };
 
   function assetFor(assets, variant) {
     var re = new RegExp('^akvalink-' + variant + '-v.*\\.bin$');

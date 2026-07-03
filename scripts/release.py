@@ -51,7 +51,9 @@ FLASHER_ARGS = BUILD_DIR / "flasher_args.json"
 DIST_DIR = REPO_ROOT / "dist"
 
 # The variants built + packaged for every release.
-VARIANTS = ("thread", "wifi", "ble")
+# thread/wifi/ble are battery-powered (all years).
+# ap and station need mains/USB (captive web page / LAN page).
+VARIANTS = ("thread", "wifi", "ble", "ap", "station")
 
 SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
@@ -137,15 +139,16 @@ def _run(cmd: list[str], dry_run: bool) -> None:
 
 
 def _build_cmd(variant: str) -> list[str]:
+    FLAG = {"wifi": "--wifi", "ble": "--ble", "ap": "--ap", "station": "--station"}
     if os.name == "nt":
         cmd = ["cmd", "/c", str(REPO_ROOT / "launch-akvalink-wsl.cmd")]
-        flag = {"wifi": "--wifi", "ble": "--ble"}.get(variant)
+        flag = FLAG.get(variant)
         if flag:
             cmd.append(flag)
         cmd.append("--rebuild")
         return cmd
     cmd = ["bash", str(REPO_ROOT / "build.sh"), "build"]
-    flag = {"wifi": "--wifi", "ble": "--ble"}.get(variant)
+    flag = FLAG.get(variant)
     if flag:
         cmd.append(flag)
     return cmd

@@ -118,6 +118,18 @@ def test_build_cmd_windows_ble(monkeypatch):
     assert "--wifi" not in cmd
 
 
+def test_build_cmd_windows_ap(monkeypatch):
+    monkeypatch.setattr(release.os, "name", "nt")
+    cmd = release._build_cmd("ap")
+    assert "--ap" in cmd and "--rebuild" in cmd
+
+
+def test_build_cmd_windows_station(monkeypatch):
+    monkeypatch.setattr(release.os, "name", "nt")
+    cmd = release._build_cmd("station")
+    assert "--station" in cmd and "--rebuild" in cmd
+
+
 def test_build_cmd_posix(monkeypatch):
     monkeypatch.setattr(release.os, "name", "posix")
     cmd = release._build_cmd("thread")

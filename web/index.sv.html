@@ -350,6 +350,8 @@
           <tr><td>Matter / Thread <em>(standard)</em></td><td><code>(ingen)</code></td><td>esp-matter, OpenThread, BLE-driftsättning</td></tr>
           <tr><td>Matter / Wi-Fi</td><td><code>--wifi</code></td><td>esp-matter, Wi-Fi, BLE-driftsättning</td></tr>
           <tr><td>Endast BLE</td><td><code>--ble</code></td><td>NimBLE GATT — ingen hub, ingen router</td></tr>
+          <tr><td>Wi-Fi AP <em>(nät/USB)</em></td><td><code>--ap</code></td><td>SoftAP "AkvaLink" + webbsida, vilken telefon som helst; ingen router</td></tr>
+          <tr><td>Wi-Fi station <em>(nät/USB)</em></td><td><code>--station</code></td><td>Ansluter till hemma-Wi-Fi (BLE-driftsätts), sida på akvalink.local; ingen hub</td></tr>
           <tr><td>Sensortest</td><td><code>--sensor</code></td><td>Läs &amp; logga givaren enbart</td></tr>
         </tbody>
       </table>
@@ -361,7 +363,7 @@
   <div class="wrap">
     <h2>Ladda ner firmware</h2>
     <p class="lead">Förbyggda enfilsbinärer för NORA-W40 (ESP32-C6) — alltid senaste releasen.</p>
-    <p class="lead">Osäker på vilken? Alla tre läser samma givare — de skiljer sig i hur du når den. <strong>Thread</strong> och <strong>Wi-Fi</strong> dyker upp i Apple / Google / Alexa som en vanlig Matter-givare; <strong>Endast BLE</strong> pratar direkt med din telefon, ingen hub och ingen appbutik.</p>
+    <p class="lead">Osäker på vilken? <strong>Thread</strong> och <strong>Wi-Fi</strong> dyker upp i Apple / Google / Alexa som en vanlig Matter-givare. <strong>Endast BLE</strong> pratar direkt med din telefon. <strong>AP</strong> och <strong>Station</strong> serverar en live-webbsida — ingen hub, ingen app, bara en webbläsare (kräver nät/USB-ström).</p>
     <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Senaste release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=senaste&amp;logo=github"></a></p>
     <div class="grid">
       <a class="dl-card" id="dlThread" href="https://github.com/stenmo/AkvaLink/releases">
@@ -372,6 +374,12 @@
       </a>
       <a class="dl-card" id="dlBle" href="https://github.com/stenmo/AkvaLink/releases">
         <span class="ico">🔵</span><h3>Endast BLE</h3><p>Ingen hub, inget moln · direkt till din telefon via Bluetooth.</p><span class="dl-btn">Ladda ner .bin</span>
+      </a>
+      <a class="dl-card" id="dlAp" href="https://github.com/stenmo/AkvaLink/releases">
+        <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Öppet nätverk "AkvaLink" · anslut, sidan öppnas automatiskt. Ingen router, ingen app, vilken telefon som helst. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
+      </a>
+      <a class="dl-card" id="dlStation" href="https://github.com/stenmo/AkvaLink/releases">
+        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink.local</strong> i valfri webbläsare på ditt LAN. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
       </a>
     </div>
     <p class="ble-note">Flasha till <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
@@ -405,6 +413,8 @@
       <li class="done"><span class="mark">✓</span>Fristående BLE GATT-variant (utan hub)</li>
       <li class="done"><span class="mark">✓</span>Live-temperatur i webbläsaren (Web Bluetooth)</li>
       <li class="done"><span class="mark">✓</span>BLE firmware-uppdatering (egen GATT över esp_ota)</li>
+      <li class="done"><span class="mark">✓</span>Wi-Fi AP-variant — öppet nätverk + webbsida, vilken telefon (nät/USB)</li>
+      <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-driftsätts, ansluter till hemma-Wi-Fi, sida på akvalink.local (nät/USB)</li>
       <li class="todo"><span class="mark">▹</span>Riktig effektmätning + djupt viloläge</li>
       <li class="todo"><span class="mark">▹</span>E-ink-display (stora siffror, batteri, trend)</li>
       <li class="todo"><span class="mark">▹</span>Batterispänning + låg-batteri Matter-händelse</li>
@@ -793,7 +803,7 @@
 // versionen visas. Följer alltid nyaste releasen.
 (function () {
   var REPO = 'stenmo/AkvaLink';
-  var cards = { thread: 'dlThread', wifi: 'dlWifi', ble: 'dlBle' };
+  var cards = { thread: 'dlThread', wifi: 'dlWifi', ble: 'dlBle', ap: 'dlAp', station: 'dlStation' };
 
   function assetFor(assets, variant) {
     var re = new RegExp('^akvalink-' + variant + '-v.*\\.bin$');

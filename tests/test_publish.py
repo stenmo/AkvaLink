@@ -18,7 +18,7 @@ def test_asset_name(variant, version, expected):
 
 
 def test_variants_are_the_three_shipping_ones():
-    assert list(publish.VARIANTS) == ["thread", "wifi", "ble"]
+    assert list(publish.VARIANTS) == ["thread", "wifi", "ble", "ap", "station"]
 
 
 def test_clean_upload_url_strips_template_and_adds_name():
@@ -53,7 +53,7 @@ def test_collect_assets_ok(tmp_path, monkeypatch):
         (tmp_path / name).write_bytes(b"IMG")
         (tmp_path / (name + ".sha256")).write_text(f"abc  {name}\n", encoding="utf-8")
     assets = publish.collect_assets("0.2.0")
-    assert len(assets) == 6   # image + sidecar for each of the three variants
+    assert len(assets) == 10   # image + sidecar for each of the five variants
     names = [p.name for p in assets]
     assert "akvalink-thread-v0.2.0.bin" in names
     assert "akvalink-ble-v0.2.0.bin.sha256" in names
@@ -77,20 +77,21 @@ def test_collect_assets_includes_app_images(tmp_path, monkeypatch):
             (tmp_path / name).write_bytes(b"IMG")
             (tmp_path / (name + ".sha256")).write_text(f"abc  {name}\n", encoding="utf-8")
     assets = publish.collect_assets("0.2.0")
-    # (merged + app) x (image + sidecar) x 3 variants
-    assert len(assets) == 12
+    # (merged + app) x (image + sidecar) x 5 variants
+    assert len(assets) == 20
     names = [p.name for p in assets]
     assert "akvalink-ble-app-v0.2.0.bin" in names
 
 
 def test_format_notes_lists_all_variants_and_hashes():
-    digests = {"thread": "aaa", "wifi": "bbb", "ble": "ccc"}
+    digests = {"thread": "aaa", "wifi": "bbb", "ble": "ccc", "ap": "ddd", "station": "eee"}
     notes = publish.format_notes("0.2.0", digests)
     assert notes.startswith("# AkvaLink v0.2.0")
     assert "write-flash 0x0 akvalink-thread-v0.2.0.bin" in notes
-    for variant in ("thread", "wifi", "ble"):
+    for variant in ("thread", "wifi", "ble", "ap", "station"):
         assert publish.asset_name(variant, "0.2.0") in notes
     assert "aaa" in notes and "bbb" in notes and "ccc" in notes
+    assert "ddd" in notes and "eee" in notes
     assert notes.endswith("\n")
 
 

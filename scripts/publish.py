@@ -44,11 +44,12 @@ REPO_SLUG = os.environ.get("AKVALINK_REPO", "stenmo/AkvaLink")
 API = "https://api.github.com"
 
 # The variants shipped as release assets (slug → human label).
-# All three run on battery; Wi-Fi just has the shortest life of the three.
 VARIANTS = {
     "thread": "Matter over Thread — battery-powered, longest life (Sleepy End Device)",
     "wifi": "Matter over Wi-Fi — battery-powered, shorter life than Thread",
     "ble": "Standalone BLE GATT — battery-powered, no hub, no Matter",
+    "ap": "Wi-Fi AP — open hotspot + captive page, any phone; needs mains/USB power",
+    "station": "Wi-Fi station — BLE-provisioned, joins your Wi-Fi, page at akvalink.local; needs mains/USB",
 }
 
 
@@ -83,6 +84,8 @@ def read_digest(path: Path) -> str:
 
 def format_notes(version: str, digests: dict) -> str:
     """Release body: what each asset is + how to flash it, with SHA256s."""
+    battery_variants = {k: v for k, v in VARIANTS.items() if k in ("thread", "wifi", "ble")}
+    mains_variants   = {k: v for k, v in VARIANTS.items() if k in ("ap", "station")}
     lines = [
         f"# AkvaLink v{version}",
         "",
@@ -95,15 +98,25 @@ def format_notes(version: str, digests: dict) -> str:
         f"esptool --chip esp32c6 write-flash 0x0 {asset_name('thread', version)}",
         "```",
         "",
-        "## Variants",
+        "## Battery-powered variants",
         "",
-        "**All three variants are battery-powered.** Thread lasts longest,",
-        "Wi-Fi the shortest of the three — pick by how you reach the sensor.",
+        "Thread lasts longest, Wi-Fi the shortest — pick by how you reach the sensor.",
         "",
         "| Asset | What it is |",
         "|-------|------------|",
     ]
-    for variant, label in VARIANTS.items():
+    for variant, label in battery_variants.items():
+        lines.append(f"| `{asset_name(variant, version)}` | {label} |")
+    lines += [
+        "",
+        "## Mains/USB-powered variants",
+        "",
+        "These keep Wi-Fi active and need external power.",
+        "",
+        "| Asset | What it is |",
+        "|-------|------------|",
+    ]
+    for variant, label in mains_variants.items():
         lines.append(f"| `{asset_name(variant, version)}` | {label} |")
     lines += ["", "## SHA256", "", "```"]
     for variant in VARIANTS:
