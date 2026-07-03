@@ -22,11 +22,18 @@ static const char *TAG = "web";
 // HTTP handler on another task. A single 32-bit float store/load is atomic on
 // the C6, so no lock is needed for a display value.
 static volatile float s_temp_c = NAN;
+// Battery level (0-100). 255 = unknown/not available (no ADC yet).
+static volatile uint8_t s_battery_percent = 255;
 static httpd_handle_t s_httpd = NULL;
 
 void akvalink_web_set_temperature(float celsius)
 {
     s_temp_c = celsius;
+}
+
+void akvalink_web_set_battery(uint8_t percent)
+{
+    s_battery_percent = (percent > 100) ? 100 : percent;
 }
 
 // --- Web page (self-contained, no external assets) --------------------------
@@ -45,11 +52,14 @@ static const char PAGE_HTML[] = R"HTML(<!doctype html>
   .u{font-size:1.6rem;color:#28c2d6}
   .s{opacity:.7;margin-top:10px;font-size:.95rem}
   .m{opacity:.45;margin-top:6px;font-size:.75rem}
+  .b{opacity:.5;margin-top:4px;font-size:.8rem}
+  .b.low{color:#ff6b6b;opacity:.85}
 </style></head>
 <body><div class="c">
   <h1>AkvaLink &#127754;</h1>
   <div><span class="t" id="t">&ndash;</span><span class="u">&nbsp;&deg;C</span></div>
   <div class="s" id="s">reading&hellip;</div>
+  <div class="b" id="b"></div>
   <div class="m" id="m"></div>
 </div>
 <script>
@@ -58,12 +68,19 @@ function u(){fetch('/temp',{cache:'no-store'}).then(r=>r.json()).then(d=>{
   if(d.celsius==null){t.textContent='\u2013';s.textContent='no reading yet';}
   else{t.textContent=Number(d.celsius).toFixed(1);s.textContent='live \u00b7 updates every 2s';}
 }).catch(function(){document.getElementById('s').textContent='disconnected';});}
+function bat(){fetch('/battery',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+  if(!d||d.percent===null)return;
+  var el=document.getElementById('b'),p=d.percent;
+  el.textContent=(p<=10?'\ud83e\udeb4':'\ud83d\udd0b')+' '+p+'%';
+  el.className='b'+(p<=20?' low':'');
+}).catch(function(){});}
 function mq(){fetch('/mqtt-status',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
   if(!d)return;
   var m=document.getElementById('m');
   m.textContent=d.connected?'MQTT \u2713 Home Assistant':'MQTT \u2013 no broker';
 }).catch(function(){});}
 u();setInterval(u,2000);
+bat();setInterval(bat,30000);
 mq();setInterval(mq,10000);
 </script></body></html>)HTML";
 
@@ -86,6 +103,21 @@ static esp_err_t temp_get(httpd_req_t *req)
         const char *sign = centi < 0 ? "-" : "";
         int a = abs(centi);
         n = snprintf(buf, sizeof(buf), "{\"celsius\":%s%d.%02d}", sign, a / 100, a % 100);
+    }
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    return httpd_resp_send(req, buf, n);
+}
+
+static esp_err_t battery_get(httpd_req_t *req)
+{
+    char buf[32];
+    int n;
+    uint8_t pct = s_battery_percent;
+    if (pct == 255) {
+        n = snprintf(buf, sizeof(buf), "{\"percent\":null}");  // not available yet
+    } else {
+        n = snprintf(buf, sizeof(buf), "{\"percent\":%u}", (unsigned)pct);
     }
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
@@ -119,6 +151,10 @@ esp_err_t akvalink_web_start_server(void)
     httpd_uri_t temp = {};
     temp.uri = "/temp"; temp.method = HTTP_GET; temp.handler = temp_get;
     httpd_register_uri_handler(s_httpd, &temp);
+
+    httpd_uri_t batt = {};
+    batt.uri = "/battery"; batt.method = HTTP_GET; batt.handler = battery_get;
+    httpd_register_uri_handler(s_httpd, &batt);
 
     httpd_uri_t any = {};
     any.uri = "/*"; any.method = HTTP_GET; any.handler = any_get;

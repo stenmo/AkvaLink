@@ -16,6 +16,10 @@ esp_err_t akvalink_web_start_server(void);
 // DS18B20 sampling task on each reading.
 void akvalink_web_set_temperature(float celsius);
 
+// Set battery level (0-100 %). Call when ADC reading is available.
+// Pass 255 (default) to report "unknown" — the indicator will be hidden.
+void akvalink_web_set_battery(uint8_t percent);
+
 #ifdef __cplusplus
 }
 #endif

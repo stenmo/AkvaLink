@@ -33,7 +33,26 @@ environments where the temperature barely changes, but you want to know
 | Sensor | DS18B20 (stainless probe) | ±0.5 °C, 12-bit (0.0625 °C steps), 1-Wire, ~$3 |
 | Power | 2× AA alkaline (or 18650 Li) | ~12 years on 2× AA in pool conditions |
 
-**Schematic:** GPIO15 → DS18B20 DQ, 4.7 kΩ pull-up to +3V3. That's it.
+**Schematic (direct GPIO, default build):**
+
+```
+                        ┌──────────────────────────────────────────┐
+                        │       NORA-W40 / EVK-NORA-W40            │
+  +3V3 ────────┬─────── │ GPIO15 (J15.4)  ← DS18B20 DQ 1-Wire     │
+               │        │                                          │
+              4.7 kΩ    │ GPIO9  (BOOT)   ← re-provision button    │
+               │        │                   long-press 5 s →       │
+DS18B20 ───────┘        │                   erase Wi-Fi, re-prov   │
+  DQ ─────────────────► │                                          │
+  VDD ────────────────── │ +3V3            ← future: battery ADC   │
+  GND ────────────────── │ GND                                     │
+                        │                     ┌──────────┐         │
+  Battery (+) ──── R1 ──┤ ADCx (future) ◄─────┤ R1 / R2  │        │
+  Battery (-) ──── GND  │                     │ divider  │        │
+                        └──────────────────────┴──────────┴────────┘
+```
+
+R1/R2 voltage divider (not yet populated): e.g. 390 kΩ / 100 kΩ scales 3.3 V full-charge to ≈ 0.68 V, safely within the ESP32-C6 ADC input range.
 
 For long cable runs (> 5 m), a DS2482-800 I2C-to-1-Wire bridge variant is also
 supported (`--clickboard` build flag).

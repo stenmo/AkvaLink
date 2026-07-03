@@ -35,16 +35,31 @@ at the repo root for hardware wiring, commissioning, and full usage.
 | Commissioning | BLE 5.3 (off after pairing to save power) |
 | Framework | esp-matter release/v1.5 (connectedhomeip, ESP-IDF v5.4.1) |
 
+## GPIO map
+
+| GPIO | EVK header | Function | Direction | Notes |
+|------|------------|----------|-----------|-------|
+| GPIO15 | J15.4 | DS18B20 DQ (1-Wire) | Bidir | 4.7 kΩ pull-up to +3V3 |
+| GPIO6  | MikroBUS 1 SDA | DS2482 I2C SDA (`--clickboard`) | Bidir | Alternate sensor path |
+| GPIO7  | MikroBUS 1 SCL | DS2482 I2C SCL (`--clickboard`) | Out | Alternate sensor path |
+| GPIO9  | BOOT button | Re-provision / factory recovery | In pull-up | Long-press 5 s (`--station`): erase Wi-Fi creds + restart BLE provisioning |
+| TBD    | ADC header | Battery voltage divider (future) | In ADC | See ADC section below |
+
 ## Sensor wiring
 
 ### Option A: Direct GPIO (default build)
 
 ```
-DS18B20          EVK-NORA-W40
-───────          ────────────
-VDD (pin 3) ──── J16.26 (+3V3)
-DQ  (pin 2) ──── J15.4  (GPIO15) ← 4.7 kΩ pull-up to +3V3
-GND (pin 1) ──── J16.28 (GND)
+                         EVK-NORA-W40
+                         ──────────────────────────────
+  +3V3 ────────┬──────── J16.26  (+3V3)
+               │
+             4.7 kΩ
+               │
+DS18B20        │
+  DQ  ─────────┴──────── J15.4   (GPIO15)   1-Wire data
+  VDD ─────────────────── J16.26  (+3V3)
+  GND ─────────────────── J16.28  (GND)
 ```
 
 ### Option B: DS2482-800 Click board (`--clickboard` build)
@@ -66,6 +81,51 @@ At init, the driver logs the full sensor identity:
 ```
 I (1416) ds2482: 1-Wire ROM: 28-0417C4A2D3FF-2A (DS18B20)
 I (1420) ds2482: Power supply: external VDD
+
+### GPIO9 / BOOT — re-provisioning recovery (`--station` variant)
+
+The EVK BOOT button (GPIO9, active-low with internal pull-up) doubles as a
+hardware recovery path. Hold it **5 seconds** while the device is running to:
+
+1. Erase the `wifi_prov` NVS namespace (Wi-Fi credentials)
+2. Restart — the device re-enters BLE provisioning automatically
+
+No flash-erase or USB cable needed. Normal short-press still does nothing
+(the 5 s threshold prevents accidental triggers).
+
+```
+              ┌─────────────────┐
+  GPIO9 ──────┤  BOOT button    │──── GND
+  (pull-up)   │  (active-low)   │
+              └─────────────────┘
+  Hold 5 s → wifi_prov NVS erased → esp_restart() → BLE provisioning
+```
+
+### Battery ADC voltage divider (future, not yet populated)
+
+When the voltage divider is populated, the firmware will read the battery
+rail through the ESP32-C6 SAR ADC and report percentage via:
+- BLE GATT Battery Service (0x180F / 0x2A19) on the `--ble` variant
+- `/battery` HTTP endpoint on the `--station` / `--ap` web page
+- MQTT `akvalink/<mac>/battery` topic (low-battery alert at ≤ 10 %)
+
+**Suggested divider (2× AA, 3.3 V max full-charge):**
+
+```
+Battery (+) ─────────────────────────────── V_bat (max ~3.3 V)
+                │
+               R1 = 390 kΩ
+                │
+                ├──────────────────────────► ADC input (≤ 3.3 V)
+                │                           scale: V_bat × R2/(R1+R2)
+               R2 = 100 kΩ                        = V_bat × 0.204
+                │                           3.3 V → 0.67 V (safe)
+Battery (-) ─────────────────────────────── GND
+```
+
+Use high-value resistors (390 kΩ + 100 kΩ) to minimise quiescent current
+(~7 µA at 3 V) — negligible against the µA-range sleep current budget.
+Enable the ADC only during sampling, then power it down.
 I (1425) ds2482: Resolution: 12-bit (0.0625 °C/LSB, 750 ms conversion)
 I (1430) ds2482: DS2482-800 OK on I2C 0x18, DS18B20 on OW_IO0
 ```
