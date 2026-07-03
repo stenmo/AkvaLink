@@ -22,11 +22,9 @@ gets started.
 - [x] **Re-provisioning button** ✓ — long-press GPIO9 (EVK boot button) 5 s
       to erase Wi-Fi NVS + re-enter BLE provisioning. Currently the only
       recovery path is a manual flash-erase.
-- [ ] **GATT Battery Service (BAS) + writable device name** — stub the
-      standard BAS (0x180F / 0x2A19) at 100 % now; wire to the ADC when
-      the voltage divider is populated. Add a writable Custom characteristic
-      for the device friendly name (stored in NVS), used in mDNS + MQTT
-      entity name. Add min/max/alert threshold characteristics.
+- [x] **GATT Battery Service (BAS) + writable device name** ✓ — BAS stub
+      at 100 % until ADC wired; writable device-name char (NVS-backed);
+      alert high/low threshold chars (NVS-backed, sint16 0.01 °C).
 - [ ] **Temperature alerts via MQTT** — publish `{"state":"high"}` / `"low"` /
       `"ok"` to `akvalink/<mac>/alert` when temperature crosses configurable
       thresholds. HA automations can then push notifications. Depends on

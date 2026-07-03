@@ -3,9 +3,11 @@
 // Standalone BLE GATT server for the --ble AkvaLink variant (NimBLE).
 //
 // Services:
+//   - Battery (0x180F): Battery Level 0x2A19 (uint8 0-100, stub=100 until ADC wired)
 //   - Device Information (0x180A): manufacturer, model, firmware revision
-//   - Environmental Sensing (0x181A): Temperature 0x2A6E (sint16, 0.01 °C), notify
-//   - AkvaLink custom service: uptime (uint32 seconds), read + notify
+//   - Environmental Sensing (0x181A): Temperature 0x2A6E (sint16, 0.01 \u00b0C), notify
+//   - AkvaLink custom service: uptime, writable device name (NVS-backed),
+//     high/low alert thresholds (int16, 0.01 \u00b0C, NVS-backed)
 //   - AkvaLink OTA service (128-bit): BLE firmware update — control + data chars
 //
 // Advertising rotates between legacy 1M (broad phone compatibility, esp. iOS)
@@ -29,6 +31,8 @@
 #include "esp_timer.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
+#include "nvs_flash.h"
+#include "nvs.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -57,10 +61,12 @@ static const char *MODEL        = "AkvaLink NORA-W40";
 // --- UUIDs (static objects — see C++ note above) ----------------------------
 static const ble_uuid16_t UUID_DIS          = BLE_UUID16_INIT(0x180A);
 static const ble_uuid16_t UUID_ESS          = BLE_UUID16_INIT(0x181A);
+static const ble_uuid16_t UUID_BAS          = BLE_UUID16_INIT(0x180F); // Battery Service
 static const ble_uuid16_t UUID_MANUFACTURER = BLE_UUID16_INIT(0x2A29);
 static const ble_uuid16_t UUID_MODEL        = BLE_UUID16_INIT(0x2A24);
 static const ble_uuid16_t UUID_FW_REVISION  = BLE_UUID16_INIT(0x2A26);
 static const ble_uuid16_t UUID_TEMPERATURE  = BLE_UUID16_INIT(0x2A6E);
+static const ble_uuid16_t UUID_BATTERY_LVL  = BLE_UUID16_INIT(0x2A19); // Battery Level
 
 // Custom AkvaLink service + uptime characteristic (random 128-bit base).
 // f0aq0001-6e40-4a71-9b2c-akvalink0001 style; bytes are little-endian.
@@ -69,6 +75,17 @@ static const ble_uuid128_t UUID_AKVALINK_SVC = BLE_UUID128_INIT(
     0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
 static const ble_uuid128_t UUID_UPTIME = BLE_UUID128_INIT(
     0x02, 0x00, 0x6c, 0x69, 0x6e, 0x6b, 0x2c, 0x9b,
+    0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
+// Writable device-friendly name (stored in NVS; reflected in GAP on next reboot).
+static const ble_uuid128_t UUID_DEV_NAME = BLE_UUID128_INIT(
+    0x03, 0x00, 0x6c, 0x69, 0x6e, 0x6b, 0x2c, 0x9b,
+    0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
+// Alert thresholds (sint16, 0.01 \u00b0C). High/low stored in NVS; 0 = disabled.
+static const ble_uuid128_t UUID_ALERT_HIGH = BLE_UUID128_INIT(
+    0x04, 0x00, 0x6c, 0x69, 0x6e, 0x6b, 0x2c, 0x9b,
+    0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
+static const ble_uuid128_t UUID_ALERT_LOW = BLE_UUID128_INIT(
+    0x05, 0x00, 0x6c, 0x69, 0x6e, 0x6b, 0x2c, 0x9b,
     0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
 
 // BLE OTA service + control/data characteristics (same 128-bit base).
@@ -83,12 +100,40 @@ static const ble_uuid128_t UUID_OTA_DATA = BLE_UUID128_INIT(
     0x71, 0x4a, 0x40, 0x6e, 0x01, 0x00, 0xa0, 0xf0);
 
 // --- State ------------------------------------------------------------------
-static uint8_t  s_own_addr_type   = 0;
-static uint16_t s_conn_handle     = BLE_HS_CONN_HANDLE_NONE;
-static uint16_t s_temp_val_handle = 0;
+static uint8_t  s_own_addr_type     = 0;
+static uint16_t s_conn_handle       = BLE_HS_CONN_HANDLE_NONE;
+static uint16_t s_temp_val_handle   = 0;
 static uint16_t s_uptime_val_handle = 0;
-static bool     s_temp_subscribed = false;
-static int16_t  s_temp_centi      = 0;   // temperature in 0.01 °C units
+static bool     s_temp_subscribed   = false;
+static int16_t  s_temp_centi        = 0;   // temperature in 0.01 \u00b0C units
+
+// Battery level (0-100). Stub at 100 % until the ADC circuit is populated.
+// Call akvalink_ble_gatt_set_battery() when the ADC is ready.
+static uint8_t s_battery_percent = 100;
+
+// Alert thresholds (int16, 0.01 \u00b0C). 0 = disabled. Persisted in NVS.
+#define NVS_NS        "akvalink"
+#define NVS_KEY_NAME  "devname"
+#define NVS_KEY_HIGH  "alert_high"
+#define NVS_KEY_LOW   "alert_low"
+#define DEV_NAME_MAX  32
+
+static char    s_dev_name[DEV_NAME_MAX + 1] = DEVICE_NAME;
+static int16_t s_alert_high = 0;    // 0 = disabled
+static int16_t s_alert_low  = 0;    // 0 = disabled
+
+static void load_nvs_settings(void)
+{
+    nvs_handle_t h;
+    if (nvs_open(NVS_NS, NVS_READONLY, &h) != ESP_OK) {
+        return;  // no settings yet — use defaults
+    }
+    size_t len = sizeof(s_dev_name);
+    nvs_get_str(h, NVS_KEY_NAME, s_dev_name, &len);
+    nvs_get_i16(h, NVS_KEY_HIGH, &s_alert_high);
+    nvs_get_i16(h, NVS_KEY_LOW,  &s_alert_low);
+    nvs_close(h);
+}
 
 // --- BLE OTA state ----------------------------------------------------------
 static uint16_t              s_ota_ctrl_handle = 0;
@@ -110,10 +155,60 @@ static int gatt_access(uint16_t /*conn*/, uint16_t /*attr*/,
         return BLE_ATT_ERR_WRITE_NOT_PERMITTED;
     }
 
-    // Custom 128-bit uptime characteristic.
+    // Custom 128-bit characteristics.
     if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_UPTIME.u) == 0) {
         uint32_t uptime_s = (uint32_t)(esp_timer_get_time() / 1000000);
         return os_mbuf_append(ctxt->om, &uptime_s, sizeof(uptime_s)) == 0
+                   ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+    }
+    if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_DEV_NAME.u) == 0) {
+        if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
+            // Writable device name: update NVS + in-memory copy.
+            uint16_t len = 0;
+            char buf[DEV_NAME_MAX + 1] = {};
+            ble_hs_mbuf_to_flat(ctxt->om, buf, DEV_NAME_MAX, &len);
+            buf[len] = '\0';
+            strncpy(s_dev_name, buf, DEV_NAME_MAX);
+            nvs_handle_t h;
+            if (nvs_open(NVS_NS, NVS_READWRITE, &h) == ESP_OK) {
+                nvs_set_str(h, NVS_KEY_NAME, s_dev_name);
+                nvs_commit(h);
+                nvs_close(h);
+            }
+            ESP_LOGI(TAG, "Device name updated to \"%s\" (takes effect on reboot)", s_dev_name);
+            return 0;
+        }
+        return os_mbuf_append(ctxt->om, s_dev_name, strlen(s_dev_name)) == 0
+                   ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+    }
+    if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_ALERT_HIGH.u) == 0) {
+        if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
+            uint16_t len = 0;
+            ble_hs_mbuf_to_flat(ctxt->om, &s_alert_high, sizeof(s_alert_high), &len);
+            nvs_handle_t h;
+            if (nvs_open(NVS_NS, NVS_READWRITE, &h) == ESP_OK) {
+                nvs_set_i16(h, NVS_KEY_HIGH, s_alert_high);
+                nvs_commit(h); nvs_close(h);
+            }
+            ESP_LOGI(TAG, "Alert high set to %d (%.2f\u00b0C)", s_alert_high, s_alert_high / 100.0f);
+            return 0;
+        }
+        return os_mbuf_append(ctxt->om, &s_alert_high, sizeof(s_alert_high)) == 0
+                   ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+    }
+    if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_ALERT_LOW.u) == 0) {
+        if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
+            uint16_t len = 0;
+            ble_hs_mbuf_to_flat(ctxt->om, &s_alert_low, sizeof(s_alert_low), &len);
+            nvs_handle_t h;
+            if (nvs_open(NVS_NS, NVS_READWRITE, &h) == ESP_OK) {
+                nvs_set_i16(h, NVS_KEY_LOW, s_alert_low);
+                nvs_commit(h); nvs_close(h);
+            }
+            ESP_LOGI(TAG, "Alert low set to %d (%.2f\u00b0C)", s_alert_low, s_alert_low / 100.0f);
+            return 0;
+        }
+        return os_mbuf_append(ctxt->om, &s_alert_low, sizeof(s_alert_low)) == 0
                    ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
     }
 
@@ -124,13 +219,16 @@ static int gatt_access(uint16_t /*conn*/, uint16_t /*attr*/,
         case 0x2A24:  // Model
             return os_mbuf_append(ctxt->om, MODEL, strlen(MODEL)) == 0
                        ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
-        case 0x2A26: {  // Firmware revision — from version.txt / PROJECT_VER
+        case 0x2A26: {  // Firmware revision
             const esp_app_desc_t *desc = esp_app_get_description();
             return os_mbuf_append(ctxt->om, desc->version, strlen(desc->version)) == 0
                        ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
         }
-        case 0x2A6E:  // Temperature (sint16, 0.01 °C, little-endian)
+        case 0x2A6E:  // Temperature (sint16, 0.01 \u00b0C)
             return os_mbuf_append(ctxt->om, &s_temp_centi, sizeof(s_temp_centi)) == 0
+                       ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+        case 0x2A19:  // Battery Level (uint8, 0-100 %)
+            return os_mbuf_append(ctxt->om, &s_battery_percent, sizeof(s_battery_percent)) == 0
                        ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
         default:
             return BLE_ATT_ERR_UNLIKELY;
@@ -315,9 +413,23 @@ static const struct ble_gatt_chr_def s_ess_chrs[] = {
 };
 
 static const struct ble_gatt_chr_def s_akvalink_chrs[] = {
-    { .uuid = &UUID_UPTIME.u, .access_cb = gatt_access,
+    { .uuid = &UUID_UPTIME.u,     .access_cb = gatt_access,
       .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
       .val_handle = &s_uptime_val_handle },
+    // Writable device-friendly name (stored in NVS; reflected after reboot).
+    { .uuid = &UUID_DEV_NAME.u,   .access_cb = gatt_access,
+      .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE },
+    // Alert thresholds (sint16, 0.01 \u00b0C; 0 = disabled; stored in NVS).
+    { .uuid = &UUID_ALERT_HIGH.u, .access_cb = gatt_access,
+      .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE },
+    { .uuid = &UUID_ALERT_LOW.u,  .access_cb = gatt_access,
+      .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE },
+    { 0 },
+};
+
+static const struct ble_gatt_chr_def s_bas_chrs[] = {
+    { .uuid = &UUID_BATTERY_LVL.u, .access_cb = gatt_access,
+      .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY },
     { 0 },
 };
 
@@ -331,6 +443,7 @@ static const struct ble_gatt_chr_def s_ota_chrs[] = {
 };
 
 static const struct ble_gatt_svc_def s_services[] = {
+    { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_BAS.u,          .characteristics = s_bas_chrs },
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_DIS.u,          .characteristics = s_dis_chrs },
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_ESS.u,          .characteristics = s_ess_chrs },
     { .type = BLE_GATT_SVC_TYPE_PRIMARY, .uuid = &UUID_AKVALINK_SVC.u, .characteristics = s_akvalink_chrs },
@@ -531,6 +644,8 @@ static void host_task(void * /*param*/)
 // --- Public API -------------------------------------------------------------
 esp_err_t akvalink_ble_gatt_start(void)
 {
+    load_nvs_settings();   // load device name + alert thresholds from NVS
+
     esp_err_t err = nimble_port_init();
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "nimble_port_init failed: %d", err);
@@ -548,11 +663,12 @@ esp_err_t akvalink_ble_gatt_start(void)
     rc = ble_gatts_add_svcs(s_services);
     if (rc != 0) { ESP_LOGE(TAG, "add_svcs rc=%d", rc); return ESP_FAIL; }
 
-    rc = ble_svc_gap_device_name_set(DEVICE_NAME);
+    rc = ble_svc_gap_device_name_set(s_dev_name);  // uses NVS name if set
     if (rc != 0) { ESP_LOGW(TAG, "device_name_set rc=%d", rc); }
 
     nimble_port_freertos_init(host_task);
-    ESP_LOGI(TAG, "🌊 AkvaLink BLE GATT server started");
+    ESP_LOGI(TAG, "🌊 AkvaLink BLE GATT server started (name: \"%s\", alert high=%d low=%d)",
+             s_dev_name, s_alert_high, s_alert_low);
     return ESP_OK;
 }
 
@@ -561,10 +677,22 @@ void akvalink_ble_gatt_set_temperature(float celsius)
     s_temp_centi = (int16_t)lroundf(celsius * 100.0f);
 
     if (s_conn_handle == BLE_HS_CONN_HANDLE_NONE || !s_temp_subscribed) {
-        return;  // nobody listening — the value is served on the next read
+        return;
     }
     struct os_mbuf *om = ble_hs_mbuf_from_flat(&s_temp_centi, sizeof(s_temp_centi));
     if (om) {
         ble_gatts_notify_custom(s_conn_handle, s_temp_val_handle, om);
     }
 }
+
+void akvalink_ble_gatt_set_battery(uint8_t percent)
+{
+    if (percent > 100) percent = 100;
+    s_battery_percent = percent;
+    // NOTE: no active notify here — the client reads on demand. Add a
+    // val_handle + notify call (like temperature) when the ADC is wired.
+}
+
+int16_t akvalink_ble_gatt_get_alert_high(void) { return s_alert_high; }
+int16_t akvalink_ble_gatt_get_alert_low(void)  { return s_alert_low;  }
+

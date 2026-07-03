@@ -14,15 +14,23 @@
 extern "C" {
 #endif
 
-// Bring up the NimBLE host and register the GATT services (Device Information,
-// Environmental Sensing, and a custom AkvaLink service). Starts advertising.
-// Only valid in the --ble build — it owns the NimBLE host, which would
-// clash with esp-matter's BLE commissioning in the Matter variants.
+// Bring up the NimBLE host and register the GATT services (Battery, Device
+// Information, Environmental Sensing, and a custom AkvaLink service with
+// uptime, writable device name, and alert thresholds). Starts advertising.
 esp_err_t akvalink_ble_gatt_start(void);
 
 // Publish a new temperature (°C). Updates the Environmental Sensing
 // characteristic and notifies a subscribed central, if any.
 void akvalink_ble_gatt_set_temperature(float celsius);
+
+// Update the Battery Level characteristic (0–100 %). Call when ADC reading
+// is available; no-op until the ADC circuit is populated (defaults to 100 %).
+void akvalink_ble_gatt_set_battery(uint8_t percent);
+
+// Read the alert thresholds as last set via the GATT characteristics.
+// Values are in 0.01 °C units; 0 = disabled.
+int16_t akvalink_ble_gatt_get_alert_high(void);
+int16_t akvalink_ble_gatt_get_alert_low(void);
 
 #ifdef __cplusplus
 }
