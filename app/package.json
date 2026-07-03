@@ -8,8 +8,11 @@
     "sync-web": "node scripts/build-web.mjs",
     "dev": "npm run sync-web && vite",
     "build": "npm run sync-web && vite build",
+    "add:ios": "cap add ios && npm run ios:permissions",
+    "add:android": "cap add android",
+    "ios:permissions": "node scripts/ios-permissions.mjs",
     "cap:sync": "npm run build && cap sync",
-    "cap:ios": "npm run build && cap sync ios && cap open ios",
+    "cap:ios": "npm run build && cap sync ios && npm run ios:permissions && cap open ios",
     "cap:android": "npm run build && cap sync android && cap open android"
   },
   "dependencies": {

@@ -31,12 +31,13 @@ web/index.html  ──(scripts/build-web.mjs)──►  index.html + src/page.js
 
 ```bash
 cd app
+nvm use                # Node LTS (see .nvmrc)
 npm install
 npm run build          # regenerates index.html+page.js from ../web, bundles to dist/
 
 # add the native projects (creates ios/ and/or android/, git-ignored)
-npx cap add ios
-npx cap add android
+npm run add:ios        # macOS: cap add ios + auto-adds the Bluetooth Info.plist keys
+npm run add:android    # cap add android
 ```
 
 ## Build & run
@@ -49,20 +50,16 @@ npm run cap:android    # build web + sync + open Android Studio
 After any change to `../web/**`, re-run `npm run cap:sync` (or `cap:ios` /
 `cap:android`) to regenerate and copy the UI into the native project.
 
-## Permissions (add after `cap add`)
+## Permissions (automated)
 
-- **iOS** — in `ios/App/App/Info.plist` add a Bluetooth usage string
-  (required or the app is rejected / crashes on first scan):
-
-  ```xml
-  <key>NSBluetoothAlwaysUsageDescription</key>
-  <string>AkvaLink connects to your nearby sensor over Bluetooth.</string>
-  ```
-
-- **Android** — the plugin merges the needed `BLUETOOTH_SCAN` /
-  `BLUETOOTH_CONNECT` permissions automatically. The shim calls
-  `initialize({ androidNeverForLocation: true })` so no location permission is
-  requested (BLE-only, Android 12+).
+- **iOS** — `scripts/ios-permissions.mjs` adds the required Bluetooth usage
+  strings (`NSBluetoothAlwaysUsageDescription` +
+  `NSBluetoothPeripheralUsageDescription`) to `ios/App/App/Info.plist`. It runs
+  automatically via `npm run add:ios` and every `npm run cap:ios`, and is
+  idempotent — **no manual plist editing needed**.
+- **Android** — the plugin merges `BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT`
+  automatically. The shim calls `initialize({ androidNeverForLocation: true })`
+  so no location permission is requested (BLE-only, Android 12+).
 
 ## What works / what doesn't (v1)
 

@@ -2,7 +2,15 @@
   "appId": "com.akvalink.app",
   "appName": "AkvaLink",
   "webDir": "dist",
+  "backgroundColor": "#033f63",
   "server": {
     "androidScheme": "https"
+  },
+  "ios": {
+    "backgroundColor": "#033f63",
+    "contentInset": "always"
+  },
+  "android": {
+    "backgroundColor": "#033f63"
   }
 }
