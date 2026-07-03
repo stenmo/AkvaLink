@@ -13,6 +13,9 @@ extern "C" {
 // "akvalink-<last4mac>.local" (unique per device), serves the shared temperature
 // page (see web_page.h), and publishes temperature readings to the configured
 // MQTT broker for Home Assistant autodiscovery. No Matter, no hub.
+//
+// Long-press GPIO9 (EVK BOOT button) 5 s: erases Wi-Fi creds and restarts into
+// BLE provisioning — hardware recovery without needing a flash-erase.
 esp_err_t akvalink_station_start(void);
 
 // Push the latest temperature (deg C). Updates the web page AND publishes to

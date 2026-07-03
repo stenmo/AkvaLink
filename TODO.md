@@ -19,7 +19,7 @@ gets started.
 
 ## Station variant — feature queue (one at a time)
 
-- [ ] **Re-provisioning button** — long-press GPIO9 (EVK boot button) 5 s
+- [x] **Re-provisioning button** ✓ — long-press GPIO9 (EVK boot button) 5 s
       to erase Wi-Fi NVS + re-enter BLE provisioning. Currently the only
       recovery path is a manual flash-erase.
 - [ ] **GATT Battery Service (BAS) + writable device name** — stub the

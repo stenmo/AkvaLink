@@ -3,13 +3,9 @@
 // Standalone Wi-Fi station variant (--station): join the home Wi-Fi as a
 // client, provisioned over BLE with Espressif Unified Provisioning (the free
 // "ESP BLE Provisioning" app). Once online it:
-//   - advertises mDNS "akvalink.local" and serves the shared temp page
-//   - connects to the configured MQTT broker and publishes Home Assistant
-//     MQTT autodiscovery config + live temperature readings
-//
-// POWER: staying associated to an AP keeps the Wi-Fi radio reachable — lighter
-// than SoftAP but still not multi-year on a coin cell. For mains/USB or a
-// generous battery; Wi-Fi 6 TWT tuning is a future power task (see TODO.md).
+//   - advertises mDNS "akvalink-<last4mac>.local" and serves the shared page
+//   - connects to the configured MQTT broker and publishes HA autodiscovery
+// Long-press GPIO9 (EVK BOOT button) 5 s → erases Wi-Fi creds + re-provisions.
 
 #include "station_web.h"
 #include "web_page.h"
@@ -18,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "driver/gpio.h"
 #include "esp_event.h"
 #include "esp_http_server.h"   // for httpd_handle_t + httpd_register_uri_handler
 #include "esp_log.h"
@@ -25,8 +22,10 @@
 #include "esp_wifi.h"
 #include "mdns.h"
 #include "mqtt_client.h"
+#include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "freertos/task.h"
 
 // Defined in web_page.cpp; declared here rather than in web_page.h to avoid
 // pulling esp_http_server.h into non-web (thread/wifi/ble) variants.
@@ -249,9 +248,45 @@ static void event_handler(void *arg, esp_event_base_t base, int32_t id, void *da
     }
 }
 
+// --- Re-provisioning button (GPIO9 = EVK BOOT button) ----------------------
+// Long-press 5 s → erase Wi-Fi NVS namespace + restart into BLE provisioning.
+// Gives the user a hardware recovery path without needing a flash-erase.
+#define REPROV_GPIO        GPIO_NUM_9
+#define REPROV_HOLD_MS     5000   // 5 s continuous press
+
+static void reprov_task(void *)
+{
+    gpio_config_t io = {};
+    io.pin_bit_mask = (1ULL << REPROV_GPIO);
+    io.mode         = GPIO_MODE_INPUT;
+    io.pull_up_en   = GPIO_PULLUP_ENABLE;
+    io.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io.intr_type    = GPIO_INTR_DISABLE;
+    gpio_config(&io);
+
+    uint32_t held_ms = 0;
+    while (true) {
+        vTaskDelay(pdMS_TO_TICKS(100));
+        if (gpio_get_level(REPROV_GPIO) == 0) {  // button pressed (active-low)
+            held_ms += 100;
+            if (held_ms >= REPROV_HOLD_MS) {
+                ESP_LOGW(TAG, "⚙ BOOT held %u ms — erasing Wi-Fi creds, restarting BLE provisioning", held_ms);
+                wifi_prov_mgr_reset_provisioning();   // clears the wifi_prov NVS namespace
+                esp_restart();
+            }
+        } else {
+            held_ms = 0;
+        }
+    }
+}
+
 esp_err_t akvalink_station_start(void)
 {
     s_events = xEventGroupCreate();
+
+    // Start the re-provisioning monitor early — before Wi-Fi init — so the
+    // button works even if Wi-Fi connection hangs.
+    xTaskCreate(reprov_task, "reprov", 2048, NULL, 3, NULL);
 
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
