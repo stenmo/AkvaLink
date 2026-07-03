@@ -10,6 +10,7 @@
 #include "station_web.h"
 #include "web_page.h"
 
+#include <inttypes.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -270,7 +271,7 @@ static void reprov_task(void *)
         if (gpio_get_level(REPROV_GPIO) == 0) {  // button pressed (active-low)
             held_ms += 100;
             if (held_ms >= REPROV_HOLD_MS) {
-                ESP_LOGW(TAG, "⚙ BOOT held %u ms — erasing Wi-Fi creds, restarting BLE provisioning", held_ms);
+                ESP_LOGW(TAG, "\xe2\x9a\x99 BOOT held %" PRIu32 " ms \xe2\x80\x94 erasing Wi-Fi creds, restarting BLE provisioning", held_ms);
                 wifi_prov_mgr_reset_provisioning();   // clears the wifi_prov NVS namespace
                 esp_restart();
             }
