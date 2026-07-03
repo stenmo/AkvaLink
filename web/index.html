@@ -351,7 +351,7 @@
           <tr><td>Matter / Wi-Fi</td><td><code>--wifi</code></td><td>esp-matter, Wi-Fi, BLE commissioning</td></tr>
           <tr><td>BLE-only</td><td><code>--ble</code></td><td>NimBLE GATT — no hub, no router</td></tr>
           <tr><td>Wi-Fi AP <em>(mains/USB)</em></td><td><code>--ap</code></td><td>SoftAP “AkvaLink” + captive web page, any phone; no router needed</td></tr>
-          <tr><td>Wi-Fi station <em>(mains/USB)</em></td><td><code>--station</code></td><td>Joins home Wi-Fi (BLE-provisioned), page at akvalink.local; no hub</td></tr>
+          <tr><td>Wi-Fi station <em>(mains/USB)</em></td><td><code>--station</code></td><td>Joins home Wi-Fi (BLE-provisioned), unique akvalink-&lt;last4mac&gt;.local + HA MQTT autodiscovery; no hub</td></tr>
           <tr><td>Sensor test</td><td><code>--sensor</code></td><td>Read &amp; log the probe only</td></tr>
         </tbody>
       </table>
@@ -379,7 +379,7 @@
         <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Open hotspot "AkvaLink" · join it, the page opens automatically. No router, no app, any phone. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
       </a>
       <a class="dl-card" id="dlStation" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink.local</strong> in any browser on your LAN. Auto-discovered by <strong>Home Assistant</strong> via MQTT. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
+        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink-&lt;last4mac&gt;.local</strong> in any browser on your LAN. Auto-discovered by <strong>Home Assistant</strong> via MQTT. Multiple devices get unique hostnames. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
       </a>
     </div>
     <p class="ble-note">Flash to <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>

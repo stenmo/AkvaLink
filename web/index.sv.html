@@ -351,7 +351,7 @@
           <tr><td>Matter / Wi-Fi</td><td><code>--wifi</code></td><td>esp-matter, Wi-Fi, BLE-driftsättning</td></tr>
           <tr><td>Endast BLE</td><td><code>--ble</code></td><td>NimBLE GATT — ingen hub, ingen router</td></tr>
           <tr><td>Wi-Fi AP <em>(nät/USB)</em></td><td><code>--ap</code></td><td>SoftAP "AkvaLink" + webbsida, vilken telefon som helst; ingen router</td></tr>
-          <tr><td>Wi-Fi station <em>(nät/USB)</em></td><td><code>--station</code></td><td>Ansluter till hemma-Wi-Fi (BLE-driftsätts), sida på akvalink.local; ingen hub</td></tr>
+          <tr><td>Wi-Fi station <em>(nät/USB)</em></td><td><code>--station</code></td><td>Ansluter till hemma-Wi-Fi (BLE-driftsätts), unik sida på akvalink-&lt;sista4mac&gt;.local + HA MQTT; ingen hub</td></tr>
           <tr><td>Sensortest</td><td><code>--sensor</code></td><td>Läs &amp; logga givaren enbart</td></tr>
         </tbody>
       </table>
@@ -379,7 +379,7 @@
         <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Öppet nätverk "AkvaLink" · anslut, sidan öppnas automatiskt. Ingen router, ingen app, vilken telefon som helst. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
       </a>
       <a class="dl-card" id="dlStation" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink.local</strong> i valfri webbläsare på ditt LAN. Autodetekteras av <strong>Home Assistant</strong> via MQTT. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
+        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink-&lt;sista4mac&gt;.local</strong> i valfri webbläsare på ditt LAN. Autodetekteras av <strong>Home Assistant</strong> via MQTT. Flera enheter får unika värdnamn. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
       </a>
     </div>
     <p class="ble-note">Flasha till <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
@@ -414,7 +414,7 @@
       <li class="done"><span class="mark">✓</span>Live-temperatur i webbläsaren (Web Bluetooth)</li>
       <li class="done"><span class="mark">✓</span>BLE firmware-uppdatering (egen GATT över esp_ota)</li>
       <li class="done"><span class="mark">✓</span>Wi-Fi AP-variant — öppet nätverk + webbsida, vilken telefon (nät/USB)</li>
-      <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-driftsätts, ansluter till hemma-Wi-Fi, sida på akvalink.local, Home Assistant MQTT-autodetektering (nät/USB)</li>
+      <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-driftsätts, hemma-Wi-Fi, unik akvalink-&lt;sista4mac&gt;.local, Home Assistant MQTT-autodetektering (nät/USB)</li>
       <li class="todo"><span class="mark">▹</span>Riktig effektmätning + djupt viloläge</li>
       <li class="todo"><span class="mark">▹</span>E-ink-display (stora siffror, batteri, trend)</li>
       <li class="todo"><span class="mark">▹</span>Batterispänning + låg-batteri Matter-händelse</li>

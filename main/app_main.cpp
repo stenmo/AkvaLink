@@ -183,7 +183,7 @@ extern "C" void app_main()
     ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi station variant — BLE-provisioned client + akvalink.local");
     ESP_ERROR_CHECK(akvalink_station_start());
     ds18b20_task_start();
-    ESP_LOGI(TAG, "✨ AkvaLink station up — provision over BLE, then open http://akvalink.local");
+    ESP_LOGI(TAG, "✨ AkvaLink station up — provision over BLE, then open http://akvalink-<last4mac>.local");
 #else
 
     // --- Matter node + Temperature Sensor endpoint --------------------------

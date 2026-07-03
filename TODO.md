@@ -12,12 +12,34 @@ Per `.github/copilot-instructions.md` (KISS): exactly one thing in flight
 at a time. Until something here is done, nothing from *Future ideas*
 gets started.
 
-- [ ] **Run the EVK end-to-end.** Build → flash → DS18B20 reads → commission
-      in Apple Home / Google Home → see the temperature in the app.
-      Photo of it working = the moment the project becomes real.
-- [ ] **Set up an off-machine git backup.** Private remote (private GitHub,
-      Codeberg, Gitea, or just a `git push` to an external drive).
-      10-minute job, removes the "single disk failure" risk.
+- [x] **Run the EVK end-to-end** ✓ — Thread Matter + Wi-Fi AP + Wi-Fi station
+      all verified on hardware. Temperature confirmed in browser.
+- [x] **Wi-Fi station: unique mDNS hostname** ✓ — `akvalink-<last4mac>.local`
+      so multiple devices on the same LAN don't collide.
+
+## Station variant — feature queue (one at a time)
+
+- [ ] **Re-provisioning button** — long-press GPIO9 (EVK boot button) 5 s
+      to erase Wi-Fi NVS + re-enter BLE provisioning. Currently the only
+      recovery path is a manual flash-erase.
+- [ ] **GATT Battery Service (BAS) + writable device name** — stub the
+      standard BAS (0x180F / 0x2A19) at 100 % now; wire to the ADC when
+      the voltage divider is populated. Add a writable Custom characteristic
+      for the device friendly name (stored in NVS), used in mDNS + MQTT
+      entity name. Add min/max/alert threshold characteristics.
+- [ ] **Temperature alerts via MQTT** — publish `{"state":"high"}` / `"low"` /
+      `"ok"` to `akvalink/<mac>/alert` when temperature crosses configurable
+      thresholds. HA automations can then push notifications. Depends on
+      alert threshold storage (from GATT item above, or just Kconfig for now).
+- [ ] **MQTT broker URL at runtime** — HTTP POST to `/config` on
+      `akvalink-<mac>.local` to store broker URL in NVS. No rebuild needed
+      to point at a different broker.
+- [ ] **Low battery alert (10 %)** — publish `{"battery":9}` to
+      `akvalink/<mac>/battery` and MQTT alert when level ≤ 10 %.
+      Requires the BAS + ADC item above.
+- [ ] **OTA over HTTP** for `--station` — device polls a URL for new
+      firmware, downloads and flashes via esp_https_ota. Complementary to
+      the existing BLE OTA in `--ble`.
 
 ## Next — first measurement
 

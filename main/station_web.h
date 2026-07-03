@@ -10,9 +10,9 @@ extern "C" {
 // Start the standalone Wi-Fi station variant (--station): joins the home Wi-Fi
 // as a client, provisioned over BLE using Espressif Unified Provisioning (the
 // free "ESP BLE Provisioning" app). Once connected it advertises mDNS
-// "akvalink.local", serves the shared temperature page (see web_page.h), and
-// publishes temperature readings to the configured MQTT broker for Home
-// Assistant autodiscovery. No Matter, no hub.
+// "akvalink-<last4mac>.local" (unique per device), serves the shared temperature
+// page (see web_page.h), and publishes temperature readings to the configured
+// MQTT broker for Home Assistant autodiscovery. No Matter, no hub.
 esp_err_t akvalink_station_start(void);
 
 // Push the latest temperature (deg C). Updates the web page AND publishes to

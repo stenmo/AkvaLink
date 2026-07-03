@@ -39,7 +39,11 @@ static const char *TAG = "station";
 
 #define PROV_SERVICE_NAME "AkvaLink"   // BLE name shown in the provisioning app
 #define PROV_POP          "akvalink"   // proof-of-possession the app must enter
-#define MDNS_HOSTNAME     "akvalink"   // → http://akvalink.local
+
+// mDNS hostname is akvalink-<last4ofmac>.local so multiple devices on the
+// same LAN get unique names without any configuration.
+// Set in start_mqtt() once the MAC is known; used in start_mdns_and_web().
+static char s_mdns_hostname[24] = "akvalink";  // e.g. "akvalink-5f884c"
 
 // MQTT broker URL from Kconfig (default: Mosquitto add-on on Home Assistant).
 #define MQTT_BROKER_URL   CONFIG_AKVALINK_MQTT_BROKER_URL
@@ -122,6 +126,9 @@ static void start_mqtt(void)
     esp_wifi_get_mac(WIFI_IF_STA, mac);
     snprintf(s_mac, sizeof(s_mac), "%02x%02x%02x%02x%02x%02x",
              mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    // Unique hostname: akvalink-<last4ofmac>.local (avoids collisions on shared LANs).
+    snprintf(s_mdns_hostname, sizeof(s_mdns_hostname), "akvalink-%02x%02x%02x",
+             mac[3], mac[4], mac[5]);
     snprintf(s_state_topic, sizeof(s_state_topic), "akvalink/%s/temperature", s_mac);
     snprintf(s_avail_topic, sizeof(s_avail_topic), "akvalink/%s/status", s_mac);
 
@@ -182,10 +189,10 @@ static void start_mdns_and_web(void)
     }
     s_web_up = true;                            // set early — prevent double-init on rapid IP events
     if (mdns_init() == ESP_OK) {
-        mdns_hostname_set(MDNS_HOSTNAME);
+        mdns_hostname_set(s_mdns_hostname);
         mdns_instance_name_set("AkvaLink temperature");
         mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
-        ESP_LOGI(TAG, "mDNS up — page at http://%s.local", MDNS_HOSTNAME);
+        ESP_LOGI(TAG, "mDNS up — page at http://%s.local", s_mdns_hostname);
     } else {
         ESP_LOGW(TAG, "mDNS init failed — reach the page by IP instead");
     }
