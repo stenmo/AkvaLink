@@ -48,10 +48,10 @@ set(AQ_PRIV_REQ nvs_flash driver esp_timer
 if(DEFINED ENV{AKVALINK_BLE})
     list(APPEND AQ_PRIV_REQ bt esp_app_format app_update)
 elseif(DEFINED ENV{AKVALINK_AP})
-    list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip)
+    list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip esp_timer)
 elseif(DEFINED ENV{AKVALINK_STATION})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip
-        wifi_provisioning mdns bt mqtt)
+        wifi_provisioning mdns bt mqtt esp_timer)
 elseif(NOT DEFINED ENV{AKVALINK_NO_MATTER})
     list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)
 endif()
