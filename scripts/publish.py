@@ -2,8 +2,9 @@
 """AkvaLink publish helper — ship a GitHub release from the dist/ artifacts.
 
 Takes the merged images that scripts/release.py produced in dist/ (one per
-variant: thread, wifi, ble), pushes the tag, then creates (or updates) the
-GitHub release and uploads those images + their .sha256 sidecars as assets.
+variant: thread, wifi, ble, ap, station), pushes the tag, then creates (or
+updates) the GitHub release and uploads those images + their .sha256 sidecars
+as assets.
 
 Division of labour:
     scripts/release.py  --bump patch   # prepare: test, bump, build all, tag, dist/
@@ -45,10 +46,11 @@ API = "https://api.github.com"
 
 # The variants shipped as release assets (slug → human label).
 VARIANTS = {
-    "thread": "Matter over Thread — battery-powered, longest life (Sleepy End Device)",
-    "wifi": "Matter over Wi-Fi — battery-powered, shorter life than Thread",
-    "ble": "Standalone BLE GATT — battery-powered, no hub, no Matter",
-    "ap": "Wi-Fi AP — open hotspot + captive page, any phone; needs mains/USB power",
+    "thread":  "Matter over Thread — battery-powered, longest life (Sleepy End Device)",
+    "wifi":    "Matter over Wi-Fi — battery-powered, shorter life than Thread",
+    "ble":     "Standalone BLE GATT — battery-powered, no hub, no Matter",
+    "espnow":  "ESP-NOW broadcast — deep-sleep sensor for friends' ESP32 networks; no hub, no provisioning",
+    "ap":      "Wi-Fi AP — open hotspot + captive page, any phone; needs mains/USB power",
     "station": "Wi-Fi station — BLE-provisioned, joins your Wi-Fi, page at akvalink.local; needs mains/USB",
 }
 
@@ -84,7 +86,7 @@ def read_digest(path: Path) -> str:
 
 def format_notes(version: str, digests: dict) -> str:
     """Release body: what each asset is + how to flash it, with SHA256s."""
-    battery_variants = {k: v for k, v in VARIANTS.items() if k in ("thread", "wifi", "ble")}
+    battery_variants = {k: v for k, v in VARIANTS.items() if k in ("thread", "wifi", "ble", "espnow")}
     mains_variants   = {k: v for k, v in VARIANTS.items() if k in ("ap", "station")}
     lines = [
         f"# AkvaLink v{version}",

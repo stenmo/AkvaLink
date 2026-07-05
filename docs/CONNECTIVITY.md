@@ -222,8 +222,10 @@ they pick BLE-only or Wi-Fi-standalone in the app.
 |--------|---------------|-------------------|
 | Matter / Thread (default) | *(none)* | esp-matter, OpenThread, BLE (commissioning) |
 | Matter / Wi-Fi | `--wifi` | esp-matter, Wi-Fi, BLE (commissioning) |
-| BLE-only | `--ble` *(new)* | NimBLE, no Matter, no Wi-Fi, no Thread |
-| Wi-Fi standalone | `--wifi-standalone` *(new)* | LwIP, mDNS, HTTP, NimBLE (provisioning), no Matter |
+| BLE-only | `--ble` | NimBLE, no Matter, no Wi-Fi, no Thread |
+| Wi-Fi AP | `--ap` | Wi-Fi SoftAP, LwIP, HTTP (captive page), no Matter, no BLE |
+| Wi-Fi station | `--station` | Wi-Fi STA, LwIP, mDNS, HTTP, MQTT, NimBLE (provisioning), no Matter |
+| Sensor test | `--sensor` | 1-Wire only, no radio stacks (bench probe check) |
 | **Universal** (eventual goal) | `--all` *(stretch)* | All of the above, runtime mode select. Larger flash, but one SKU. |
 
 The `--all` build is the right end state for a polished product (one

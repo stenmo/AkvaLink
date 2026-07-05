@@ -54,6 +54,10 @@ static const char *TAG = "ble_gatt";
 #define ADV_INST_LEGACY 0    // 1M legacy PDUs — best phone compatibility (esp. iOS)
 #define ADV_INST_CODED  1    // Coded PHY S=8 — long range (Android / gateway)
 #define ADV_ROTATE_MS   4000 // dwell per PHY before switching
+#define ADV_ITVL_MS     1000 // adv interval while unconnected — battery lever
+                             // (we stop advertising on connect, so this is the
+                             // only advertising state). 1 s ≈ still snappy to
+                             // discover, ~5× fewer radio wakeups than 200 ms.
 
 static const char *MANUFACTURER = "u-blox";
 static const char *MODEL        = "AkvaLink NORA-W40";
@@ -562,8 +566,8 @@ static void adv_configure(void)
     params.own_addr_type = s_own_addr_type;
     params.primary_phy   = BLE_HCI_LE_PHY_1M;
     params.secondary_phy = BLE_HCI_LE_PHY_1M;
-    params.itvl_min      = BLE_GAP_ADV_ITVL_MS(200);
-    params.itvl_max      = BLE_GAP_ADV_ITVL_MS(250);
+    params.itvl_min      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
+    params.itvl_max      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
     params.sid           = ADV_INST_LEGACY;
     rc = ble_gap_ext_adv_configure(ADV_INST_LEGACY, &params, NULL, gap_event, NULL);
     if (rc == 0 && build_adv_data(&om) == 0) {
@@ -581,8 +585,8 @@ static void adv_configure(void)
     params.own_addr_type = s_own_addr_type;
     params.primary_phy   = BLE_HCI_LE_PHY_CODED;
     params.secondary_phy = BLE_HCI_LE_PHY_CODED;
-    params.itvl_min      = BLE_GAP_ADV_ITVL_MS(400);
-    params.itvl_max      = BLE_GAP_ADV_ITVL_MS(500);
+    params.itvl_min      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
+    params.itvl_max      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
     params.sid           = ADV_INST_CODED;
     rc = ble_gap_ext_adv_configure(ADV_INST_CODED, &params, NULL, gap_event, NULL);
     if (rc == 0 && build_adv_data(&om) == 0) {

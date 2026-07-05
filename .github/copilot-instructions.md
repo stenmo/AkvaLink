@@ -69,22 +69,23 @@ Build runs in **WSL Ubuntu-24.04**, sourcing:
 - esp-matter release/v1.5 from `~/esp/esp-matter`
 
 **Per-variant build dirs:** each variant builds into its own isolated directory
-with its own sdkconfig — `build/thread`, `build/wifi`, `build/ble`,
-`build/sensor` (plus a `-ds2482` suffix for the Click board). Switching variants
-therefore needs **no** reconfigure or rebuild; each keeps its own ccache.
-`--flash` picks the directory matching the flags. `clean` wipes all of `build/`.
+with its own sdkconfig — `build/thread`, `build/wifi`, `build/ble`, `build/ap`,
+`build/station`, `build/sensor` (plus a `-ds2482` suffix for the Click board).
+Switching variants therefore needs **no** reconfigure or rebuild; each keeps its
+own ccache. `--flash` picks the directory matching the flags. `clean` wipes all
+of `build/`.
 
 ## Releasing
 
 Two scripts, clean split — `release.py` *prepares*, `publish.py` *ships*:
 
 ```powershell
-# 1. Prepare (local): test, bump version.txt, build ALL 3 variants → merged
+# 1. Prepare (local): test, bump version.txt, build ALL 5 variants → merged
 #    0x0 images in dist/, commit + tag. Touches nothing remote.
 py -3 scripts/release.py --bump patch
 
 # 2. Ship (remote): push the tag, create the GitHub release and upload the
-#    dist/ assets (thread, wifi, ble). Re-runnable; never rebuilds.
+#    dist/ assets (thread, wifi, ble, ap, station). Re-runnable; never rebuilds.
 py -3 scripts/publish.py
 ```
 

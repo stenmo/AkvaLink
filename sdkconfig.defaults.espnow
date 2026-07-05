@@ -1,0 +1,43 @@
+# AkvaLink ESP-NOW variant — deep-sleep broadcast sensor, no hub, no provisioning.
+#
+# Layer on top of the base defaults:
+#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.espnow" reconfigure
+# or via the launcher:  launch-akvalink-wsl.cmd --espnow --rebuild
+#
+# One reading per wake cycle → broadcast via ESP-NOW → deep sleep N seconds.
+# Receivers (friends' ESP32 devices) listen on the same channel and parse the
+# akvalink_espnow_payload_t struct (version, temp, battery_mv, seq, mac).
+#
+# POWER: deep sleep floor ≈ 7 µA (NORA-W40 datasheet). Active window ≈ 200 ms
+# per cycle. Measure with PPK2 via J3 for the real average current.
+
+# Select the ESP-NOW app path (main/Kconfig.projbuild).
+CONFIG_AKVALINK_ESPNOW=y
+
+# No Matter network stacks.
+CONFIG_OPENTHREAD_ENABLED=n
+CONFIG_OPENTHREAD_MTD=n
+CONFIG_OPENTHREAD_SRP_CLIENT=n
+CONFIG_OPENTHREAD_DNS_CLIENT=n
+CONFIG_OPENTHREAD_JOINER=n
+CONFIG_OPENTHREAD_DEVICE_TYPE_SLEEPY_END_DEVICE=n
+
+# No BLE — ESP-NOW uses Wi-Fi PHY only.
+CONFIG_BT_ENABLED=n
+CONFIG_BT_NIMBLE_ENABLED=n
+CONFIG_ENABLE_CHIPOBLE=n
+
+# Wi-Fi: STA mode (no AP, no SoftAP). ESP-NOW requires Wi-Fi to be started
+# but never actually associates with a network.
+CONFIG_ENABLE_WIFI_STATION=n
+CONFIG_ESP_WIFI_SOFTAP_SUPPORT=n
+
+# Power management: base sdkconfig enables light sleep for the Thread SED.
+# For the ESP-NOW variant we use deep sleep between cycles instead — the device
+# fully powers down the CPU+radio and wakes via the RTC timer. Disable the
+# light sleep PM to avoid it conflicting with esp_deep_sleep().
+CONFIG_PM_ENABLE=n
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=n
+CONFIG_ESP_SLEEP_POWER_DOWN_FLASH=n
+CONFIG_PM_POWER_DOWN_CPU_IN_LIGHT_SLEEP=n
+CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP=n

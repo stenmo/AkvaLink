@@ -12,6 +12,18 @@ menu "AkvaLink"
             connects directly over BLE. Select via the launcher's --ble flag
             (which layers sdkconfig.defaults.ble on top of sdkconfig.defaults).
 
+    config AKVALINK_BLE_PM
+        bool "Enable BLE light sleep (experimental — validate with PPK2 first)"
+        depends on AKVALINK_BLE_ONLY
+        default n
+        help
+            Enable CPU/peripheral light sleep and BLE controller sleep for the
+            --ble variant. Requires CONFIG_BT_LE_SLEEP_ENABLE, CONFIG_MAC_BB_PD,
+            and CONFIG_BT_LE_LP_CLK_SRC_DEFAULT to also be set (see the
+            commented-out block at the bottom of sdkconfig.defaults.ble).
+            Do NOT enable until current consumption has been measured and the
+            numbers look correct on the PPK2 with J3 in series.
+
     config AKVALINK_SENSOR_TEST
         bool "Build the sensor-only test variant (no Matter, no BLE)"
         default n
@@ -33,6 +45,38 @@ menu "AkvaLink"
             NOTE: an always-on SoftAP keeps the Wi-Fi radio awake and is NOT
             battery friendly (days, not years) — for mains/USB-powered use.
             Select via the launcher's --ap flag.
+
+    config AKVALINK_ESPNOW
+        bool "Build the standalone ESP-NOW broadcast variant (deep sleep, no hub)"
+        default n
+        help
+            Build the --espnow AkvaLink variant: wake from deep sleep, read the
+            DS18B20, broadcast one akvalink_espnow_payload_t packet via ESP-NOW
+            to FF:FF:FF:FF:FF:FF, then go back to deep sleep. No Matter, no BLE,
+            no provisioning. Friends' ESP32 devices on the same channel receive
+            the reading without any pairing.
+            Sleep interval: CONFIG_AKVALINK_ESPNOW_SLEEP_S (default 60 s).
+            Channel: CONFIG_AKVALINK_ESPNOW_CHANNEL (default 1).
+
+    config AKVALINK_ESPNOW_CHANNEL
+        int "ESP-NOW Wi-Fi channel (1-13, must match receivers)"
+        depends on AKVALINK_ESPNOW
+        default 1
+        range 1 13
+        help
+            All ESP-NOW senders and receivers must be on the same channel.
+            Default 1 is the safest choice for compatibility with receivers
+            that default to channel 1.
+
+    config AKVALINK_ESPNOW_SLEEP_S
+        int "Deep sleep interval between ESP-NOW broadcasts (seconds)"
+        depends on AKVALINK_ESPNOW
+        default 60
+        range 5 3600
+        help
+            How long the device sleeps between temperature readings and
+            broadcasts. 60 s is a good default — 300 s gives the best battery
+            life at the cost of slower update rate on receivers.
 
     config AKVALINK_STATION
         bool "Build the Wi-Fi station variant (BLE-provisioned client, no Matter)"

@@ -2,8 +2,8 @@
 """AkvaLink release helper — *prepare* a release (local only).
 
 Pipeline: preflight -> test (pytest) -> bump version -> build ALL variants
-(thread, wifi, ble) into their own dirs -> merge each into a single 0x0-flashable
-image in dist/ -> commit + tag.
+(thread, wifi, ble, ap, station) into their own dirs -> merge each into a single
+0x0-flashable image in dist/ -> commit + tag.
 
 This script stops at the tag: it does not touch GitHub. Shipping (push, GitHub
 release, asset upload) is the job of scripts/publish.py. So:
@@ -53,7 +53,7 @@ DIST_DIR = REPO_ROOT / "dist"
 # The variants built + packaged for every release.
 # thread/wifi/ble are battery-powered (all years).
 # ap and station need mains/USB (captive web page / LAN page).
-VARIANTS = ("thread", "wifi", "ble", "ap", "station")
+VARIANTS = ("thread", "wifi", "ble", "ap", "station", "espnow")
 
 SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
@@ -139,7 +139,7 @@ def _run(cmd: list[str], dry_run: bool) -> None:
 
 
 def _build_cmd(variant: str) -> list[str]:
-    FLAG = {"wifi": "--wifi", "ble": "--ble", "ap": "--ap", "station": "--station"}
+    FLAG = {"wifi": "--wifi", "ble": "--ble", "ap": "--ap", "station": "--station", "espnow": "--espnow"}
     if os.name == "nt":
         cmd = ["cmd", "/c", str(REPO_ROOT / "launch-akvalink-wsl.cmd")]
         flag = FLAG.get(variant)

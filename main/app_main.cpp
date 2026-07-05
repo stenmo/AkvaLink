@@ -11,11 +11,13 @@
 #include "ble_gatt.h"
 #include "ap_web.h"
 #include "station_web.h"
+#include "espnow_sensor.h"
 #include "qr_console.h"
 
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "nvs_flash.h"
+#include "esp_pm.h"
 
 #if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
 #include <esp_matter.h>
@@ -24,7 +26,6 @@
 
 #include <app/server/Server.h>
 #include <setup_payload/OnboardingCodesUtil.h>
-#include <esp_pm.h>
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 #include <openthread/instance.h>
@@ -73,6 +74,34 @@ static void print_banner(void)
     ESP_LOGI(TAG, "  \033[37minspired by \033[96mpoolmicke.se\033[37m — tack Micke! \xF0\x9F\x87\xB8\xF0\x9F\x87\xAA\033[0m");
     ESP_LOGI(TAG, "");
 }
+
+// ---------------------------------------------------------------------------
+// Automatic light sleep (CPU + peripherals power down between events, DFS down
+// to 10 MHz). Shared by the Matter/Thread and BLE-only paths — both are
+// battery targets. For BLE this only actually engages once the controller is
+// allowed to sleep on a low-power clock that survives light sleep — see
+// CONFIG_BT_LE_SLEEP_ENABLE + CONFIG_BT_LE_LP_CLK_SRC_DEFAULT in
+// sdkconfig.defaults.ble (the IDF default is the main XTAL, which is powered
+// down in sleep, so without those the radio pins the CPU awake at ~8 mA).
+// ---------------------------------------------------------------------------
+#if CONFIG_PM_ENABLE
+static void __attribute__((unused)) configure_light_sleep(void)
+{
+    esp_pm_config_t pm_config = {
+        .max_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
+        .min_freq_mhz = 10,
+        .light_sleep_enable = true,
+    };
+    esp_err_t err = esp_pm_configure(&pm_config);
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "\xE2\x9A\xA1 PM: light sleep enabled, DFS %d↔%d MHz",
+                 10, CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ);
+    } else {
+        ESP_LOGW(TAG, "esp_pm_configure failed: %s (continuing without light sleep)",
+                 esp_err_to_name(err));
+    }
+}
+#endif
 
 #if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
 
@@ -165,6 +194,11 @@ extern "C" void app_main()
     // --- BLE-only variant: no Matter, no Thread, no Wi-Fi. Just a standalone
     // NimBLE GATT server + the sensor task feeding it. For homes with no hub.
     ESP_LOGI(TAG, "\xF0\x9F\x94\xB5 BLE-only variant — standalone GATT server (no Matter)");
+#if CONFIG_AKVALINK_BLE_PM
+    configure_light_sleep();   // CPU/peripheral light sleep between BLE events
+#else
+    ESP_LOGI(TAG, "PM: light sleep disabled (set CONFIG_AKVALINK_BLE_PM=y to enable)");
+#endif
     ESP_ERROR_CHECK(akvalink_ble_gatt_start());
     ds18b20_task_start();
     ESP_LOGI(TAG, "✨ AkvaLink BLE-only up — connect to \"AkvaLink\" over BLE");
@@ -177,13 +211,17 @@ extern "C" void app_main()
     ds18b20_task_start();
     ESP_LOGI(TAG, "✨ AkvaLink AP up — join open Wi-Fi \"AkvaLink\", the page opens (or http://192.168.4.1)");
 #elif CONFIG_AKVALINK_STATION
-    // --- Wi-Fi station variant: join the home Wi-Fi as a client (BLE-
-    // provisioned), advertise mDNS "akvalink.local", serve the temperature
-    // page. No Matter, no hub — the phone/app talks to it on the LAN.
+    // --- Wi-Fi station variant
     ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi station variant — BLE-provisioned client + akvalink.local");
     ESP_ERROR_CHECK(akvalink_station_start());
     ds18b20_task_start();
-    ESP_LOGI(TAG, "✨ AkvaLink station up — provision over BLE, then open http://akvalink-<last4mac>.local");
+    ESP_LOGI(TAG, "\u2728 AkvaLink station up — provision over BLE, then open http://akvalink-<last4mac>.local");
+#elif CONFIG_AKVALINK_ESPNOW
+    // --- ESP-NOW variant: deep-sleep broadcast, no hub, no provisioning.
+    // Never returns — goes to deep sleep after sending one packet.
+    ESP_LOGI(TAG, "\xF0\x9F\x93\xA1 ESP-NOW variant — broadcasting to channel %d (deep sleep %d s)",
+             CONFIG_AKVALINK_ESPNOW_CHANNEL, CONFIG_AKVALINK_ESPNOW_SLEEP_S);
+    akvalink_espnow_start();  // never returns
 #else
 
     // --- Matter node + Temperature Sensor endpoint --------------------------
@@ -221,19 +259,7 @@ extern "C" void app_main()
 
     // --- Power management (explicit light sleep + DFS) -----------------------
 #if CONFIG_PM_ENABLE
-    esp_pm_config_t pm_config = {
-        .max_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
-        .min_freq_mhz = 10,
-        .light_sleep_enable = true,
-    };
-    err = esp_pm_configure(&pm_config);
-    if (err == ESP_OK) {
-        ESP_LOGI(TAG, "\xE2\x9A\xA1 PM: light sleep enabled, DFS %d↔%d MHz",
-                 10, CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ);
-    } else {
-        ESP_LOGW(TAG, "esp_pm_configure failed: %s (continuing without light sleep)",
-                 esp_err_to_name(err));
-    }
+    configure_light_sleep();
 #endif
 
     // --- Start Matter (BLE commissioning + Thread join) ---------------------

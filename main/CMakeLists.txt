@@ -33,6 +33,11 @@ if(DEFINED ENV{AKVALINK_STATION})
     list(APPEND SRCS "station_web.cpp" "web_page.cpp")
 endif()
 
+# ESP-NOW variant (build.sh --espnow): deep-sleep broadcast sensor, no hub.
+if(DEFINED ENV{AKVALINK_ESPNOW})
+    list(APPEND SRCS "espnow_sensor.cpp")
+endif()
+
 # QR-in-console for Matter commissioning: renders the "MT:..." setup payload as
 # a scannable ASCII QR (Nayuki qrcodegen, MIT). Needs CHIP's GetQRCode, so it's
 # Matter-only — i.e. neither the BLE nor the no-Matter env var is set.
@@ -52,6 +57,8 @@ elseif(DEFINED ENV{AKVALINK_AP})
 elseif(DEFINED ENV{AKVALINK_STATION})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip
         wifi_provisioning mdns bt mqtt esp_timer)
+elseif(DEFINED ENV{AKVALINK_ESPNOW})
+    list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_now)
 elseif(NOT DEFINED ENV{AKVALINK_NO_MATTER})
     list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)
 endif()
