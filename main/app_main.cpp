@@ -18,6 +18,7 @@
 #include "esp_timer.h"
 #include "nvs_flash.h"
 #include "esp_pm.h"
+#include "driver/gpio.h"   // GPIO9 escape hatch in --station (boot into BLE mode)
 
 #if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && \
     !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW
@@ -212,7 +213,7 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(akvalink_ap_start());
     ds18b20_task_start();
     ESP_LOGI(TAG, "✨ AkvaLink AP up — join open Wi-Fi \"AkvaLink\", the page opens (or http://192.168.4.1)");
-#include "driver/gpio.h"
+
 #elif CONFIG_AKVALINK_STATION
     // --- Wi-Fi station variant
     // GPIO9 escape hatch: hold the BOOT button at power-on to skip Wi-Fi and

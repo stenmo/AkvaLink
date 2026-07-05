@@ -146,6 +146,9 @@
   .dl-btn { display: inline-block; background: var(--water); color: #fff; padding: 8px 16px;
     border-radius: 999px; font-weight: 600; font-size: .9rem; }
   .dl-card:hover .dl-btn { background: var(--deep); }
+  .dl-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .dl-ota { background: transparent; border: 1.5px solid var(--water); color: var(--water); }
+  .dl-card:hover .dl-ota { background: var(--water); color: #fff; }
 
   /* Wiring schematic */
   .schematic { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 8px; margin-top: 16px; }
@@ -416,29 +419,37 @@
     <p class="lead">Osäker på vilken? <strong>Thread</strong> och <strong>Wi-Fi</strong> dyker upp i Apple / Google / Alexa som en vanlig Matter-givare. <strong>ESPHome</strong> integrerar direkt med Home Assistant. <strong>Endast BLE</strong> pratar direkt med din telefon. <strong>AP</strong> och <strong>Station</strong> serverar en live-webbsida — ingen hub, ingen app, bara en webbläsare (kräver nät/USB-ström).</p>
     <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Senaste release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=senaste&amp;logo=github"></a></p>
     <div class="grid">
-      <a class="dl-card" id="dlThread" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🧵</span><h3>Thread</h3><p>Matter via Thread · bäst batteri. Kräver en hub — HomePod, Apple TV, Nest eller Echo.</p><span class="dl-btn">Ladda ner .bin</span>
-      </a>
-      <a class="dl-card" id="dlWifi" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">📶</span><h3>Wi-Fi</h3><p>Matter via Wi-Fi · ingen Thread-hub. Går också på batteri — men färre år. Din router + valfri Matter-app.</p><span class="dl-btn">Ladda ner .bin</span>
-      </a>
-      <a class="dl-card" id="dlBle" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🔵</span><h3>Endast BLE</h3><p>Ingen hub, inget moln · direkt till din telefon via Bluetooth.</p><span class="dl-btn">Ladda ner .bin</span>
-      </a>
-      <a class="dl-card" id="dlAp" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Öppet nätverk "AkvaLink" · anslut, sidan öppnas automatiskt. Ingen router, ingen app, vilken telefon som helst. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
-      </a>
-      <a class="dl-card" id="dlStation" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink-&lt;sista4mac&gt;.local</strong> i valfri webbläsare på ditt LAN. Autodetekteras av <strong>Home Assistant</strong> via MQTT. Flera enheter får unika värdnamn. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
-      </a>
-      <a class="dl-card" id="dlEspnow" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">📢</span><h3>ESP-NOW</h3><p>Deep-sleep-utsändning — vaknar, läser DS18B20, skickar ett paket till valfri ESP32 på samma Wi-Fi-kanal, sover. Ingen hub, ingen driftsättning, maximal batteritid. <em>Mottagaren behöver en ESP32-skiss.</em></p><span class="dl-btn">Ladda ner .bin</span>
-      </a>
-      <a class="dl-card" id="dlEsphome" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🏡</span><h3>ESPHome</h3><p>Inbyggt <strong>Home Assistant</strong>-API — ingen MQTT-broker behövs. Flasha en gång, adoptera i ESPHome-dashboarden, OTA-uppdatera från Home Assistant. Driftsätts med Improv via USB-seriell.</p><span class="dl-btn">Ladda ner .bin</span>
-      </a>
+      <div class="dl-card">
+        <span class="ico">🧵</span><h3>Thread</h3><p>Matter via Thread · bäst batteri. Kräver en hub — HomePod, Apple TV, Nest eller Echo.</p>
+        <div class="dl-btns"><a id="dlThread" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlThreadApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">📶</span><h3>Wi-Fi</h3><p>Matter via Wi-Fi · ingen Thread-hub. Går också på batteri — men färre år. Din router + valfri Matter-app.</p>
+        <div class="dl-btns"><a id="dlWifi" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlWifiApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">🔵</span><h3>Endast BLE</h3><p>Ingen hub, inget moln · direkt till din telefon via Bluetooth.</p>
+        <div class="dl-btns"><a id="dlBle" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlBleApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Öppet nätverk “AkvaLink” · anslut, sidan öppnas automatiskt. Ingen router, ingen app, vilken telefon som helst. <em>Kräver nät/USB-ström.</em></p>
+        <div class="dl-btns"><a id="dlAp" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink-&lt;sista4mac&gt;.local</strong> i valfri webbläsare på ditt LAN. Autodetekteras av <strong>Home Assistant</strong> via MQTT. Flera enheter får unika värdnamn. <em>Kräver nät/USB-ström.</em></p>
+        <div class="dl-btns"><a id="dlStation" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">📢</span><h3>ESP-NOW</h3><p>Deep-sleep-utsändning — vaknar, läser DS18B20, skickar ett paket till valfri ESP32 på samma Wi-Fi-kanal, sover. Ingen hub, ingen driftsättning, maximal batteritid. <em>Mottagaren behöver en ESP32-skiss.</em></p>
+        <div class="dl-btns"><a id="dlEspnow" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">🏡</span><h3>ESPHome</h3><p>Inbyggt <strong>Home Assistant</strong>-API — ingen MQTT-broker behövs. Flasha en gång, adoptera i ESPHome-dashboarden, OTA-uppdatera från Home Assistant. Driftsätts med Improv via USB-seriell.</p>
+        <div class="dl-btns"><a id="dlEsphome" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEsphomeApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
     </div>
-    <p class="ble-note">Flasha till <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
+    <p class="ble-note"><strong>esptool&nbsp;.bin</strong> — fullständig bild, flasha på 0x0. Använd vid första installation eller variantbyte: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code><br>
+    <strong>OTA&nbsp;.bin</strong> — enbart app-partition. Använd för uppdatering <em>inom samma variant</em> (BLE→BLE, Thread→Thread osv.) utan att påverka NVS eller driftsättningsdata. Korsvariant-OTA (t.ex. BLE→Thread) är möjlig men kräver fabråterställning efterpå. · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
     <div class="live-card ota-card" id="otaCard">
       <h3 class="ota-title">Firmware-uppdatering via Bluetooth</h3>
       <p class="ota-hint">Ett klick — sidan hämtar senaste firmware och flashar den via BLE (Chrome/Edge).</p>
@@ -853,16 +864,15 @@
 </script>
 
 <script>
-// Fyll de tre nedladdningsknapparna från senaste GitHub-releasen. De statiska
-// länkarna pekar redan på release-sidan som reserv (fungerar utan JS / vid
-// API-gräns); vid lyckad hämtning uppgraderas de till direkta asset-länkar och
-// versionen visas. Följer alltid nyaste releasen.
+// Fyll nedladdningsknapparna från senaste GitHub-releasen.
+// Varje kort får två länkar: 'esptool .bin' (fullständig bild, 0x0)
+// och 'OTA .bin' (enbart app-partition, för trådlös uppdatering).
 (function () {
   var REPO = 'stenmo/AkvaLink';
-  var cards = { thread: 'dlThread', wifi: 'dlWifi', ble: 'dlBle', ap: 'dlAp', station: 'dlStation', espnow: 'dlEspnow', esphome: 'dlEsphome' };
+  var cards    = { thread: 'dlThread',    wifi: 'dlWifi',    ble: 'dlBle',    ap: 'dlAp',    station: 'dlStation',    espnow: 'dlEspnow',    esphome: 'dlEsphome' };
+  var appCards = { thread: 'dlThreadApp', wifi: 'dlWifiApp', ble: 'dlBleApp', ap: 'dlApApp', station: 'dlStationApp', espnow: 'dlEspnowApp', esphome: 'dlEsphomeApp' };
 
-  function assetFor(assets, variant) {
-    var re = new RegExp('^akvalink-' + variant + '-v.*\\.bin$');
+  function assetUrl(assets, re) {
     for (var i = 0; i < assets.length; i++) {
       if (re.test(assets[i].name)) return assets[i].browser_download_url;
     }
@@ -876,9 +886,12 @@
     .then(function (rel) {
       var assets = rel.assets || [];
       Object.keys(cards).forEach(function (variant) {
-        var el = document.getElementById(cards[variant]);
-        var url = assetFor(assets, variant);
-        if (el && url) el.setAttribute('href', url);
+        var el    = document.getElementById(cards[variant]);
+        var appEl = document.getElementById(appCards[variant]);
+        var url    = assetUrl(assets, new RegExp('^akvalink-' + variant + '-v.*\\.bin$'));
+        var appUrl = assetUrl(assets, new RegExp('^akvalink-' + variant + '-app-v.*\\.bin$'));
+        if (el && url)       el.setAttribute('href', url);
+        if (appEl && appUrl) appEl.setAttribute('href', appUrl);
       });
     })
     .catch(function () { /* behåll reserv-länkar till release-sidan */ });

@@ -140,6 +140,9 @@
   .dl-btn { display: inline-block; background: var(--water); color: #fff; padding: 8px 16px;
     border-radius: 999px; font-weight: 600; font-size: .9rem; }
   .dl-card:hover .dl-btn { background: var(--deep); }
+  .dl-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .dl-ota { background: transparent; border: 1.5px solid var(--water); color: var(--water); }
+  .dl-card:hover .dl-ota { background: var(--water); color: #fff; }
 
   /* Wiring schematic */
   .schematic { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 8px; margin-top: 16px; }
@@ -431,29 +434,37 @@
     <p class="lead">Not sure which? <strong>Thread</strong> and <strong>Wi-Fi</strong> join Apple / Google / Alexa as a standard Matter sensor. <strong>ESPHome</strong> integrates natively with Home Assistant. <strong>BLE-only</strong> talks straight to your phone. <strong>AP</strong> and <strong>Station</strong> serve a live web page — no hub, no app, just a browser (need mains/USB power).</p>
     <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=latest&amp;logo=github"></a></p>
     <div class="grid">
-      <a class="dl-card" id="dlThread" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🧵</span><h3>Thread</h3><p>Matter over Thread · best battery. Needs a hub — HomePod, Apple TV, Nest or Echo.</p><span class="dl-btn">Download .bin</span>
-      </a>
-      <a class="dl-card" id="dlWifi" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">📶</span><h3>Wi-Fi</h3><p>Matter over Wi-Fi · no Thread hub. Runs on battery too — just fewer years. Your router + any Matter app.</p><span class="dl-btn">Download .bin</span>
-      </a>
-      <a class="dl-card" id="dlBle" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🔵</span><h3>BLE-only</h3><p>No hub, no cloud · straight to your phone over Bluetooth.</p><span class="dl-btn">Download .bin</span>
-      </a>
-      <a class="dl-card" id="dlAp" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Open hotspot "AkvaLink" · join it, the page opens automatically. No router, no app, any phone. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
-      </a>
-      <a class="dl-card" id="dlStation" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink-&lt;last4mac&gt;.local</strong> in any browser on your LAN. Auto-discovered by <strong>Home Assistant</strong> via MQTT. Multiple devices get unique hostnames. <em>Needs mains/USB power.</em></p><span class="dl-btn">Download .bin</span>
-      </a>
-      <a class="dl-card" id="dlEspnow" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">📢</span><h3>ESP-NOW</h3><p>Deep-sleep broadcast — wakes, reads DS18B20, sends one packet to any ESP32 on the same Wi-Fi channel, sleeps. No hub, no provisioning, maximum battery life. <em>Receiver needs an ESP32 sketch.</em></p><span class="dl-btn">Download .bin</span>
-      </a>
-      <a class="dl-card" id="dlEsphome" href="https://github.com/stenmo/AkvaLink/releases">
-        <span class="ico">🏡</span><h3>ESPHome</h3><p>Native <strong>Home Assistant</strong> API — no MQTT broker needed. Flash once, adopt in the ESPHome dashboard, OTA-update from Home Assistant. Provisioned with Improv over USB serial.</p><span class="dl-btn">Download .bin</span>
-      </a>
+      <div class="dl-card">
+        <span class="ico">🧵</span><h3>Thread</h3><p>Matter over Thread · best battery. Needs a hub — HomePod, Apple TV, Nest or Echo.</p>
+        <div class="dl-btns"><a id="dlThread" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlThreadApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">📶</span><h3>Wi-Fi</h3><p>Matter over Wi-Fi · no Thread hub. Runs on battery too — just fewer years. Your router + any Matter app.</p>
+        <div class="dl-btns"><a id="dlWifi" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlWifiApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">🔵</span><h3>BLE-only</h3><p>No hub, no cloud · straight to your phone over Bluetooth.</p>
+        <div class="dl-btns"><a id="dlBle" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlBleApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Open hotspot “AkvaLink” · join it, the page opens automatically. No router, no app, any phone. <em>Needs mains/USB power.</em></p>
+        <div class="dl-btns"><a id="dlAp" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink-&lt;last4mac&gt;.local</strong> in any browser on your LAN. Auto-discovered by <strong>Home Assistant</strong> via MQTT. Multiple devices get unique hostnames. <em>Needs mains/USB power.</em></p>
+        <div class="dl-btns"><a id="dlStation" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">📢</span><h3>ESP-NOW</h3><p>Deep-sleep broadcast — wakes, reads DS18B20, sends one packet to any ESP32 on the same Wi-Fi channel, sleeps. No hub, no provisioning, maximum battery life. <em>Receiver needs an ESP32 sketch.</em></p>
+        <div class="dl-btns"><a id="dlEspnow" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
+      <div class="dl-card">
+        <span class="ico">🏡</span><h3>ESPHome</h3><p>Native <strong>Home Assistant</strong> API — no MQTT broker needed. Flash once, adopt in the ESPHome dashboard, OTA-update from Home Assistant. Provisioned with Improv over USB serial.</p>
+        <div class="dl-btns"><a id="dlEsphome" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEsphomeApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+      </div>
     </div>
-    <p class="ble-note">Flash to <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>
+    <p class="ble-note"><strong>esptool&nbsp;.bin</strong> — full merged image, flash at 0x0. Use for first-time setup or switching variants: <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code><br>
+    <strong>OTA&nbsp;.bin</strong> — app partition only. Use for updating <em>within the same variant</em> (BLE→BLE, Thread→Thread, etc.) without touching NVS or commissioning data. Cross-variant OTA is possible but requires a factory reset after. · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>
     <div class="live-card ota-card" id="otaCard">
       <h3 class="ota-title">Firmware update over Bluetooth</h3>
       <p class="ota-hint">One click — the page fetches the latest firmware and flashes it over BLE (Chrome/Edge).</p>
@@ -871,16 +882,15 @@
 </script>
 
 <script>
-// Populate the three download buttons from the latest GitHub release. The
-// static hrefs already point at the releases page as a graceful fallback (works
-// with JS off / API rate-limited); on success we upgrade them to direct asset
-// links and show the version. Always tracks the newest release.
+// Populate download buttons from the latest GitHub release.
+// Each card gets two links: 'esptool .bin' (full merged image, flash at 0x0)
+// and 'OTA .bin' (app-partition-only image for BLE GATT OTA / HTTP /ota).
 (function () {
   var REPO = 'stenmo/AkvaLink';
-  var cards = { thread: 'dlThread', wifi: 'dlWifi', ble: 'dlBle', ap: 'dlAp', station: 'dlStation', espnow: 'dlEspnow', esphome: 'dlEsphome' };
+  var cards    = { thread: 'dlThread',    wifi: 'dlWifi',    ble: 'dlBle',    ap: 'dlAp',    station: 'dlStation',    espnow: 'dlEspnow',    esphome: 'dlEsphome' };
+  var appCards = { thread: 'dlThreadApp', wifi: 'dlWifiApp', ble: 'dlBleApp', ap: 'dlApApp', station: 'dlStationApp', espnow: 'dlEspnowApp', esphome: 'dlEsphomeApp' };
 
-  function assetFor(assets, variant) {
-    var re = new RegExp('^akvalink-' + variant + '-v.*\\.bin$');
+  function assetUrl(assets, re) {
     for (var i = 0; i < assets.length; i++) {
       if (re.test(assets[i].name)) return assets[i].browser_download_url;
     }
@@ -894,9 +904,12 @@
     .then(function (rel) {
       var assets = rel.assets || [];
       Object.keys(cards).forEach(function (variant) {
-        var el = document.getElementById(cards[variant]);
-        var url = assetFor(assets, variant);
-        if (el && url) el.setAttribute('href', url);
+        var el    = document.getElementById(cards[variant]);
+        var appEl = document.getElementById(appCards[variant]);
+        var url    = assetUrl(assets, new RegExp('^akvalink-' + variant + '-v.*\\.bin$'));
+        var appUrl = assetUrl(assets, new RegExp('^akvalink-' + variant + '-app-v.*\\.bin$'));
+        if (el && url)       el.setAttribute('href', url);
+        if (appEl && appUrl) appEl.setAttribute('href', appUrl);
       });
     })
     .catch(function () { /* keep fallback links to the releases page */ });
