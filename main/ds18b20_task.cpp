@@ -32,7 +32,8 @@
 #include "ds18b20.h"
 #endif
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && \
+    !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW
 #include <esp_matter.h>
 #include <esp_matter_attribute_utils.h>
 
@@ -179,7 +180,8 @@ static void sensor_print_details(void)
 
 #endif // APP_USE_DS2482
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && \
+    !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW
 static void push_to_matter(float celsius)
 {
     if (g_temp_endpoint_id == 0) {
