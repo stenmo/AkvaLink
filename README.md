@@ -36,20 +36,20 @@ environments where the temperature barely changes, but you want to know
 **Schematic (direct GPIO, default build):**
 
 ```
-                        ┌──────────────────────────────────────────┐
-                        │       NORA-W40 / EVK-NORA-W40            │
-  +3V3 ────────┬─────── │ GPIO15 (J15.4)  ← DS18B20 DQ 1-Wire     │
-               │        │                                          │
-              4.7 kΩ    │ GPIO9  (BOOT)   ← re-provision button    │
-               │        │                   long-press 5 s →       │
-DS18B20 ───────┘        │                   erase Wi-Fi, re-prov   │
-  DQ ─────────────────► │                                          │
-  VDD ────────────────── │ +3V3            ← future: battery ADC   │
-  GND ────────────────── │ GND                                     │
-                        │                     ┌──────────┐         │
-  Battery (+) ──── R1 ──┤ ADCx (future) ◄─────┤ R1 / R2  │        │
-  Battery (-) ──── GND  │                     │ divider  │        │
-                        └──────────────────────┴──────────┴────────┘
+                         ┌──────────────────────────────────────────┐
+                         │       NORA-W40 / EVK-NORA-W40            │
+  +3V3 ────────┬──────── │ GPIO15 (J15.4)  ← DS18B20 DQ 1-Wire      │
+               │         │                                          │
+              4.7 kΩ     │ GPIO9  (BOOT)   ← re-provision button    │
+               │         │                   long-press 5 s →       │
+DS18B20 ───────┘         │                   erase Wi-Fi, re-prov   │
+  DQ ──────────────────► │                                          │
+  VDD ────────────────── │ +3V3            ← future: battery ADC    │
+  GND ────────────────── │ GND                                      │
+                         │                     ┌──────────┐         │
+  Battery (+) ──── R1 ───┤ ADCx (future) ◄─────┤ R1 / R2  │         │
+  Battery (-) ──── GND   │                     │ divider  │         │
+                         └─────────────────────┴──────────┴─────────┘
 ```
 
 R1/R2 voltage divider (not yet populated): e.g. 390 kΩ / 100 kΩ scales 3.3 V full-charge to ≈ 0.68 V, safely within the ESP32-C6 ADC input range.
