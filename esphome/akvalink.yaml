@@ -4,7 +4,7 @@ esphome:
   name_add_mac_suffix: true
   project:
     name: stenmo.akvalink
-    version: "0.2.4"
+    version: "0.3.0"
 
 dashboard_import:
   package_import_url: github://stenmo/AkvaLink/esphome/akvalink.yaml@main
