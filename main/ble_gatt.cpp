@@ -426,7 +426,10 @@ static int cpf_access(uint16_t, uint16_t, struct ble_gatt_access_ctxt *ctxt, voi
     return os_mbuf_append(ctxt->om, s_temp_cpf, sizeof(s_temp_cpf)) == 0
                ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 }
-static const struct ble_gatt_dsc_def s_temp_dscs[] = {
+// NimBLE's ble_gatt_chr_def::descriptors field is ble_gatt_dsc_def* (non-const
+// ptr in this IDF version), so the array cannot be declared const even though
+// the data never changes at runtime.
+static struct ble_gatt_dsc_def s_temp_dscs[] = {
     { .uuid = &UUID_CPF.u, .att_flags = BLE_ATT_F_READ, .access_cb = cpf_access },
     { 0 },
 };
