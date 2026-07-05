@@ -19,7 +19,8 @@
 #include "nvs_flash.h"
 #include "esp_pm.h"
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && \
+    !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW
 #include <esp_matter.h>
 #include <esp_matter_console.h>
 #include <esp_matter_ota.h>
@@ -103,7 +104,8 @@ static void __attribute__((unused)) configure_light_sleep(void)
 }
 #endif
 
-#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION
+#if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && \
+    !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW
 
 // ---------------------------------------------------------------------------
 // Matter event callback. Mostly informational — we just log lifecycle events

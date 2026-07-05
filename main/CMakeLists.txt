@@ -41,7 +41,8 @@ endif()
 # QR-in-console for Matter commissioning: renders the "MT:..." setup payload as
 # a scannable ASCII QR (Nayuki qrcodegen, MIT). Needs CHIP's GetQRCode, so it's
 # Matter-only — i.e. neither the BLE nor the no-Matter env var is set.
-if(NOT DEFINED ENV{AKVALINK_BLE} AND NOT DEFINED ENV{AKVALINK_NO_MATTER})
+if(NOT DEFINED ENV{AKVALINK_BLE} AND NOT DEFINED ENV{AKVALINK_NO_MATTER}
+        AND NOT DEFINED ENV{AKVALINK_ESPNOW})
     list(APPEND SRCS "qrcodegen.c" "qr_console.c")
 endif()
 
@@ -59,7 +60,7 @@ elseif(DEFINED ENV{AKVALINK_STATION})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip
         wifi_provisioning mdns bt mqtt esp_timer esp_app_format app_update)
 elseif(DEFINED ENV{AKVALINK_ESPNOW})
-    list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_now)
+    list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif)
 elseif(NOT DEFINED ENV{AKVALINK_NO_MATTER})
     list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)
 endif()
