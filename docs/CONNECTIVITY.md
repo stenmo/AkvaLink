@@ -250,6 +250,66 @@ PPK2 verification is on the TODO.
 
 ---
 
+## Always-available BLE — investigation (July 2026)
+
+> Question raised: can BLE be **always available on every variant** — either
+> by "borrowing" BLE from Matter (coexistence), or by a GPIO-selected dual
+> boot into a BLE image on a second flash bank?
+
+**Hardware fact (NORA-W40 datasheet, verified):** one radio, one antenna.
+Wi-Fi / 802.15.4 (Thread) / BLE are *time-divided on the antenna* by the
+ESP32-C6 coexistence arbiter — the same mechanism Matter already uses to run
+CHIPoBLE and Thread "simultaneously" during commissioning. So coexistence is
+a supported, documented capability, not a hack.
+
+Three approaches, with the honest trade-offs:
+
+### Option A — BLE always-on, coexisting with Matter/Wi-Fi
+Keep the BLE controller + NimBLE host alive *after* Matter commissioning and
+register our GATT services alongside CHIPoBLE (Matter normally tears BLE down
+post-commission to reclaim RAM/power).
+- ✅ Supported; ~30–50 KB RAM/flash cost.
+- ❌ **Kills the battery goal for SED/Thread.** BLE advertising forces regular
+  radio wake-ups; the ~12 yr on 2× AA figure collapses to months. Violates the
+  power rules.
+- **Good for mains-powered variants only** (AP / Station / ESPHome) — no battery
+  cost there, and it hands every mains variant "talk to it over Bluetooth" free.
+
+### Option B — Dual-boot: GPIO at boot picks a flash bank
+Two separate app images in `ota_0` / `ota_1`; a custom bootloader reads GPIO9
+(BOOT) and selects the BLE app vs the Matter app.
+- ❌ **Breaks OTA** — both slots hold *different* apps, leaving no free slot to
+  receive an update (would need a third app partition).
+- ❌ **Won't fit on 4 MB** — `ota_0`+`ota_1` already = 3.75 MB and a Matter image
+  alone is ~1.9 MB. Needs the **8 MB** module (NORA-W401-10B / W406-10B).
+- 🔧 Custom bootloader (`CONFIG_BOOTLOADER_CUSTOM`) — extra complexity + certification cost.
+- Verdict: strongest isolation, but overkill unless the two firmwares must be
+  fully independent *and* we commit to 8 MB.
+
+### Option C — One image, GPIO at boot selects the stack *(recommended)*
+Single firmware compiles **both** paths; `app_main` reads GPIO9 at boot —
+held → BLE-only GATT server; released → normal Matter/Wi-Fi path. This is
+roadmap item #6 ("Universal build with runtime mode select").
+- ✅ No bootloader changes, no partition changes, **OTA stays intact** (one slot
+  updates everything).
+- ✅ Reuses the existing GPIO9 re-provisioning button — becomes a **BLE escape
+  hatch**: if Matter/Thread commissioning is broken, hold BOOT at power-on to
+  come up as a plain BLE sensor a phone can read.
+- ✅ BLE only runs when *asked for*, so no always-on battery drain.
+- ⚠️ **Open question — flash budget.** Matter + Thread + Wi-Fi + NimBLE-GATT in
+  one image may not fit in 4 MB (the Thread build is already ~1 % free). **This
+  must be measured with `idf.py size` before committing** (per the *measure
+  before optimizing* rule). Very likely fits on 8 MB.
+
+**Recommendation:** Option A-lite for the mains variants (always-on BLE, no
+battery cost) + Option C for the battery variants (on-demand BLE escape hatch,
+gated behind a flash-size measurement). **Not** Option B unless we adopt the
+8 MB module. Next concrete step: measure current per-variant flash usage
+(`idf.py size` / `size-components`) to settle the Option C 4 MB question.
+
+---
+
+
 ## Roadmap (this is the order)
 
 1. Matter / Thread — *shipped*.
@@ -260,6 +320,9 @@ PPK2 verification is on the TODO.
 5. Nordic Wi-Fi Provisioner GATT service — *optional*, only for the
    dual-ecosystem demo story; skip unless that's wanted.
 6. Universal build with runtime mode select.
+   *See [Always-available BLE — investigation](#always-available-ble--investigation-july-2026)
+   above (Option C — GPIO-at-boot BLE escape hatch). Gate on an `idf.py size`
+   flash-budget measurement first.*
 7. Optional Improv-Wi-Fi for Home Assistant friendliness.
 
 Tracked in [TODO.md](../TODO.md) under **Connectivity / Provisioning**.
