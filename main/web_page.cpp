@@ -20,6 +20,7 @@
 
 #include "esp_http_server.h"
 #include "esp_log.h"
+#include "esp_ota_ops.h"
 #include "esp_timer.h"
 
 static const char *TAG = "web";
@@ -191,6 +192,16 @@ static const char PAGE_HTML[] = R"HTML(<!doctype html>
     <div class="glabel"><span id="glo"></span><span id="ghi"></span></div>
     <span class="clr" onclick="clearHist()">&#10006; clear history</span>
   </div>
+  <div id="upd" style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12)">
+    <div style="font-size:.85rem;opacity:.55;margin-bottom:8px">Firmware update</div>
+    <label style="padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.22);cursor:pointer;font-size:.82rem">
+      Choose .bin<input type="file" id="otf" accept=".bin" style="display:none" onchange="selF(this)"></label>
+    <span id="ofn" style="font-size:.78rem;opacity:.4;margin-left:6px"></span>
+    <div id="opr" style="height:5px;background:rgba(0,0,0,.25);border-radius:3px;margin:8px 0 4px;display:none">
+      <div id="obr" style="height:100%;width:0;background:#28c2d6;border-radius:3px;transition:width .2s"></div></div>
+    <div id="oms" style="font-size:.78rem;opacity:.6;margin-bottom:6px"></div>
+    <button id="ofl" onclick="doOta()" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(40,194,214,.5);background:rgba(40,194,214,.12);color:#28c2d6;cursor:pointer;font-size:.82rem">Flash</button>
+  </div>
 </div>
 <script>
 var histData={m:[],h:[]},tab=0;
@@ -254,6 +265,22 @@ function clearHist(){fetch('/history/reset',{method:'POST'}).then(function(){
 u();trend();stats();bat();mq();hist();
 setInterval(u,2000);setInterval(trend,10000);setInterval(stats,30000);
 setInterval(bat,30000);setInterval(mq,10000);setInterval(hist,60000);
+var _otaF=null;
+function selF(i){_otaF=i.files[0];document.getElementById('ofn').textContent=_otaF?_otaF.name:'';}
+function doOta(){
+  if(!_otaF){document.getElementById('oms').textContent='Select a .bin file first';return;}
+  var btn=document.getElementById('ofl'),pr=document.getElementById('opr'),br=document.getElementById('obr'),ms=document.getElementById('oms');
+  btn.disabled=true;btn.textContent='Uploading\u2026';pr.style.display='';br.style.width='0';
+  var xhr=new XMLHttpRequest();xhr.open('POST','/ota');
+  xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.timeout=120000;
+  xhr.upload.onprogress=function(e){if(e.lengthComputable){br.style.width=(e.loaded/e.total*100)+'%';ms.textContent='Uploading '+Math.round(e.loaded/e.total*100)+'%\u2026';}};
+  xhr.onload=function(){var r=null;try{r=JSON.parse(xhr.responseText);}catch(e){}
+    if(r&&r.ok){br.style.width='100%';ms.textContent='Done \u2014 rebooting\u2026';}
+    else{ms.textContent='Failed: '+(r&&r.error||'unknown');}
+    btn.textContent='Flash';btn.disabled=false;};
+  xhr.onerror=function(){ms.textContent='Upload error';btn.textContent='Flash';btn.disabled=false;};
+  _otaF.arrayBuffer().then(function(ab){xhr.send(ab);});
+}
 </script></body></html>)HTML";
 
 static esp_err_t root_get(httpd_req_t *req)
@@ -372,13 +399,82 @@ static esp_err_t any_get(httpd_req_t *req)
     return httpd_resp_send(req, PAGE_HTML, HTTPD_RESP_USE_STRLEN);
 }
 
+// --- OTA firmware upload (POST /ota) ----------------------------------------
+// Accepts a raw binary firmware image as the POST body (Content-Type:
+// application/octet-stream).  Writes to the inactive OTA slot via
+// esp_ota_ops, commits, then reboots after a short grace period so the HTTP
+// response can be flushed to the browser.
+static void ota_reboot_cb(void *) { esp_restart(); }
+static bool s_ota_running = false;
+
+static esp_err_t ota_post(httpd_req_t *req)
+{
+    int total = req->content_len;
+    if (total <= 0 || total > 2 * 1024 * 1024) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "invalid content-length");
+        return ESP_FAIL;
+    }
+    if (s_ota_running) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "ota already running");
+        return ESP_FAIL;
+    }
+    s_ota_running = true;
+
+    const esp_partition_t *upd = esp_ota_get_next_update_partition(NULL);
+    if (!upd) {
+        s_ota_running = false;
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "no OTA partition");
+        return ESP_FAIL;
+    }
+
+    esp_ota_handle_t handle = 0;
+    if (esp_ota_begin(upd, OTA_WITH_SEQUENTIAL_WRITES, &handle) != ESP_OK) {
+        s_ota_running = false;
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "ota begin failed");
+        return ESP_FAIL;
+    }
+
+    char chunk[1024];
+    int received = 0;
+    bool ok = true;
+    while (received < total && ok) {
+        int want = total - received;
+        if (want > (int)sizeof(chunk)) want = (int)sizeof(chunk);
+        int n = httpd_req_recv(req, chunk, (size_t)want);
+        if (n <= 0) { ok = false; break; }
+        if (esp_ota_write(handle, chunk, (size_t)n) != ESP_OK) { ok = false; break; }
+        received += n;
+    }
+
+    if (!ok || esp_ota_end(handle) != ESP_OK ||
+        esp_ota_set_boot_partition(upd) != ESP_OK) {
+        s_ota_running = false;
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "ota write/end failed");
+        return ESP_FAIL;
+    }
+
+    ESP_LOGI(TAG, "OTA upload done (%d bytes) — rebooting", received);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, "{\"ok\":true}", HTTPD_RESP_USE_STRLEN);
+
+    // Reboot 1.5 s after response flushes.
+    esp_timer_handle_t timer;
+    esp_timer_create_args_t ta = {};
+    ta.callback = ota_reboot_cb;
+    ta.name     = "ota_reboot";
+    esp_timer_create(&ta, &timer);
+    esp_timer_start_once(timer, 1500000);
+    return ESP_OK;
+}
+
 esp_err_t akvalink_web_start_server(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.uri_match_fn    = httpd_uri_match_wildcard;
+    config.uri_match_fn     = httpd_uri_match_wildcard;
     config.lru_purge_enable = true;
     config.max_open_sockets = 4;
-    config.max_uri_handlers = 12;   // room for the new endpoints
+    config.max_uri_handlers = 13;   // room for all endpoints incl. /ota
+    config.recv_wait_timeout = 30;  // allow large OTA uploads
 
     if (httpd_start(&s_httpd, &config) != ESP_OK) {
         ESP_LOGE(TAG, "httpd_start failed");
@@ -393,9 +489,10 @@ esp_err_t akvalink_web_start_server(void)
     h.uri = "/stats";         h.method = HTTP_GET;  h.handler = stats_get;           httpd_register_uri_handler(s_httpd, &h);
     h.uri = "/history";       h.method = HTTP_GET;  h.handler = history_get;         httpd_register_uri_handler(s_httpd, &h);
     h.uri = "/history/reset"; h.method = HTTP_POST; h.handler = history_reset_post;  httpd_register_uri_handler(s_httpd, &h);
+    h.uri = "/ota";           h.method = HTTP_POST; h.handler = ota_post;            httpd_register_uri_handler(s_httpd, &h);
     h.uri = "/*";             h.method = HTTP_GET;  h.handler = any_get;             httpd_register_uri_handler(s_httpd, &h);
 
-    ESP_LOGI(TAG, "HTTP server up — /, /temp, /battery, /trend, /stats, /history");
+    ESP_LOGI(TAG, "HTTP server up — /, /temp, /battery, /trend, /stats, /history, /ota");
     return ESP_OK;
 }
 

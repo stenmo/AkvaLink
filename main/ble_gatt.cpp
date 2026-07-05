@@ -54,10 +54,10 @@ static const char *TAG = "ble_gatt";
 #define ADV_INST_LEGACY 0    // 1M legacy PDUs — best phone compatibility (esp. iOS)
 #define ADV_INST_CODED  1    // Coded PHY S=8 — long range (Android / gateway)
 #define ADV_ROTATE_MS   4000 // dwell per PHY before switching
-#define ADV_ITVL_MS     1000 // adv interval while unconnected — battery lever
-                             // (we stop advertising on connect, so this is the
-                             // only advertising state). 1 s ≈ still snappy to
-                             // discover, ~5× fewer radio wakeups than 200 ms.
+#define ADV_ITVL_MS      200 // adv interval while unconnected — 200 ms is the
+                             // BT SIG "general discoverable" sweet spot.  We
+                             // stop advertising on connect, so this only fires
+                             // before the first pairing.
 
 static const char *MANUFACTURER = "u-blox";
 static const char *MODEL        = "AkvaLink NORA-W40";
