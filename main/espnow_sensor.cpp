@@ -59,9 +59,12 @@ static bool              s_send_ok;
 // ---------------------------------------------------------------------------
 static esp_err_t read_temperature(float *celsius)
 {
-    onewire_bus_handle_t    bus = NULL;
-    ds18b20_device_handle_t dev = NULL;
-    esp_err_t               ret = ESP_FAIL;
+    onewire_bus_handle_t         bus  = NULL;
+    ds18b20_device_handle_t      dev  = NULL;
+    onewire_device_iter_handle_t iter = NULL;
+    onewire_device_t             found = {};
+    int                          n    = 0;
+    esp_err_t                    ret  = ESP_FAIL;
 
     onewire_bus_config_t bus_cfg = {
         .bus_gpio_num = APP_DS18B20_GPIO,
@@ -71,11 +74,8 @@ static esp_err_t read_temperature(float *celsius)
     ESP_RETURN_ON_ERROR(onewire_new_bus_rmt(&bus_cfg, &rmt_cfg, &bus),
                         TAG, "bus create failed");
 
-    onewire_device_iter_handle_t iter = NULL;
     ESP_GOTO_ON_ERROR(onewire_new_device_iter(bus, &iter), cleanup_bus, TAG, "iter alloc");
 
-    onewire_device_t found = {};
-    int n = 0;
     while (onewire_device_iter_get_next(iter, &found) == ESP_OK) {
         ds18b20_config_t ds_cfg = {};
         if (ds18b20_new_device(&found, &ds_cfg, &dev) == ESP_OK) {
