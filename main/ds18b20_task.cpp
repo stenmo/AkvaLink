@@ -258,6 +258,8 @@ static void sample_task(void *)
             akvalink_web_set_temperature(celsius);
 #elif CONFIG_AKVALINK_STATION
             akvalink_station_set_temperature(celsius);
+#elif CONFIG_AKVALINK_ESPNOW
+            /* espnow_sensor reads the probe itself before transmitting */
 #else
             push_to_matter(celsius);
 #endif
