@@ -218,33 +218,13 @@ above has happened.
 - Keep every path **local and private** — reuse the same threshold/report
   logic; no new cloud dependency.
 
-## ESPHome variant
-> Detailed spec captured from product review, July 2026.
+## ESPHome variant — ✓ shipped July 2026
 
-A proper ESPHome build (not just a dropped .bin) that integrates natively
-with the ESPHome ecosystem:
+`esphome/akvalink.yaml` with `esphome.project` (`stenmo.akvalink`), `dashboard_import`,
+`improv_serial`, DS18B20 on GPIO15, Home Assistant native API, OTA. Added to `VARIANTS`
+in `release.py` + `publish.py`; download card on the web page.
 
-- **Adoptable YAML** — `esphome/akvalink.yaml` with `esphome.project`
-  block (`stenmo.akvalink`, version string from `version.txt`) and
-  `dashboard_import: package_import_url: github://stenmo/AkvaLink/esphome/akvalink.yaml@main`.
-  Anyone who flashes the binary can "adopt" it in their ESPHome dashboard,
-  which pulls the YAML and makes it theirs to extend. Pattern from Apollo/Athom.
-  Required for the Made for ESPHome badge.
-- **Improv for Wi-Fi setup** — add `esp32_improv` (BLE) and `improv_serial`
-  so Wi-Fi is configured right after flashing via ESP Web Tools. Mirrors the
-  existing BLE-provisioning flow.
-- **Web flashing** — ESPHome builds produce `firmware.factory.bin` (flash at
-  `0x0`, same as other variants) plus a `manifest.json`. Drop an ESP Web Tools
-  button on the site next to the BLE updater for browser-flashing over USB.
-- **CI** — `esphome/build-action` compiles YAML → factory bin in GitHub Actions,
-  slot into the release pipeline with name `akvalink-esphome.bin`.
-- **Web page** — differentiate from the MQTT station variant in one line each:
-  *Station/MQTT = any broker, zero dependencies; ESPHome = native HA API,
-  adopt-and-customize in YAML.*
-
-Implementation needs: `esphome/` directory, new YAML, CI workflow update,
-ESP Web Tools button in `web/index.html` + `web/index.sv.html`, add `esphome`
-to `VARIANTS` in `release.py` + `publish.py`, update web page download section.
+Remaining (not yet done): CI via `esphome/build-action`, ESP Web Tools USB-flash button.
 
 ## Productisation
 > See [docs/ENCLOSURE_DESIGN.md](docs/ENCLOSURE_DESIGN.md)

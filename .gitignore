@@ -28,6 +28,10 @@ Thumbs.db
 *.swp
 *~
 
+# ESPHome — real secrets stay local; placeholder committed for CI reference
+esphome/secrets.yaml
+.esphome/
+
 # Python / pytest cruft
 __pycache__/
 *.pyc

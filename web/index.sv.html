@@ -413,7 +413,7 @@
   <div class="wrap">
     <h2>Ladda ner firmware</h2>
     <p class="lead">Förbyggda enfilsbinärer för NORA-W40 (ESP32-C6) — alltid senaste releasen.</p>
-    <p class="lead">Osäker på vilken? <strong>Thread</strong> och <strong>Wi-Fi</strong> dyker upp i Apple / Google / Alexa som en vanlig Matter-givare. <strong>Endast BLE</strong> pratar direkt med din telefon. <strong>AP</strong> och <strong>Station</strong> serverar en live-webbsida — ingen hub, ingen app, bara en webbläsare (kräver nät/USB-ström).</p>
+    <p class="lead">Osäker på vilken? <strong>Thread</strong> och <strong>Wi-Fi</strong> dyker upp i Apple / Google / Alexa som en vanlig Matter-givare. <strong>ESPHome</strong> integrerar direkt med Home Assistant. <strong>Endast BLE</strong> pratar direkt med din telefon. <strong>AP</strong> och <strong>Station</strong> serverar en live-webbsida — ingen hub, ingen app, bara en webbläsare (kräver nät/USB-ström).</p>
     <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Senaste release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=senaste&amp;logo=github"></a></p>
     <div class="grid">
       <a class="dl-card" id="dlThread" href="https://github.com/stenmo/AkvaLink/releases">
@@ -430,6 +430,12 @@
       </a>
       <a class="dl-card" id="dlStation" href="https://github.com/stenmo/AkvaLink/releases">
         <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink-&lt;sista4mac&gt;.local</strong> i valfri webbläsare på ditt LAN. Autodetekteras av <strong>Home Assistant</strong> via MQTT. Flera enheter får unika värdnamn. <em>Kräver nät/USB-ström.</em></p><span class="dl-btn">Ladda ner .bin</span>
+      </a>
+      <a class="dl-card" id="dlEspnow" href="https://github.com/stenmo/AkvaLink/releases">
+        <span class="ico">📢</span><h3>ESP-NOW</h3><p>Deep-sleep-utsändning — vaknar, läser DS18B20, skickar ett paket till valfri ESP32 på samma Wi-Fi-kanal, sover. Ingen hub, ingen driftsättning, maximal batteritid. <em>Mottagaren behöver en ESP32-skiss.</em></p><span class="dl-btn">Ladda ner .bin</span>
+      </a>
+      <a class="dl-card" id="dlEsphome" href="https://github.com/stenmo/AkvaLink/releases">
+        <span class="ico">🏡</span><h3>ESPHome</h3><p>Inbyggt <strong>Home Assistant</strong>-API — ingen MQTT-broker behövs. Flasha en gång, adoptera i ESPHome-dashboarden, OTA-uppdatera från Home Assistant. Driftsätts med Improv via USB-seriell.</p><span class="dl-btn">Ladda ner .bin</span>
       </a>
     </div>
     <p class="ble-note">Flasha till <code>0x0</code>: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code> · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
@@ -465,6 +471,8 @@
       <li class="done"><span class="mark">✓</span>BLE firmware-uppdatering (egen GATT över esp_ota)</li>
       <li class="done"><span class="mark">✓</span>Wi-Fi AP-variant — öppet nätverk + webbsida, vilken telefon (nät/USB)</li>
       <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-driftsätts, hemma-Wi-Fi, unik akvalink-&lt;sista4mac&gt;.local, Home Assistant MQTT-autodetektering (nät/USB)</li>
+      <li class="done"><span class="mark">✓</span>ESP-NOW-utsändning — deep-sleep-givare, ingen hub, ingen driftsättning</li>
+      <li class="done"><span class="mark">✓</span>ESPHome / Home Assistant inbyggt API-variant (anpassa YAML, OTA från dashboarden)</li>
       <li class="todo"><span class="mark">▹</span>Riktig effektmätning + djupt viloläge</li>
       <li class="todo"><span class="mark">▹</span>E-ink-display (stora siffror, batteri, trend)</li>
       <li class="todo"><span class="mark">▹</span>Batterispänning + låg-batteri Matter-händelse</li>
@@ -852,7 +860,7 @@
 // versionen visas. Följer alltid nyaste releasen.
 (function () {
   var REPO = 'stenmo/AkvaLink';
-  var cards = { thread: 'dlThread', wifi: 'dlWifi', ble: 'dlBle', ap: 'dlAp', station: 'dlStation' };
+  var cards = { thread: 'dlThread', wifi: 'dlWifi', ble: 'dlBle', ap: 'dlAp', station: 'dlStation', espnow: 'dlEspnow', esphome: 'dlEsphome' };
 
   function assetFor(assets, variant) {
     var re = new RegExp('^akvalink-' + variant + '-v.*\\.bin$');

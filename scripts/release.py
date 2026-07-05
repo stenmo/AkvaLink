@@ -51,9 +51,10 @@ FLASHER_ARGS = BUILD_DIR / "flasher_args.json"
 DIST_DIR = REPO_ROOT / "dist"
 
 # The variants built + packaged for every release.
-# thread/wifi/ble are battery-powered (all years).
+# thread/wifi/ble/espnow are battery-powered.
 # ap and station need mains/USB (captive web page / LAN page).
-VARIANTS = ("thread", "wifi", "ble", "ap", "station", "espnow")
+# esphome uses its own build system (ESPHome YAML, not ESP-IDF directly).
+VARIANTS = ("thread", "wifi", "ble", "ap", "station", "espnow", "esphome")
 
 SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
@@ -139,6 +140,16 @@ def _run(cmd: list[str], dry_run: bool) -> None:
 
 
 def _build_cmd(variant: str) -> list[str]:
+    if variant == "esphome":
+        # ESPHome uses its own build system (not ESP-IDF / launch-akvalink-wsl)
+        if os.name == "nt":
+            drive = REPO_ROOT.drive[0].lower()
+            rest = REPO_ROOT.as_posix()[3:]  # strip "E:/"
+            wsl_root = f"/mnt/{drive}/{rest}"
+            return ["cmd", "/c", "wsl", "bash", "-lc",
+                    f"cd {wsl_root} && ~/.local/bin/esphome compile esphome/akvalink.yaml"]
+        return ["bash", "-c",
+                f"cd '{REPO_ROOT}' && esphome compile esphome/akvalink.yaml"]
     FLAG = {"wifi": "--wifi", "ble": "--ble", "ap": "--ap", "station": "--station", "espnow": "--espnow"}
     if os.name == "nt":
         cmd = ["cmd", "/c", str(REPO_ROOT / "launch-akvalink-wsl.cmd")]
@@ -152,6 +163,38 @@ def _build_cmd(variant: str) -> list[str]:
     if flag:
         cmd.append(flag)
     return cmd
+
+
+def _update_esphome_version(version: str) -> None:
+    """Patch the project.version string in esphome/akvalink.yaml."""
+    yaml_path = REPO_ROOT / "esphome" / "akvalink.yaml"
+    txt = yaml_path.read_text(encoding="utf-8")
+    txt = re.sub(
+        r"(name: stenmo\.akvalink\n\s+version:\s*\")[^\"]*\"",
+        rf'\g<1>{version}"',
+        txt,
+    )
+    yaml_path.write_text(txt, encoding="utf-8")
+
+
+def _stage_esphome(version: str, dry_run: bool) -> None:
+    """Copy ESPHome factory.bin (merged, 0x0-flashable) and ota.bin to dist/."""
+    pio = (REPO_ROOT / "esphome" / ".esphome" / "build" / "akvalink"
+           / ".pioenvs" / "akvalink")
+    for src, dst_name in [
+        (pio / "firmware.factory.bin", f"akvalink-esphome-v{version}.bin"),
+        (pio / "firmware.ota.bin",     f"akvalink-esphome-app-v{version}.bin"),
+    ]:
+        dst = DIST_DIR / dst_name
+        print(f"\u2022 package: dist/{dst_name}")
+        if dry_run:
+            continue
+        if not src.is_file():
+            print(f"    (no {src} \u2014 skipping)")
+            continue
+        shutil.copyfile(src, dst)
+        digest = sha256_file(dst)
+        Path(str(dst) + ".sha256").write_text(f"{digest}  {dst.name}\n", encoding="utf-8")
 
 
 def sha256_file(path: Path) -> str:
@@ -274,19 +317,25 @@ def main(argv: list[str] | None = None) -> int:
             FIRMWARE_BIN = BUILD_DIR / "akvalink.bin"
             FLASHER_ARGS = BUILD_DIR / "flasher_args.json"
             print(f"• build: {variant}")
+            if variant == "esphome" and not args.dry_run:
+                _update_esphome_version(new_version)
             try:
                 _run(_build_cmd(variant), args.dry_run)
             except SystemExit:
                 if not args.dry_run:  # roll back the version bump on build failure
                     _run(["git", "checkout", "--", str(VERSION_FILE)], dry_run=False)
                 raise
-            print(f"• package: dist/akvalink-{variant}-v{new_version}.bin")
-            merge_firmware(new_version, variant, args.dry_run, out_dir=DIST_DIR)
-            stage_app_image(variant, new_version, args.dry_run)
+            if variant == "esphome":
+                _stage_esphome(new_version, args.dry_run)
+            else:
+                print(f"\u2022 package: dist/akvalink-{variant}-v{new_version}.bin")
+                merge_firmware(new_version, variant, args.dry_run, out_dir=DIST_DIR)
+                stage_app_image(variant, new_version, args.dry_run)
 
     # 4. Commit + tag
     print(f"• commit + tag {tag}")
-    _run(["git", "add", str(VERSION_FILE)], args.dry_run)
+    _run(["git", "add", str(VERSION_FILE),
+          str(REPO_ROOT / "esphome" / "akvalink.yaml")], args.dry_run)
     _run(["git", "commit", "-m", f"release: {tag}"], args.dry_run)
     _run(["git", "tag", "-a", tag, "-m", f"AkvaLink {tag}"], args.dry_run)
 
