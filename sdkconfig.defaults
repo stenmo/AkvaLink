@@ -48,7 +48,13 @@ CONFIG_OPENTHREAD_FTD=n
 CONFIG_OPENTHREAD_RADIO=n
 CONFIG_OPENTHREAD_SRP_CLIENT=y
 CONFIG_OPENTHREAD_DNS_CLIENT=y
-CONFIG_OPENTHREAD_JOINER=y
+CONFIG_OPENTHREAD_JOINER=n
+# Thread Joiner is for Thread-native commissioning — Matter uses BLE/PASE,
+# never the OT joiner protocol. Saves ~6 KB flash.
+
+# Reduce NimBLE host task stack (4096 default → 3072) — CHIPoBLE commissioning
+# uses short transactions, 3 KB is sufficient.
+CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=3072
 CONFIG_OPENTHREAD_COMMISSIONER=n
 
 # --- Sleepy End Device (battery-friendly) ------------------------------------

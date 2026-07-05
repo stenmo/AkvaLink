@@ -10,6 +10,9 @@
 #include "ds18b20_task.h"
 #include "ble_gatt.h"
 #include "ap_web.h"
+#if CONFIG_AKVALINK_BLE_ESCAPE_HATCH
+#include "ble_escape.h"
+#endif
 #include "station_web.h"
 #include "espnow_sensor.h"
 #include "qr_console.h"
@@ -58,6 +61,13 @@ using namespace chip::app::Clusters;
 static const char * TAG = "app_main";
 
 uint16_t g_temp_endpoint_id = 0;
+
+// Set to true in the GPIO9 escape hatch paths (AP and Thread). Causes
+// ds18b20_task to route temperature updates to akvalink_ble_escape_set_temperature()
+// instead of the main transport (web page / Matter attribute report).
+#if CONFIG_AKVALINK_BLE_ESCAPE_HATCH
+bool g_ble_escape_active = false;
+#endif
 
 // ---------------------------------------------------------------------------
 // Boot banner — a small nod to https://poolmicke.se/ (Micke's "personlig och
@@ -187,6 +197,48 @@ extern "C" void app_main()
     }
     ESP_ERROR_CHECK(err);
 
+    // --- Variant guard: auto-erase NVS on cross-variant OTA ----------------
+    // If a different variant's app was flashed via OTA (e.g. BLE → Thread),
+    // the new firmware would find stale NVS from the old variant, causing
+    // Matter commissioning, BLE pairing, or Wi-Fi provisioning to fail.
+    // Store a short variant ID; if it doesn't match what's compiled in, wipe
+    // NVS before any subsystem touches it, then record the new ID.
+    {
+        static const char *VARIANT_ID =
+#if   CONFIG_AKVALINK_BLE_ONLY  
+            "ble"
+#elif CONFIG_AKVALINK_STATION
+            "station"
+#elif CONFIG_AKVALINK_AP
+            "ap"
+#elif CONFIG_AKVALINK_ESPNOW
+            "espnow"
+#else
+            "matter"   // both thread and wifi use Matter/chip NVS namespaces
+#endif
+            ;
+        nvs_handle_t h;
+        char stored[12] = {};
+        size_t len = sizeof(stored);
+        bool mismatch = true;
+        if (nvs_open("akvalink_sys", NVS_READONLY, &h) == ESP_OK) {
+            mismatch = (nvs_get_str(h, "variant", stored, &len) != ESP_OK ||
+                        strcmp(stored, VARIANT_ID) != 0);
+            nvs_close(h);
+        }
+        if (mismatch) {
+            ESP_LOGW(TAG, "Variant mismatch (stored='%s' vs compiled='%s') — "
+                     "erasing NVS for clean cross-variant boot", stored, VARIANT_ID);
+            ESP_ERROR_CHECK(nvs_flash_erase());
+            ESP_ERROR_CHECK(nvs_flash_init());
+            if (nvs_open("akvalink_sys", NVS_READWRITE, &h) == ESP_OK) {
+                nvs_set_str(h, "variant", VARIANT_ID);
+                nvs_commit(h);
+                nvs_close(h);
+            }
+        }
+    }
+
 #if CONFIG_AKVALINK_SENSOR_TEST
     // --- DS18B20 test variant: read the 1-Wire sensor and log it. No Matter,
     // no BLE, no networking — for verifying probe wiring / the sensor.
@@ -209,8 +261,26 @@ extern "C" void app_main()
     // --- Wi-Fi AP variant: open SoftAP "AkvaLink" + a captive web page showing
     // the live temperature. No Matter, no BLE. NEEDS EXTERNAL POWER (the Wi-Fi
     // radio stays awake for the AP — not battery friendly).
-    ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi AP variant — SoftAP \"AkvaLink\" + web page (needs external power)");
-    ESP_ERROR_CHECK(akvalink_ap_start());
+    ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi AP variant — SoftAP \"AkvaLink\" + web page (needs external power)");#if CONFIG_AKVALINK_BLE_ESCAPE_HATCH
+    // GPIO9 escape hatch: hold BOOT button at power-on to skip SoftAP and
+    // boot into standalone BLE GATT mode (Option C, CONNECTIVITY.md).
+    {
+        gpio_config_t io_cfg = {};
+        io_cfg.pin_bit_mask = 1ULL << 9;
+        io_cfg.mode         = GPIO_MODE_INPUT;
+        io_cfg.pull_up_en   = GPIO_PULLUP_ENABLE;
+        gpio_config(&io_cfg);
+        vTaskDelay(pdMS_TO_TICKS(50));   // let pin settle
+        if (gpio_get_level(GPIO_NUM_9) == 0) {
+            ESP_LOGW(TAG, "\xF0\x9F\x94\xB5 GPIO9 held at boot \xe2\x80\x94 BLE escape hatch (skipping SoftAP)");
+            g_ble_escape_active = true;
+            ESP_ERROR_CHECK(akvalink_ble_escape_start());
+            ds18b20_task_start();
+            ESP_LOGI(TAG, "\xe2\x9c\xa8 AkvaLink BLE escape hatch up \xe2\x80\x94 connect to \"AkvaLink\" over BLE");
+            return;
+        }
+    }
+#endif    ESP_ERROR_CHECK(akvalink_ap_start());
     ds18b20_task_start();
     ESP_LOGI(TAG, "✨ AkvaLink AP up — join open Wi-Fi \"AkvaLink\", the page opens (or http://192.168.4.1)");
 
@@ -247,6 +317,29 @@ extern "C" void app_main()
 #else
 
     // --- Matter node + Temperature Sensor endpoint --------------------------
+#if CONFIG_AKVALINK_BLE_ESCAPE_HATCH
+    // GPIO9 escape hatch: hold BOOT button at power-on to skip Matter/Thread
+    // and boot into minimal BLE GATT mode instead (Option C, CONNECTIVITY.md).
+    // BLE stack is already compiled in for CHIPoBLE commissioning — incremental
+    // cost is only the ble_escape.cpp GATT server (~15 KB).
+    {
+        gpio_config_t io_cfg = {};
+        io_cfg.pin_bit_mask = 1ULL << 9;
+        io_cfg.mode         = GPIO_MODE_INPUT;
+        io_cfg.pull_up_en   = GPIO_PULLUP_ENABLE;
+        gpio_config(&io_cfg);
+        vTaskDelay(pdMS_TO_TICKS(50));   // let pin settle
+        if (gpio_get_level(GPIO_NUM_9) == 0) {
+            ESP_LOGW(TAG, "\xF0\x9F\x94\xB5 GPIO9 held at boot \xe2\x80\x94 BLE escape hatch (skipping Matter)");
+            g_ble_escape_active = true;
+            ESP_ERROR_CHECK(akvalink_ble_escape_start());
+            ds18b20_task_start();
+            ESP_LOGI(TAG, "\xe2\x9c\xa8 AkvaLink BLE escape hatch up \xe2\x80\x94 connect to \"AkvaLink\" over BLE");
+            return;
+        }
+    }
+#endif
+
     node::config_t node_cfg;
     node_t * node = node::create(&node_cfg, on_attribute_update, on_identification);
     if (!node) {

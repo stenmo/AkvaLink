@@ -14,6 +14,10 @@
 #include "ap_web.h"
 #include "station_web.h"
 #include "web_page.h"
+#if CONFIG_AKVALINK_BLE_ESCAPE_HATCH
+#include "ble_escape.h"
+extern bool g_ble_escape_active;   // set in app_main when escape hatch is active
+#endif
 
 #include <math.h>
 #include <stdio.h>
@@ -255,12 +259,26 @@ static void sample_task(void *)
 #if CONFIG_AKVALINK_BLE_ONLY
             akvalink_ble_gatt_set_temperature(celsius);
 #elif CONFIG_AKVALINK_AP
+            // In escape hatch mode the web server is not running; route to BLE.
+            // In normal AP mode: update the shared web_page state.
+#  if CONFIG_AKVALINK_BLE_ESCAPE_HATCH
+            if (g_ble_escape_active) {
+                akvalink_ble_escape_set_temperature(celsius);
+            } else
+#  endif
             akvalink_web_set_temperature(celsius);
 #elif CONFIG_AKVALINK_STATION
             akvalink_station_set_temperature(celsius);
 #elif CONFIG_AKVALINK_ESPNOW
             /* espnow_sensor reads the probe itself before transmitting */
 #else
+            // Matter path: check escape hatch first so push_to_matter() is
+            // never called when Matter was not started (GPIO9 held at boot).
+#  if CONFIG_AKVALINK_BLE_ESCAPE_HATCH
+            if (g_ble_escape_active) {
+                akvalink_ble_escape_set_temperature(celsius);
+            } else
+#  endif
             push_to_matter(celsius);
 #endif
 

@@ -104,6 +104,27 @@ menu "AkvaLink"
             broker runs on a different host, port, or scheme (e.g.
             mqtt://192.168.1.10:1883 or mqtts://... for TLS).
 
+    config AKVALINK_BLE_ESCAPE_HATCH
+        bool "BLE escape hatch (hold GPIO9 at boot to enter minimal BLE mode)"
+        default y if AKVALINK_AP
+        default n
+        depends on BT_ENABLED && !AKVALINK_BLE_ONLY && !AKVALINK_STATION
+        help
+            When GPIO9 (BOOT button on EVK) is held at power-on, skip the
+            configured network stack and start a minimal BLE GATT server
+            instead (ESS Temperature 0x181A + DIS 0x180A, legacy 1M adv).
+
+            Useful for recovery when the main transport is unavailable, for
+            demo without a Thread border router, or as a universal "is it
+            alive?" diagnostic. Connects with any BLE temperature app.
+
+            AP: enabled by default (BLE is explicitly compiled into this
+            variant; the Wi-Fi SoftAP can't be reached if provisioning fails).
+            Thread/WiFi: disabled by default — the BLE stack is already
+            compiled in (CHIPoBLE commissioning) so the incremental flash cost
+            is only ~15 KB (dead-stripped when disabled). Enable if flash
+            headroom allows — 40 KB headroom is enough for a thread build.
+
     # ---- BLE GATT tuning ----------------------------------------------------
     # These apply to the --ble variant and the GPIO9 escape-hatch BLE mode in
     # --station.  They are ignored by Matter / Thread / Wi-Fi builds.

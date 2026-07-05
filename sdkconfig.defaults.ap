@@ -35,6 +35,19 @@ CONFIG_ENABLE_WIFI_STATION=n
 # needs one more. With only 8, httpd_start() fails and no page is served.
 CONFIG_LWIP_MAX_SOCKETS=16
 
+# --- BLE escape hatch: hold GPIO9 at boot to skip Wi-Fi AP and enter BLE mode.
+# AP has ~1 MB flash headroom — adding the full BLE stack (NimBLE) is trivial.
+# Minimal GATT server: DIS + ESS temperature. No OTA, no custom service.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_EXT_ADV=n          # legacy adv only — ble_escape.cpp uses ble_gap_adv_start()
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=n
+CONFIG_BT_NIMBLE_NVS_PERSIST=n
+CONFIG_BT_NIMBLE_LOG_LEVEL_WARNING=y
+CONFIG_AKVALINK_BLE_ESCAPE_HATCH=y  # enabled by default for AP
+
 # POWER: an AP must stay awake to beacon + serve clients, so disable the light
 # sleep / power management the base enables for the Thread SED.
 CONFIG_PM_ENABLE=n

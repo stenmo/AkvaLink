@@ -171,6 +171,27 @@ above has happened.
     restart advertising while a slot is free, notify **all** subscribed handles,
     keep OTA single-client. Only worth it if a "multiple viewers" demo need
     outweighs the extra radio-on power — power wins by default for this project.
+- **GPIO9 escape hatch on AP and Thread (Option C, CONNECTIVITY.md)** — **shipped July 2026.**
+  Hold BOOT button at power-on → skip the configured stack → minimal BLE GATT mode
+  (ESS temperature + DIS). New `ble_escape.cpp` (~220 lines, legacy 1M adv, no OTA,
+  no custom service) reuses the NimBLE stack already compiled in for CHIPoBLE;
+  incremental flash cost ~15 KB (dead-stripped when `CONFIG_AKVALINK_BLE_ESCAPE_HATCH=n`).
+  - **AP**: enabled by default (`sdkconfig.defaults.ap` adds BLE; AP had 1 MB+ free).
+  - **Thread**: `CONFIG_AKVALINK_BLE_ESCAPE_HATCH` defaults to `n`; enable manually.
+    Flash headroom: thread app is ~38 KB free before the 6 KB `CONFIG_OPENTHREAD_JOINER=n`
+    cut also shipped in this release. Expect ~29 KB free with hatch enabled — tight but
+    should link. Confirm with `idf.py -B build/thread size` after enabling it.
+  - **Station/BLE**: unchanged — both already use `ble_gatt.cpp` (full GATT).
+  - Temperature routing: `g_ble_escape_active` flag in `app_main.cpp` signals
+    `ds18b20_task.cpp` to route reads to `akvalink_ble_escape_set_temperature()`
+    instead of the normal transport, so `push_to_matter()` is never called
+    when Matter wasn't started.
+- **Cross-variant OTA auto-NVS erase** — **shipped July 2026.** On every boot,
+  `app_main()` reads a stored `variant` key from the `akvalink_sys` NVS
+  namespace; if it doesn't match the compiled-in variant (e.g. after OTA BLE→
+  Thread), it erases NVS before any subsystem initialises, then records the new
+  ID. Means the OTA `.bin` files can safely switch variants — device comes up
+  fresh and re-commissions automatically.
 - **Universal BLE side-channel — name + temperature + OTA on EVERY variant**
   (Thread / Wi-Fi / AP), not just `--ble`. Always-advertise the name + ESS
   temperature and keep the custom OTA GATT service reachable, so any unit is

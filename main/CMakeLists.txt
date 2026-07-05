@@ -23,8 +23,10 @@ endif()
 # Wi-Fi AP variant (build.sh --ap): open SoftAP + captive web page. Env-var
 # gated for the same expansion-timing reason as AKVALINK_BLE above. web_page.cpp
 # is the shared page/HTTP server, also used by the station variant.
+# ble_escape.cpp is always included for AP: BLE is enabled in sdkconfig.defaults.ap
+# (CONFIG_BT_ENABLED=y) and CONFIG_AKVALINK_BLE_ESCAPE_HATCH defaults to y for AP.
 if(DEFINED ENV{AKVALINK_AP})
-    list(APPEND SRCS "ap_web.cpp" "web_page.cpp")
+    list(APPEND SRCS "ap_web.cpp" "web_page.cpp" "ble_escape.cpp")
 endif()
 
 # Wi-Fi station variant (build.sh --station): join home Wi-Fi as a client,
@@ -48,6 +50,17 @@ if(NOT DEFINED ENV{AKVALINK_BLE} AND NOT DEFINED ENV{AKVALINK_NO_MATTER}
     list(APPEND SRCS "qrcodegen.c" "qr_console.c")
 endif()
 
+# BLE escape hatch for the Matter path (--thread / --wifi).
+# ble_escape.cpp uses legacy adv — compatible with BT_NIMBLE_EXT_ADV=n.
+# NimBLE is already compiled into thread/wifi for CHIPoBLE commissioning;
+# the incremental flash cost is ~15 KB (dead-stripped when not called).
+# Station and BLE variants use ble_gatt.cpp (full GATT) — no need here.
+if(NOT DEFINED ENV{AKVALINK_BLE} AND NOT DEFINED ENV{AKVALINK_STATION}
+   AND NOT DEFINED ENV{AKVALINK_AP} AND NOT DEFINED ENV{AKVALINK_ESPNOW}
+   AND NOT DEFINED ENV{AKVALINK_NO_MATTER})
+    list(APPEND SRCS "ble_escape.cpp")
+endif()
+
 # The --ble / --sensor variants drop the whole Matter stack (with no
 # Thread/Wi-Fi transport esp-matter's NetworkCommissioning static_assert fails).
 # Gate on env vars for the same expansion-timing reason as above.
@@ -57,7 +70,7 @@ if(DEFINED ENV{AKVALINK_BLE})
     list(APPEND AQ_PRIV_REQ bt esp_app_format app_update)
 elseif(DEFINED ENV{AKVALINK_AP})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip esp_timer
-        esp_app_format app_update)
+        esp_app_format app_update bt)   # bt: NimBLE for BLE escape hatch
 elseif(DEFINED ENV{AKVALINK_STATION})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip
         wifi_provisioning mdns bt mqtt esp_timer esp_app_format app_update)
