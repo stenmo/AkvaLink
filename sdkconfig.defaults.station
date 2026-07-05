@@ -25,9 +25,14 @@ CONFIG_OPENTHREAD_JOINER=n
 
 # BLE is needed for provisioning (hand over Wi-Fi credentials once). Use NimBLE
 # (lighter than Bluedroid); CHIPoBLE stays off since there is no Matter here.
+# EXT_ADV + two instances: required by ble_gatt.cpp when GPIO9 held at boot
+# triggers the BLE escape hatch (legacy 1M + Coded PHY S=8 advertising).
 CONFIG_BT_ENABLED=y
 CONFIG_BT_NIMBLE_ENABLED=y
 CONFIG_ENABLE_CHIPOBLE=n
+CONFIG_BT_NIMBLE_EXT_ADV=y
+CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES=2
+CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=517
 
 # Wi-Fi: station on; no SoftAP (the device joins an existing network).
 CONFIG_ESP_WIFI_SOFTAP_SUPPORT=n

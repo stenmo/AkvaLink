@@ -71,6 +71,7 @@ static const ble_uuid16_t UUID_MODEL        = BLE_UUID16_INIT(0x2A24);
 static const ble_uuid16_t UUID_FW_REVISION  = BLE_UUID16_INIT(0x2A26);
 static const ble_uuid16_t UUID_TEMPERATURE  = BLE_UUID16_INIT(0x2A6E);
 static const ble_uuid16_t UUID_BATTERY_LVL  = BLE_UUID16_INIT(0x2A19); // Battery Level
+static const ble_uuid16_t UUID_CPF          = BLE_UUID16_INIT(0x2904); // Characteristic Presentation Format
 
 // Custom AkvaLink service + uptime characteristic (random 128-bit base).
 // f0aq0001-6e40-4a71-9b2c-akvalink0001 style; bytes are little-endian.
@@ -409,10 +410,26 @@ static const struct ble_gatt_chr_def s_dis_chrs[] = {
     { 0 },
 };
 
+// Characteristic Presentation Format (0x2904) for Temperature 0x2A6E:
+//   Format=0x0E (sint16), Exponent=0xFE (-2 → value/100=°C),
+//   Unit=0x272F (degrees Celsius), Namespace=0x01 (BT SIG), Description=0x0000.
+// Makes nRF Connect / GATT browsers display the temperature as a decimal °C value.
+static const uint8_t s_temp_cpf[] = { 0x0E, 0xFE, 0x2F, 0x27, 0x01, 0x00, 0x00 };
+static int cpf_access(uint16_t, uint16_t, struct ble_gatt_access_ctxt *ctxt, void *)
+{
+    return os_mbuf_append(ctxt->om, s_temp_cpf, sizeof(s_temp_cpf)) == 0
+               ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+}
+static const struct ble_gatt_dsc_def s_temp_dscs[] = {
+    { .uuid = &UUID_CPF.u, .att_flags = BLE_ATT_F_READ, .access_cb = cpf_access },
+    { 0 },
+};
+
 static const struct ble_gatt_chr_def s_ess_chrs[] = {
     { .uuid = &UUID_TEMPERATURE.u, .access_cb = gatt_access,
       .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
-      .val_handle = &s_temp_val_handle },
+      .val_handle  = &s_temp_val_handle,
+      .descriptors = s_temp_dscs },
     { 0 },
 };
 

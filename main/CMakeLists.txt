@@ -29,8 +29,10 @@ endif()
 
 # Wi-Fi station variant (build.sh --station): join home Wi-Fi as a client,
 # BLE-provisioned, mDNS akvalink.local, shared web page.
+# ble_gatt.cpp is added here too: GPIO9 at boot triggers a BLE escape hatch
+# (see app_main.cpp) so the station variant can fall back to BLE GATT mode.
 if(DEFINED ENV{AKVALINK_STATION})
-    list(APPEND SRCS "station_web.cpp" "web_page.cpp")
+    list(APPEND SRCS "station_web.cpp" "web_page.cpp" "ble_gatt.cpp")
 endif()
 
 # ESP-NOW variant (build.sh --espnow): deep-sleep broadcast sensor, no hub.

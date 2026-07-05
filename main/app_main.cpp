@@ -212,8 +212,27 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(akvalink_ap_start());
     ds18b20_task_start();
     ESP_LOGI(TAG, "✨ AkvaLink AP up — join open Wi-Fi \"AkvaLink\", the page opens (or http://192.168.4.1)");
+#include "driver/gpio.h"
 #elif CONFIG_AKVALINK_STATION
     // --- Wi-Fi station variant
+    // GPIO9 escape hatch: hold the BOOT button at power-on to skip Wi-Fi and
+    // boot into standalone BLE GATT mode instead (Option C, CONNECTIVITY.md).
+    // Useful for recovery, demo without Wi-Fi, or when provisioning is broken.
+    {
+        gpio_config_t io_cfg = {};
+        io_cfg.pin_bit_mask = 1ULL << 9;
+        io_cfg.mode         = GPIO_MODE_INPUT;
+        io_cfg.pull_up_en   = GPIO_PULLUP_ENABLE;
+        gpio_config(&io_cfg);
+        vTaskDelay(pdMS_TO_TICKS(50));   // let pin settle
+        if (gpio_get_level(GPIO_NUM_9) == 0) {
+            ESP_LOGW(TAG, "\xF0\x9F\x94\xB5 GPIO9 held at boot \xe2\x80\x94 BLE escape hatch (skipping Wi-Fi station)");
+            ESP_ERROR_CHECK(akvalink_ble_gatt_start());
+            ds18b20_task_start();
+            ESP_LOGI(TAG, "\xe2\x9c\xa8 AkvaLink BLE GATT up (escape hatch) \xe2\x80\x94 connect to \"AkvaLink\" over BLE");
+            return;
+        }
+    }
     ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi station variant — BLE-provisioned client + akvalink.local");
     ESP_ERROR_CHECK(akvalink_station_start());
     ds18b20_task_start();
