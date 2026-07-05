@@ -433,9 +433,9 @@ static const struct ble_gatt_dsc_def s_temp_dscs[] = {
 
 static const struct ble_gatt_chr_def s_ess_chrs[] = {
     { .uuid = &UUID_TEMPERATURE.u, .access_cb = gatt_access,
-      .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
-      .val_handle  = &s_temp_val_handle,
-      .descriptors = s_temp_dscs },
+      .flags       = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
+      .descriptors = s_temp_dscs,
+      .val_handle  = &s_temp_val_handle },
     { 0 },
 };
 
