@@ -569,6 +569,7 @@ static void adv_configure(void)
     params.itvl_min      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
     params.itvl_max      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
     params.sid           = ADV_INST_LEGACY;
+    params.tx_power      = 127;  // 0x7F = "no preference" → controller uses max (7 dBm conducted)
     rc = ble_gap_ext_adv_configure(ADV_INST_LEGACY, &params, NULL, gap_event, NULL);
     if (rc == 0 && build_adv_data(&om) == 0) {
         ble_gap_ext_adv_set_data(ADV_INST_LEGACY, om);
@@ -588,6 +589,7 @@ static void adv_configure(void)
     params.itvl_min      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
     params.itvl_max      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
     params.sid           = ADV_INST_CODED;
+    params.tx_power      = 127;  // 0x7F = "no preference" → controller uses max (7 dBm conducted)
     rc = ble_gap_ext_adv_configure(ADV_INST_CODED, &params, NULL, gap_event, NULL);
     if (rc == 0 && build_adv_data(&om) == 0) {
         ble_gap_ext_adv_set_data(ADV_INST_CODED, om);
