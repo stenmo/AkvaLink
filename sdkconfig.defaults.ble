@@ -48,7 +48,7 @@ CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=517
 # rotates two advertising instances: legacy 1M (phone-friendly) + Coded S=8
 # (long range). Needs at least 2 instances.
 CONFIG_BT_NIMBLE_EXT_ADV=y
-CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES=2
+CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES=1
 
 # NOTE: esp-matter is NOT compiled into this variant — build.sh sets
 # AKVALINK_NO_MATTER, so the root CMakeLists builds a plain ESP-IDF project

@@ -10,9 +10,10 @@
 //     high/low alert thresholds (int16, 0.01 \u00b0C, NVS-backed)
 //   - AkvaLink OTA service (128-bit): BLE firmware update — control + data chars
 //
-// Advertising rotates between legacy 1M (broad phone compatibility, esp. iOS)
-// and extended Coded PHY S=8 (long range, ~2-4x). Coded needs CONFIG_BT_NIMBLE_
-// EXT_ADV=y (see sdkconfig.defaults.ble). On connect we request Coded S=8.
+// Advertising: legacy connectable/scannable on 1M PHY (broadest phone
+// compatibility). Extended advertising API is used so we can set tx_power=127
+// (hardware max, 7 dBm conducted / 10 dBm EIRP). Advertises continuously;
+// service data beacon refreshed on each new temperature reading.
 //
 // C++ note: NimBLE's BLE_UUID16_DECLARE()/BLE_UUID128_DECLARE() macros expand
 // to C compound literals, which are NOT valid C++. So every UUID here is a
@@ -50,14 +51,16 @@ static const char *TAG = "ble_gatt";
 
 #define DEVICE_NAME "AkvaLink"
 
-// Advertising instances: rotate between broad-compat legacy and long-range Coded.
-#define ADV_INST_LEGACY 0    // 1M legacy PDUs — best phone compatibility (esp. iOS)
-#define ADV_INST_CODED  1    // Coded PHY S=8 — long range (Android / gateway)
-#define ADV_ROTATE_MS   4000 // dwell per PHY before switching
-#define ADV_ITVL_MS      200 // adv interval while unconnected — 200 ms is the
-                             // BT SIG "general discoverable" sweet spot.  We
-                             // stop advertising on connect, so this only fires
-                             // before the first pairing.
+// Advertising instance.
+#define ADV_INST        0    // single legacy-1M connectable/scannable instance
+#if CONFIG_AKVALINK_BLE_CODED_PHY
+#define ADV_INST_LEGACY 0    // 1M legacy PDUs — broad phone compatibility
+#define ADV_INST_CODED  1    // Coded PHY S=8 — long range (~2-4×)
+#define ADV_ROTATE_MS   CONFIG_AKVALINK_BLE_ADV_ROTATE_MS
+#endif
+// Advertising interval and Coded PHY toggle from Kconfig
+// (menuconfig → AkvaLink → BLE GATT tuning, or sdkconfig.defaults.ble).
+#define ADV_ITVL_MS     CONFIG_AKVALINK_BLE_ADV_ITVL_MS
 
 static const char *MANUFACTURER = "u-blox";
 static const char *MODEL        = "AkvaLink NORA-W40";
@@ -149,7 +152,10 @@ static volatile bool         s_ota_abort  = false;
 static uint16_t              s_att_mtu    = 23;   // ATT MTU, updated on negotiation
 
 static void adv_configure(void);
+static void adv_start(void);
+#if CONFIG_AKVALINK_BLE_CODED_PHY
 static void adv_rotate_start(uint8_t instance);
+#endif
 static int  build_adv_data(struct os_mbuf **out);
 
 // --- GATT characteristic access (reads) -------------------------------------
@@ -490,7 +496,7 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
                     BLE_GAP_LE_PHY_2M_MASK | BLE_GAP_LE_PHY_1M_MASK,
                     0);
             } else {
-                adv_rotate_start(ADV_INST_LEGACY);  // failed → resume rotation
+                adv_start();  // failed \u2014 resume advertising
             }
             break;
         case BLE_GAP_EVENT_DISCONNECT:
@@ -503,14 +509,14 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
             s_att_mtu = 23;
             s_temp_subscribed = false;
             s_ota_abort = true;   // cancel any OTA in flight
-            adv_rotate_start(ADV_INST_LEGACY);
+            adv_start();
             break;
         case BLE_GAP_EVENT_MTU:
             s_att_mtu = event->mtu.value;
             ESP_LOGI(TAG, "ATT MTU negotiated: %u", s_att_mtu);
             break;
         case BLE_GAP_EVENT_PHY_UPDATE_COMPLETE:
-            ESP_LOGI(TAG, "PHY updated: tx=%u rx=%u (1=1M, 2=2M, 3=Coded/125k)",
+            ESP_LOGI(TAG, "PHY updated: tx=%u rx=%u (1=1M, 2=2M)",
                      event->phy_updated.tx_phy, event->phy_updated.rx_phy);
             break;
         case BLE_GAP_EVENT_SUBSCRIBE:
@@ -518,21 +524,22 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
                 s_temp_subscribed = event->subscribe.cur_notify;
             }
             break;
+#if CONFIG_AKVALINK_BLE_CODED_PHY
         case BLE_GAP_EVENT_ADV_COMPLETE:
-            // Rotation: legacy -> coded -> legacy … while unconnected.
+            // Rotation: legacy \u2192 coded \u2192 legacy \u2026 while unconnected.
             if (s_conn_handle == BLE_HS_CONN_HANDLE_NONE) {
                 uint8_t next = (event->adv_complete.instance == ADV_INST_LEGACY)
                                    ? ADV_INST_CODED : ADV_INST_LEGACY;
                 adv_rotate_start(next);
             }
             break;
-        default:
+#endif
             break;
     }
     return 0;
 }
 
-// --- Advertising (rotating legacy 1M + Coded PHY S=8) -----------------------
+// --- Advertising (legacy 1M, single instance, continuous) ------------------
 static int build_adv_data(struct os_mbuf **out)
 {
     struct ble_hs_adv_fields fields;
@@ -550,8 +557,7 @@ static int build_adv_data(struct os_mbuf **out)
     // Beacon the latest temperature as ESS (0x181A) service data:
     // [UUID_lo, UUID_hi, temp_lo, temp_hi] — sint16, 0.01 °C, little-endian.
     // Lets an app glance at the value without connecting; refreshed on each
-    // rotation (see adv_rotate_start). Local buffer is fine — ble_hs_adv_set_
-    // fields() serialises it synchronously below.
+    // adv_start() call.
     uint8_t svc_data[4] = {
         0x1A, 0x18,
         (uint8_t)(s_temp_centi & 0xFF), (uint8_t)((s_temp_centi >> 8) & 0xFF),
@@ -573,9 +579,9 @@ static void adv_configure(void)
 {
     struct ble_gap_ext_adv_params params;
     struct os_mbuf *om;
-    int rc;
 
-    // Instance 0 — legacy connectable/scannable on 1M (phone-friendly).
+    // Single instance — legacy connectable/scannable on 1M PHY.
+    // Extended advertising API used so we can set tx_power=127 (hardware max).
     memset(&params, 0, sizeof(params));
     params.connectable   = 1;
     params.scannable     = 1;
@@ -585,55 +591,33 @@ static void adv_configure(void)
     params.secondary_phy = BLE_HCI_LE_PHY_1M;
     params.itvl_min      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
     params.itvl_max      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
-    params.sid           = ADV_INST_LEGACY;
+    params.sid           = ADV_INST;
     params.tx_power      = 127;  // 0x7F = "no preference" → controller uses max (7 dBm conducted)
-    rc = ble_gap_ext_adv_configure(ADV_INST_LEGACY, &params, NULL, gap_event, NULL);
+    int rc = ble_gap_ext_adv_configure(ADV_INST, &params, NULL, gap_event, NULL);
     if (rc == 0 && build_adv_data(&om) == 0) {
-        ble_gap_ext_adv_set_data(ADV_INST_LEGACY, om);
+        ble_gap_ext_adv_set_data(ADV_INST, om);
     } else if (rc != 0) {
-        ESP_LOGE(TAG, "ext_adv_configure(legacy) rc=%d", rc);
-    }
-
-    // Instance 1 — extended connectable on Coded PHY S=8 (long range).
-    // Extended connectable adv cannot be scannable — that's a spec rule.
-    memset(&params, 0, sizeof(params));
-    params.connectable   = 1;
-    params.scannable     = 0;
-    params.legacy_pdu    = 0;
-    params.own_addr_type = s_own_addr_type;
-    params.primary_phy   = BLE_HCI_LE_PHY_CODED;
-    params.secondary_phy = BLE_HCI_LE_PHY_CODED;
-    params.itvl_min      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
-    params.itvl_max      = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
-    params.sid           = ADV_INST_CODED;
-    params.tx_power      = 127;  // 0x7F = "no preference" → controller uses max (7 dBm conducted)
-    rc = ble_gap_ext_adv_configure(ADV_INST_CODED, &params, NULL, gap_event, NULL);
-    if (rc == 0 && build_adv_data(&om) == 0) {
-        ble_gap_ext_adv_set_data(ADV_INST_CODED, om);
-    } else if (rc != 0) {
-        ESP_LOGE(TAG, "ext_adv_configure(coded) rc=%d", rc);
+        ESP_LOGE(TAG, "ext_adv_configure rc=%d", rc);
     }
 }
 
-static void adv_rotate_start(uint8_t instance)
+static void adv_start(void)
 {
-    if (ble_gap_ext_adv_active(instance)) {
-        return;  // already advertising on this instance
+    if (ble_gap_ext_adv_active(ADV_INST)) {
+        return;  // already advertising
     }
-    // Refresh the payload before (re)starting so the beacon carries the latest
-    // temperature — rebuilt each rotation, so it updates every ADV_ROTATE_MS.
+    // Refresh payload so the beacon carries the latest temperature.
     struct os_mbuf *om;
     if (build_adv_data(&om) == 0) {
-        ble_gap_ext_adv_set_data(instance, om);
+        ble_gap_ext_adv_set_data(ADV_INST, om);
     }
-    // duration is in 10 ms units; stop after ADV_ROTATE_MS so we rotate.
-    int rc = ble_gap_ext_adv_start(instance, ADV_ROTATE_MS / 10, 0);
+    // duration=0: advertise indefinitely until a connection is made.
+    int rc = ble_gap_ext_adv_start(ADV_INST, 0, 0);
     if (rc != 0) {
-        ESP_LOGE(TAG, "ext_adv_start(inst %u) rc=%d", instance, rc);
+        ESP_LOGE(TAG, "ext_adv_start rc=%d", rc);
         return;
     }
-    ESP_LOGI(TAG, "advertising: %s",
-             instance == ADV_INST_CODED ? "Coded PHY S=8 (long range)" : "1M legacy");
+    ESP_LOGI(TAG, "advertising (1M legacy, 200 ms interval)");
 }
 
 // --- Host sync / task -------------------------------------------------------
@@ -650,7 +634,11 @@ static void on_sync(void)
         return;
     }
     adv_configure();
+#if CONFIG_AKVALINK_BLE_CODED_PHY
     adv_rotate_start(ADV_INST_LEGACY);
+#else
+    adv_start();
+#endif
 }
 
 static void on_reset(int reason)

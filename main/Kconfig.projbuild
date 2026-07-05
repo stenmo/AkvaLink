@@ -104,4 +104,41 @@ menu "AkvaLink"
             broker runs on a different host, port, or scheme (e.g.
             mqtt://192.168.1.10:1883 or mqtts://... for TLS).
 
+    # ---- BLE GATT tuning ----------------------------------------------------
+    # These apply to the --ble variant and the GPIO9 escape-hatch BLE mode in
+    # --station.  They are ignored by Matter / Thread / Wi-Fi builds.
+
+    config AKVALINK_BLE_CODED_PHY
+        bool "Enable Coded PHY S=8 rotating advertising (long-range mode)"
+        depends on BT_NIMBLE_EXT_ADV
+        default n
+        help
+            When enabled the device alternates between legacy 1M advertising
+            and Coded PHY S=8 every AKVALINK_BLE_ADV_ROTATE_MS milliseconds.
+            Coded PHY provides ~2-4x range at the expense of slightly slower
+            discovery on legacy scanners.
+
+            Requires CONFIG_BT_NIMBLE_EXT_ADV=y and
+            CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES>=2.
+
+    config AKVALINK_BLE_ADV_ITVL_MS
+        int "BLE advertising interval (ms)"
+        depends on BT_ENABLED
+        default 200
+        range 20 10000
+        help
+            Advertising interval while unconnected.  200 ms is the BT SIG
+            "general discoverable" sweet spot — snappy enough to find quickly,
+            light enough on the battery.  Increase (e.g. 1000 ms) to further
+            reduce radio wake-ups at the cost of slower discovery.
+
+    config AKVALINK_BLE_ADV_ROTATE_MS
+        int "Coded PHY advertising dwell time per PHY (ms)"
+        depends on AKVALINK_BLE_CODED_PHY
+        default 4000
+        range 500 30000
+        help
+            How long to advertise on each PHY (1M then Coded) before switching.
+            Only active when AKVALINK_BLE_CODED_PHY is enabled.
+
 endmenu
