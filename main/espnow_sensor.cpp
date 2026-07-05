@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "esp_log.h"
+#include "esp_check.h"
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_now.h"
@@ -101,7 +102,7 @@ static esp_err_t read_temperature(float *celsius)
 cleanup_dev:
     ds18b20_del_device(dev);
 cleanup_bus:
-    onewire_del_bus(bus);
+    onewire_bus_del(bus);
     return ret;
 }
 
