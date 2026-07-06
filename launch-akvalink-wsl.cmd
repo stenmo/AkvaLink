@@ -17,9 +17,11 @@ REM   --flash    [COM<N>]  Flash all 4 partitions via esptool
 REM   --log      [COM<N>]  Start serial monitor → timestamped log file
 REM   --wifi               Build the Matter-over-Wi-Fi variant
 REM   --ble                Build the standalone BLE GATT variant (no Matter)
-REM   --sensor             Build the sensor read test (no Matter/BLE)
-REM   --ap                 Build the Wi-Fi SoftAP + web page variant (needs power)
+REM   --ap                 Build the Wi-Fi SoftAP + captive web page (mains power only)
 REM   --station            Build the Wi-Fi client variant (BLE-provisioned, akvalink.local)
+REM   --espnow             Build the ESP-NOW deep-sleep broadcast variant (no hub)
+REM   --sensor             Build the sensor read test (no Matter/BLE/Wi-Fi)
+REM   --clickboard         Build with DS2482 Click board (I2C-to-1-Wire, MikroBUS 1)
 REM   --help               Show this help
 REM
 REM COM port is autodetected by VID_303A&PID_1001 if not supplied.
@@ -322,16 +324,21 @@ REM ========================================================================
 :show_help
 echo Composable flag-style commands ^(executed in order: clean^>build^>erase^>flash^>log^):
 echo.
-echo   --build              Build firmware ^(Thread SED unless --wifi^)
+echo   --build              Build firmware ^(Thread SED unless a variant flag is given^)
 echo   --clean              Wipe build/ + sdkconfig
 echo   --rebuild            --clean then --build
 echo   --erase    [COM^<N^>]  Erase NVS via esptool ^(autodetect if no port^)
 echo   --flash    [COM^<N^>]  Flash 4 partitions via esptool ^(autodetect if no port^)
-echo   --log      [COM^<N^>]  Serial monitor → logs/nora-w40-^<TS^>.log ^(autodetect if no port^)
-echo   --wifi               Build the Matter-over-Wi-Fi variant
-echo   --ble                Build the standalone BLE GATT variant ^(no Matter^)
-echo   --sensor             Build the sensor read test ^(no Matter/BLE^)
-echo   --clickboard         Build with DS2482 Click board ^(I2C-to-1-Wire, MikroBUS 1^)
+echo   --log      [COM^<N^>]  Serial monitor -^> logs/ ^(autodetect if no port^)
+echo.
+echo Variant flags ^(one at a time; default = Thread SED^):
+echo   --wifi               Matter-over-Wi-Fi ^(no Thread border router needed^)
+echo   --ble                Standalone BLE GATT server ^(no Matter, no Wi-Fi^)
+echo   --ap                 Wi-Fi SoftAP + captive web page ^(mains power only^)
+echo   --station            Wi-Fi client, BLE-provisioned ^(akvalink.local + MQTT^)
+echo   --espnow             ESP-NOW deep-sleep broadcast ^(no hub, no pairing^)
+echo   --sensor             DS18B20 read test only ^(no network stack^)
+echo   --clickboard         DS2482 I2C-to-1-Wire Click board ^(adds to any variant^)
 echo   --help               Show this help
 echo.
 echo Verbs ^(initial setup^):
