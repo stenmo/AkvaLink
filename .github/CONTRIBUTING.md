@@ -18,7 +18,7 @@ By participating you agree to abide by our
 
 - **Open an issue first** for anything non-trivial. A quick "here's what I want
   to do" saves everyone time and avoids PRs that don't fit the project's scope.
-- **Read [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md)** and [TODO.md](TODO.md) —
+- **Read [KNOWN_LIMITATIONS.md](../docs/KNOWN_LIMITATIONS.md)** and [TODO.md](../TODO.md) —
   the TODO's *Future ideas* section is the parking lot of things we already
   want; the *Now* section is what's actually in flight.
 
@@ -40,7 +40,7 @@ AkvaLink is intentionally small. When contributing, please:
 ## Building and testing
 
 The firmware builds in **WSL** (Ubuntu-24.04) with ESP-IDF v5.4.1 and
-esp-matter release/v1.5. See [GETTING_STARTED.md](GETTING_STARTED.md) for the
+esp-matter release/v1.5. See [GETTING_STARTED.md](../docs/GETTING_STARTED.md) for the
 full toolchain setup.
 
 ```powershell
@@ -70,7 +70,7 @@ py -3 -m pytest                                 # (python3 on Linux/macOS)
 ### Cutting a release
 
 `version.txt` is the single source of truth for the version (ESP-IDF embeds it
-as the firmware `PROJECT_VER`). [scripts/release.py](scripts/release.py) runs
+as the firmware `PROJECT_VER`). [scripts/release.py](../scripts/release.py) runs
 the whole pipeline — preflight → pytest → bump → build → commit + tag →
 release notes → publish (GitHub release with `akvalink.bin` attached):
 
@@ -100,4 +100,4 @@ Use `--skip-build` / `--skip-tests` / `--no-publish` to run a subset.
 ## License
 
 By contributing, you agree that your contributions are licensed under the
-project's [Apache-2.0 License](LICENSE).
+project's [Apache-2.0 License](../LICENSE).

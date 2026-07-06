@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../app_version.dart';
 import '../strings.dart';
 import '../theme.dart';
 
@@ -20,6 +21,30 @@ class HeroHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Version badge, upper-left — mirrors the web page's badge so it's
+            // obvious which build is running. Hidden later once stable.
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.45)),
+                ),
+                child: const Text(
+                  'v$kAppVersion',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+            ),
             Row(
               children: const [
                 Text('🏊', style: TextStyle(fontSize: 30)),

@@ -140,6 +140,12 @@ class AkvaLinkController extends ChangeNotifier {
           withServices: [AkvaUuids.essService],
           withNamePrefix: [AkvaUuids.namePrefix],
         ),
+        // On Android, request LOW_LATENCY so a fast advertiser (the sensor
+        // beacons ~every 200 ms) is found quickly. Same tuning proven in the
+        // u-connectXplorer app. Ignored on other platforms.
+        platformConfig: PlatformConfig(
+          android: AndroidOptions(scanMode: AndroidScanMode.lowLatency),
+        ),
       );
     } catch (e) {
       await _stopScan();

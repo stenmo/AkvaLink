@@ -89,7 +89,7 @@ supported (`--clickboard` build flag).
 Commission with the Apple Home, Google Home, or Alexa app — scan the QR code
 printed on the serial console at first boot.
 
-📖 **Full step-by-step:** see [GETTING_STARTED.md](GETTING_STARTED.md)
+📖 **Full step-by-step:** see [GETTING_STARTED.md](docs/GETTING_STARTED.md)
 
 ## Battery life examples
 
@@ -107,7 +107,7 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 
 ## Project docs
 
-- 📖 [GETTING_STARTED.md](GETTING_STARTED.md) — clone → build → flash → commission
+- 📖 [GETTING_STARTED.md](docs/GETTING_STARTED.md) — clone → build → flash → commission
 - 📶 [docs/CONNECTIVITY.md](docs/CONNECTIVITY.md) — Matter/Thread, Matter/Wi-Fi, BLE-only, Wi-Fi standalone + provisioning
 - ⚡ [docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md) — battery math, schematic
 - ❄️ [docs/WINTER_STORAGE_MODE.md](docs/WINTER_STORAGE_MODE.md) — "drop it in the pool and forget it" mode
@@ -115,7 +115,7 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 - 🏊 [docs/ENCLOSURE_DESIGN.md](docs/ENCLOSURE_DESIGN.md) — Smart Float industrial design + mechanical details
 - 📡 [docs/RF_AND_ANTENNA.md](docs/RF_AND_ANTENNA.md) — NORA-W40 antenna keep-out + over-water RF rules
 - ✅ [TODO.md](TODO.md) — prioritised roadmap (power, smart reporting, e-ink, winter mode)
-- ⚠️ [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) — what doesn't work yet, honestly
+- ⚠️ [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) — what doesn't work yet, honestly
 
 ## Roadmap
 
@@ -152,8 +152,8 @@ Built on:
 
 ## Contributing & security
 
-- 🤝 [CONTRIBUTING.md](CONTRIBUTING.md) — how to build, test, and submit changes (KISS, battery-first, no cloud)
-- 🔒 [SECURITY.md](SECURITY.md) — report a vulnerability privately (AkvaLink is a networked Matter device)
+- 🤝 [CONTRIBUTING.md](.github/CONTRIBUTING.md) — how to build, test, and submit changes (KISS, battery-first, no cloud)
+- 🔒 [SECURITY.md](.github/SECURITY.md) — report a vulnerability privately (AkvaLink is a networked Matter device)
 
 ## License
 

@@ -45,4 +45,4 @@ AkvaLink specifically, a note here is still welcome so it can be tracked.
 ## No warranty
 
 AkvaLink is provided under the Apache-2.0 License, "AS IS", without warranty
-of any kind. See [LICENSE](LICENSE).
+of any kind. See [LICENSE](../LICENSE).

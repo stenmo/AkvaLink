@@ -9,7 +9,7 @@
 
 - **Battery-life numbers in the README are modeled, not measured.**
   They are based on datasheet currents + duty cycle math. A real Joulescope
-  / Otii / PPK2 capture is on [TODO.md](TODO.md) (P0). Treat current numbers
+  / Otii / PPK2 capture is on [TODO.md](../TODO.md) (P0). Treat current numbers
   as upper bounds.
 - **No deep sleep yet.** Only light sleep + DFS are enabled. Average
   current is therefore higher than the steady-state target.
@@ -40,7 +40,7 @@
 - **Direct GPIO 1-Wire works to ~5 m of cable.** Beyond that you need
   the `--clickboard` build (DS2482-800). This is a 1-Wire physics limit,
   not a firmware bug.
-- **No display yet.** See [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md).
+- **No display yet.** See [docs/EINK_DISPLAY_PLAN.md](EINK_DISPLAY_PLAN.md).
 - **Antenna variant matters.** NORA-W401 (external antenna) is required
   inside an enclosure with metal or wet surroundings. NORA-W406 (PCB
   antenna) is fine on a workbench, marginal in a real install.
@@ -86,7 +86,7 @@
 - **No Winter Storage Mode yet.** Today the device runs its normal
   reporting cycle 24/7/365 — not viable for "put it away in October,
   use it again in May". See
-  [docs/WINTER_STORAGE_MODE.md](docs/WINTER_STORAGE_MODE.md) for the
+  [docs/WINTER_STORAGE_MODE.md](WINTER_STORAGE_MODE.md) for the
   design, and TODO.md for the implementation plan.
 - **Alkaline cells will leak in cold storage.** Use lithium AA / AAA
   (Energizer L91 / L92) for any device that may sit unused over winter.

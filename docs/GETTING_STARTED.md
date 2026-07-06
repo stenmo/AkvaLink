@@ -131,8 +131,8 @@ git push -u origin main
 
 ## Next steps
 
-- Read [README.md](README.md) for the product pitch and battery-life numbers
-- Read [docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md) for the deep
+- Read [README.md](../README.md) for the product pitch and battery-life numbers
+- Read [docs/POWER_AND_HARDWARE.md](POWER_AND_HARDWARE.md) for the deep
   power analysis (TWT, DTIM, disconnect strategies, schematic)
-- Read [.github/copilot-instructions.md](.github/copilot-instructions.md) to
+- Read [.github/copilot-instructions.md](../.github/copilot-instructions.md) to
   understand the project's design rules before making changes

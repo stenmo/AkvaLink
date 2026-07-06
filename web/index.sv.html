@@ -66,6 +66,12 @@
   .lang-btn { background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.45); color: rgba(255,255,255,.85); padding: 4px 12px; border-radius: 999px; font-size: .82rem; font-weight: 700; font-family: inherit; letter-spacing: .04em; text-decoration: none; display: inline-block; }
   .lang-btn.active { background: #fff; color: var(--deep); border-color: #fff; cursor: default; }
   .lang-btn:hover:not(.active) { background: rgba(255,255,255,.28); color: #fff; text-decoration: none; }
+  /* Version badge — upper-left, mirrors the footer version so it's obvious at a
+     glance which build is loaded. Hidden later once everything is stable. */
+  .ver-badge { position: absolute; top: 18px; left: 20px; z-index: 10;
+    background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.45);
+    color: rgba(255,255,255,.9); padding: 4px 12px; border-radius: 999px;
+    font-size: .82rem; font-weight: 700; letter-spacing: .04em; }
 
   /* Sections */
   section { padding: 54px 0; }
@@ -201,6 +207,7 @@
 <body>
 
 <header class="hero">
+  <div class="ver-badge" id="verBadge">v0.1.4</div>
   <div class="lang-toggle">
     <a class="lang-btn" href="index.html">EN</a>
     <span class="lang-btn active">SV</span>
@@ -859,6 +866,14 @@
       statusEl.textContent = 'Inte ansluten';
       statusEl.className = 'status';
     }
+  })();
+
+  // Spegla footer-versionen till märket uppe till vänster så det syns direkt
+  // vilken build som laddats. (Deploy stämplar #siteVer från version.txt.)
+  (function () {
+    var v = document.getElementById('siteVer');
+    var badge = document.getElementById('verBadge');
+    if (v && badge) badge.textContent = 'v' + v.textContent.trim().replace(/^v/, '');
   })();
 })();
 </script>

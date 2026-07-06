@@ -164,6 +164,31 @@ publishable as-is via GitHub Pages. A language toggle (EN | SV) links between th
 - **On brand:** water/pool theme (cyan/teal), plain-spoken, honest — same voice
   as the README. No cloud claims, no vaporware presented as shipping.
 
+## Native app ↔ web page — keep in sync (web is primary)
+
+The Flutter companion app lives in `app_flutter/` (iOS/Android/Windows/Linux/
+macOS). **The web page (`web/index.html`) remains the most important, primary
+surface** — it's the public landing page and the zero-install way to use the
+product. The app is a convenience layer on top; it must never drift ahead of the
+web page in a user-visible way.
+
+- **Any user-facing improvement made in the app MUST also be made on the web
+  page — in the same change.** New feature, wording, spec, battery number, OTA
+  behaviour, version bump, layout idea: if a user would see it in the app, mirror
+  it on `web/index.html` (and its Swedish twin `index.sv.html`).
+- **Web first, or web-in-lockstep.** Prefer landing a change on the web page
+  first (or simultaneously). Never ship an app feature that makes the web page
+  look stale or wrong. If something genuinely can't exist on the web (e.g. a
+  platform-only capability), say so explicitly in the PR/commit.
+- **Version stays aligned.** `app_flutter/pubspec.yaml` `version:`, the web
+  page's version badge/footer, and `version.txt` all track the same release.
+  Bump them together.
+- **Same voice & theme.** The app reuses the web palette (deep `#033f63`, water
+  `#0aa2c0`, foam) and the same plain-spoken, no-cloud tone. Keep them one product.
+- **EN + SV both.** The app is localized EN/SV just like the web page; when you
+  add or change a string in one, update the other (see `app_flutter/lib/strings.dart`
+  and the `spellcheck_test.dart` that guards it).
+
 ## Future direct-to-app path (planned)
 
 A non-Matter path is planned for direct app integration without a hub:
