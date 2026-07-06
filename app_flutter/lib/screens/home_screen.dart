@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../ota/ota_controller.dart';
+import '../strings.dart';
 import '../widgets/hero_header.dart';
 import '../widgets/ota_card.dart';
 import '../widgets/temperature_card.dart';
@@ -60,9 +61,9 @@ class _FooterNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<Strings>();
     return Text(
-      'Local Bluetooth only · no cloud, ever.\n'
-      'u-blox NORA-W40 · ESP32-C6',
+      '${s.footerLocal}\n${s.footerHw}',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall,
     );

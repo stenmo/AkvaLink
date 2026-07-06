@@ -10,10 +10,22 @@ import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
 
 import 'akvalink_uuids.dart';
+import '../strings.dart';
 
 enum AkvaConnState { idle, scanning, connecting, connected, error }
 
 class AkvaLinkController extends ChangeNotifier {
+  AkvaLinkController({
+    Duration scanSettle = const Duration(seconds: 4),
+    Strings strings = Strings.en,
+  }) : _scanSettle = scanSettle,
+       _s = strings;
+
+  /// How long to keep scanning to find the strongest advertiser before
+  /// connecting. Short in tests, a few seconds in production.
+  final Duration _scanSettle;
+  final Strings _s;
+
   AkvaConnState _state = AkvaConnState.idle;
   AkvaConnState get state => _state;
 
@@ -76,16 +88,16 @@ class AkvaLinkController extends ChangeNotifier {
     try {
       final avail = await UniversalBle.getBluetoothAvailabilityState();
       if (avail == AvailabilityState.unsupported) {
-        return 'Bluetooth not supported on this device';
+        return _s.btUnsupported;
       }
       if (avail == AvailabilityState.poweredOff) {
-        return 'Bluetooth is turned off';
+        return _s.btOff;
       }
       final ok = await UniversalBle.hasPermissions();
       if (!ok) await UniversalBle.requestPermissions();
       return null;
     } catch (e) {
-      return 'Bluetooth unavailable: $e';
+      return '${_s.btUnavailable}: $e';
     }
   }
 
@@ -96,13 +108,16 @@ class AkvaLinkController extends ChangeNotifier {
         _state == AkvaConnState.connecting) {
       return;
     }
+    // Claim the scanning state synchronously (before the first await) so a
+    // rapid second call is reliably rejected by the guard above.
+    _set(AkvaConnState.scanning);
+
     final err = await _preflight();
     if (err != null) {
       _set(AkvaConnState.error, error: err);
       return;
     }
 
-    _set(AkvaConnState.scanning);
     BleDevice? best;
 
     await _scanSub?.cancel();
@@ -133,11 +148,11 @@ class AkvaLinkController extends ChangeNotifier {
     }
 
     // Give it a few seconds to find the strongest advertiser, then connect.
-    _scanTimeout = Timer(const Duration(seconds: 4), () async {
+    _scanTimeout = Timer(_scanSettle, () async {
       await _stopScan();
       final target = best;
       if (target == null) {
-        _set(AkvaConnState.error, error: 'No AkvaLink found nearby');
+        _set(AkvaConnState.error, error: _s.noDeviceFound);
         return;
       }
       await _connect(target.deviceId, target.name ?? AkvaUuids.namePrefix);

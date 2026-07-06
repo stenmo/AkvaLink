@@ -44,8 +44,27 @@ finalises and reboots). `0x03` aborts.
 
 ## Build & run
 
+From the repo root, the unified launcher handles the app on any host:
+
 ```powershell
-cd app_flutter
+# Windows
+..\akvalink.cmd --app              # build the Windows app
+..\akvalink.cmd --app --android    # build the Android APK
+..\akvalink.cmd --app --run        # run on this machine
+```
+
+```bash
+# Linux / macOS
+../akvalink.sh --app               # build for this host
+../akvalink.sh --app --macos       # macOS app (on a Mac)
+../akvalink.sh --app --ios         # iOS app (on a Mac)
+../akvalink.sh --app --android     # Android APK
+../akvalink.sh --app --run         # run on this machine
+```
+
+Or drive Flutter directly from this folder:
+
+```powershell
 flutter pub get
 
 # Desktop
@@ -61,6 +80,24 @@ flutter build apk
 flutter build linux
 flutter build ipa           # macOS + Xcode required
 ```
+
+## Tests
+
+```powershell
+flutter test
+```
+
+Coverage:
+- `test/ble_controller_test.dart` — scanning (name/service match, strongest
+  RSSI, none-found), connect/disconnect, temperature decode (incl. negative &
+  malformed), device-info reads, and **link-drop** handling. Driven by an
+  in-memory `FakeBlePlatform` (`test/fakes/`).
+- `test/ota_controller_test.dart` — release-asset selection, happy-path
+  BEGIN→stream→END, and corner cases: device-reported error, dropped link
+  mid-upload, missing asset, bad download, busy-guard, local-file flash.
+- `test/spellcheck_test.dart` — every UI string (EN + SV) screened against a
+  hand-curated dictionary, plus parity, whitespace and misspelling checks.
+- `test/firmware_parse_test.dart` — firmware-revision → version/variant parsing.
 
 ## Versioning
 

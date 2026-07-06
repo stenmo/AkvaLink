@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'ble/akvalink_controller.dart';
 import 'ota/ota_controller.dart';
 import 'screens/home_screen.dart';
+import 'strings.dart';
 import 'theme.dart';
 
 void main() {
@@ -21,10 +22,19 @@ class AkvaLinkApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pick English or Swedish from the platform locale (matches the web page's
+    // EN/SV split). Fixed at launch — no in-app language switcher by design.
+    final strings = Strings.forLocale(
+      WidgetsBinding.instance.platformDispatcher.locale,
+    );
+
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AkvaLinkController()),
-        ChangeNotifierProvider(create: (_) => OtaController()),
+        Provider<Strings>.value(value: strings),
+        ChangeNotifierProvider(
+          create: (_) => AkvaLinkController(strings: strings),
+        ),
+        ChangeNotifierProvider(create: (_) => OtaController(strings: strings)),
       ],
       child: MaterialApp(
         title: 'AkvaLink',

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../strings.dart';
 import '../theme.dart';
 
 /// The water-gradient hero band, mirroring web/index.html's `header.hero`.
@@ -8,6 +10,7 @@ class HeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<Strings>();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
@@ -36,7 +39,7 @@ class HeroHeader extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Battery-powered Matter pool & aquatic sensor',
+              s.tagline,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.92),
                 fontSize: 15,

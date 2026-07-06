@@ -16,11 +16,28 @@ import 'package:http/http.dart' as http;
 import 'package:universal_ble/universal_ble.dart';
 
 import '../ble/akvalink_uuids.dart';
+import '../strings.dart';
 
 enum OtaPhase { idle, fetching, connecting, erasing, uploading, done, failed }
 
 class OtaController extends ChangeNotifier {
-  static const _repo = 'stenmo/AkvaLink';
+  OtaController({
+    http.Client? httpClient,
+    String repo = 'stenmo/AkvaLink',
+    Duration eraseSettle = const Duration(milliseconds: 400),
+    int chunkSize = 240,
+    Strings strings = Strings.en,
+  }) : _client = httpClient ?? http.Client(),
+       _repo = repo,
+       _eraseSettle = eraseSettle,
+       _chunkSize = chunkSize,
+       _s = strings;
+
+  final http.Client _client;
+  final String _repo;
+  final Duration _eraseSettle;
+  final int _chunkSize;
+  final Strings _s;
 
   OtaPhase _phase = OtaPhase.idle;
   OtaPhase get phase => _phase;
@@ -55,7 +72,7 @@ class OtaController extends ChangeNotifier {
   /// Query the newest release tag so the UI can label the button.
   Future<void> refreshLatestTag() async {
     try {
-      final r = await http.get(
+      final r = await _client.get(
         Uri.parse('https://api.github.com/repos/$_repo/releases/latest'),
         headers: {'Accept': 'application/vnd.github+json'},
       );
@@ -72,7 +89,7 @@ class OtaController extends ChangeNotifier {
   /// Fetch the app-partition OTA image for [variant] from the latest release.
   /// Asset name convention: `akvalink-{variant}-app-v{ver}.bin`
   Future<Uint8List> _fetchLatestAsset(String variant) async {
-    final r = await http.get(
+    final r = await _client.get(
       Uri.parse('https://api.github.com/repos/$_repo/releases/latest'),
       headers: {'Accept': 'application/vnd.github+json'},
     );
@@ -90,7 +107,7 @@ class OtaController extends ChangeNotifier {
       orElse: () => throw Exception('No OTA asset for variant "$variant"'),
     );
     final url = match['browser_download_url'] as String;
-    final img = await http.get(Uri.parse(url));
+    final img = await _client.get(Uri.parse(url));
     if (img.statusCode != 200) {
       throw Exception('Download failed (HTTP ${img.statusCode})');
     }
@@ -103,7 +120,7 @@ class OtaController extends ChangeNotifier {
     required String variant,
   }) async {
     await _run(deviceId, () async {
-      _set(OtaPhase.fetching, 'Fetching latest $variant firmware…');
+      _set(OtaPhase.fetching, _s.otaFetchingFor(variant));
       return _fetchLatestAsset(variant);
     });
   }
@@ -124,10 +141,11 @@ class OtaController extends ChangeNotifier {
     _deviceError = false;
     _progress = 0;
     _throughputKbps = null;
+    var began = false; // true once BEGIN is sent — gates the abort on failure
     try {
       final bytes = await getBytes(); // fetch first — don't erase on a bad DL
 
-      _set(OtaPhase.connecting, 'Connecting…');
+      _set(OtaPhase.connecting, _s.otaConnecting);
       // Subscribe to status notifications so a device-side error aborts us.
       await _ctrlSub?.cancel();
       _ctrlSub =
@@ -137,7 +155,10 @@ class OtaController extends ChangeNotifier {
           ).listen((v) {
             if (v.length >= 2 && v[1] != 0) {
               _deviceError = true;
-              _set(OtaPhase.failed, 'Device reported error (code ${v[1]})');
+              _set(
+                OtaPhase.failed,
+                '${_s.otaDeviceErrorPrefix} (code ${v[1]})',
+              );
             }
           });
       try {
@@ -149,18 +170,19 @@ class OtaController extends ChangeNotifier {
       } catch (_) {}
 
       // BEGIN — device erases the passive slot (a few seconds).
-      _set(OtaPhase.erasing, 'Preparing device (erasing slot)…');
+      _set(OtaPhase.erasing, _s.otaErasing);
+      began = true;
       await UniversalBle.write(
         deviceId,
         AkvaUuids.otaService,
         AkvaUuids.otaCtrl,
         Uint8List.fromList([AkvaUuids.otaBegin]),
       );
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(_eraseSettle);
       if (_deviceError) throw Exception('device rejected BEGIN');
 
       // Stream in MTU-safe chunks (240 B is safe even at the 247 MTU we ask for).
-      const chunk = 240;
+      final chunk = _chunkSize;
       final t0 = DateTime.now();
       for (var off = 0; off < bytes.length; off += chunk) {
         if (_deviceError) throw Exception('aborted by device');
@@ -177,39 +199,38 @@ class OtaController extends ChangeNotifier {
           _throughputKbps = dt > 0 ? (off / 1024) / dt : null;
           _set(
             OtaPhase.uploading,
-            'Uploading ${(100 * off / bytes.length).round()}%',
+            _s.otaUploading((100 * off / bytes.length).round()),
             progress: off / bytes.length,
           );
         }
       }
-      _set(OtaPhase.uploading, 'Uploading 100%', progress: 1);
+      _set(OtaPhase.uploading, _s.otaUploading(100), progress: 1);
 
       // END — device finalises, sets the boot slot and reboots.
-      _set(OtaPhase.uploading, 'Finalising…', progress: 1);
+      _set(OtaPhase.uploading, _s.otaFinalising, progress: 1);
       await UniversalBle.write(
         deviceId,
         AkvaUuids.otaService,
         AkvaUuids.otaCtrl,
         Uint8List.fromList([AkvaUuids.otaEnd]),
       );
-      _set(
-        OtaPhase.done,
-        'Update sent — device rebooting into new firmware ✓',
-        progress: 1,
-      );
+      _set(OtaPhase.done, _s.otaDone, progress: 1);
     } catch (e) {
       if (_phase != OtaPhase.failed) {
-        _set(OtaPhase.failed, 'Update failed: $e');
+        _set(OtaPhase.failed, '${_s.otaFailedPrefix}: $e');
       }
-      // Best-effort abort.
-      try {
-        await UniversalBle.write(
-          deviceId,
-          AkvaUuids.otaService,
-          AkvaUuids.otaCtrl,
-          Uint8List.fromList([AkvaUuids.otaAbort]),
-        );
-      } catch (_) {}
+      // Best-effort abort — only if we actually started talking to the device
+      // (a failed fetch before BEGIN shouldn't poke the peripheral).
+      if (began) {
+        try {
+          await UniversalBle.write(
+            deviceId,
+            AkvaUuids.otaService,
+            AkvaUuids.otaCtrl,
+            Uint8List.fromList([AkvaUuids.otaAbort]),
+          );
+        } catch (_) {}
+      }
     } finally {
       await _ctrlSub?.cancel();
       _ctrlSub = null;
@@ -224,6 +245,7 @@ class OtaController extends ChangeNotifier {
   @override
   void dispose() {
     _ctrlSub?.cancel();
+    _client.close();
     super.dispose();
   }
 }

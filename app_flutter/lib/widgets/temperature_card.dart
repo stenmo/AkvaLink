@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../ble/akvalink_controller.dart';
+import '../strings.dart';
 import '../theme.dart';
 
 /// The big live-temperature readout + connection controls. Mirrors the
@@ -10,18 +11,19 @@ import '../theme.dart';
 class TemperatureCard extends StatelessWidget {
   const TemperatureCard({super.key});
 
-  String _ageString(DateTime? t) {
+  String _ageString(BuildContext context, DateTime? t) {
+    final s = context.read<Strings>();
     if (t == null) return '';
-    final s = DateTime.now().difference(t).inSeconds;
-    if (s < 2) return 'just now';
-    if (s < 60) return '${s}s ago';
-    final m = s ~/ 60;
-    return '${m}m ago';
+    final secs = DateTime.now().difference(t).inSeconds;
+    if (secs < 2) return s.justNow;
+    if (secs < 60) return s.secondsAgo(secs);
+    return s.minutesAgo(secs ~/ 60);
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.watch<AkvaLinkController>();
+    final s = context.watch<Strings>();
     final connected = c.isConnected;
     final busy =
         c.state == AkvaConnState.scanning ||
@@ -70,7 +72,7 @@ class TemperatureCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  'updated ${_ageString(c.lastUpdate)}',
+                  s.updatedAgo(_ageString(context, c.lastUpdate)),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -113,11 +115,11 @@ class TemperatureCard extends StatelessWidget {
                 label: Text(
                   busy
                       ? (c.state == AkvaConnState.scanning
-                            ? 'Scanning…'
-                            : 'Connecting…')
+                            ? s.scanning
+                            : s.connecting)
                       : connected
-                      ? 'Disconnect'
-                      : 'Connect over Bluetooth',
+                      ? s.disconnect
+                      : s.connect,
                 ),
               ),
             ),
@@ -164,27 +166,28 @@ class _StatusLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<Strings>();
     late final String text;
     late final Color color;
     switch (state) {
       case AkvaConnState.connected:
-        text = 'Connected · $name';
+        text = s.connectedTo(name);
         color = AkvaColors.ok;
         break;
       case AkvaConnState.scanning:
-        text = 'Looking for an AkvaLink nearby…';
+        text = s.lookingNearby;
         color = AkvaColors.muted;
         break;
       case AkvaConnState.connecting:
-        text = 'Connecting…';
+        text = s.connecting;
         color = AkvaColors.muted;
         break;
       case AkvaConnState.error:
-        text = error ?? 'Not connected';
+        text = error ?? s.notConnected;
         color = Colors.redAccent;
         break;
       case AkvaConnState.idle:
-        text = 'Not connected';
+        text = s.notConnected;
         color = AkvaColors.muted;
         break;
     }

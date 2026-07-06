@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../ble/akvalink_controller.dart';
 import '../ota/ota_controller.dart';
+import '../strings.dart';
 import '../theme.dart';
 
 /// Firmware update card. When connected, offers a one-click "flash latest"
@@ -15,6 +16,7 @@ class OtaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ble = context.watch<AkvaLinkController>();
     final ota = context.watch<OtaController>();
+    final s = context.watch<Strings>();
     final connected = ble.isConnected;
 
     return Card(
@@ -28,16 +30,14 @@ class OtaCard extends StatelessWidget {
                 const Icon(Icons.system_update, color: AkvaColors.deep),
                 const SizedBox(width: 8),
                 Text(
-                  'Firmware update',
+                  s.firmwareUpdate,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ],
             ),
             const SizedBox(height: 6),
             Text(
-              connected
-                  ? _deviceLine(ble, ota)
-                  : 'Connect to an AkvaLink to update its firmware over Bluetooth.',
+              connected ? _deviceLine(s, ble, ota) : s.otaConnectFirst,
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
@@ -101,16 +101,13 @@ class OtaCard extends StatelessWidget {
                         ),
                       )
                     : const Icon(Icons.cloud_download),
-                label: Text(_buttonLabel(ble, ota)),
+                label: Text(_buttonLabel(s, ble, ota)),
               ),
             ),
             if (ota.phase == OtaPhase.done || ota.phase == OtaPhase.failed)
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: ota.reset,
-                  child: const Text('Dismiss'),
-                ),
+                child: TextButton(onPressed: ota.reset, child: Text(s.dismiss)),
               ),
           ],
         ),
@@ -118,21 +115,21 @@ class OtaCard extends StatelessWidget {
     );
   }
 
-  String _deviceLine(AkvaLinkController ble, OtaController ota) {
+  String _deviceLine(Strings s, AkvaLinkController ble, OtaController ota) {
     final onDevice = ble.firmwareVersion != null
-        ? 'On device: v${ble.firmwareVersion}'
+        ? s.onDevice(ble.firmwareVersion!)
         : '';
-    final latest = ota.latestTag != null ? '  ·  latest: ${ota.latestTag}' : '';
+    final latest = ota.latestTag != null
+        ? '  ·  ${s.latestLabel(ota.latestTag!)}'
+        : '';
     final variant = ble.variant != null ? ' (${ble.variant})' : '';
     return '$onDevice$variant$latest';
   }
 
-  String _buttonLabel(AkvaLinkController ble, OtaController ota) {
-    if (ota.isBusy) return 'Updating…';
-    if (!ble.isConnected) return 'Connect first';
+  String _buttonLabel(Strings s, AkvaLinkController ble, OtaController ota) {
+    if (ota.isBusy) return s.updating;
+    if (!ble.isConnected) return s.connectFirst;
     final tag = ota.latestTag;
-    return tag != null
-        ? 'Flash latest firmware ($tag)'
-        : 'Flash latest firmware';
+    return tag != null ? s.flashLatestTag(tag) : s.flashLatest;
   }
 }
