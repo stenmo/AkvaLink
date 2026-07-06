@@ -23,6 +23,8 @@
 #include "esp_pm.h"
 #include "driver/gpio.h"   // GPIO9 escape hatch in --station (boot into BLE mode)
 #include <cstring>         // strcmp — NVS variant mismatch check
+#include "freertos/FreeRTOS.h"  // vTaskDelay / pdMS_TO_TICKS in GPIO9 escape hatch
+#include "freertos/task.h"
 
 #if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && \
     !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW

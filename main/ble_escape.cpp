@@ -83,6 +83,10 @@ static const ble_uuid16_t s_uuid_temp = BLE_UUID16_INIT(0x2A6E);
 // --- GATT service table -----------------------------------------------------
 // Struct field order: uuid, access_cb, arg, descriptors, flags, min_key_size,
 // val_handle.  Unspecified (skipped) fields are zero-initialised.
+// Suppress -Wmissing-field-initializers: the { 0 } sentinel entries leave
+// fields unset by design (NULL uuid = end-of-array marker for NimBLE).
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 static const struct ble_gatt_svc_def s_svcs[] = {
     {   // DIS — Device Information Service (0x180A)
@@ -110,6 +114,7 @@ static const struct ble_gatt_svc_def s_svcs[] = {
     },
     { 0 },
 };
+#pragma GCC diagnostic pop
 
 // --- Advertising (legacy — compatible with BT_NIMBLE_EXT_ADV=n) -------------
 
