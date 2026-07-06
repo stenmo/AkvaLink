@@ -1,0 +1,5 @@
+# Stub for esp-matter's cmake (components_include.cmake always prepends
+# "sdkconfig.defaults" relative to the project root before appending the
+# file(s) we pass via -DSDKCONFIG_DEFAULTS).  This stub satisfies that
+# existence check.  The real configuration lives in config/sdkconfig.defaults,
+# which is loaded immediately after and overrides any setting declared here.
