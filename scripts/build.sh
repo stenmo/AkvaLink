@@ -21,6 +21,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# build.sh lives in scripts/; the ESP-IDF project root (CMakeLists.txt) is one
+# level up. Use PROJECT_DIR everywhere idf.py needs the project directory.
+PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
 
 # --- Tool locations (WSL home, NOT mounted Windows paths) -------------------
 # Espressif explicitly warns against running esp-matter from a /mnt/c path.
@@ -137,7 +140,7 @@ case "$cmd" in
 
     build)
         activate_env
-        cd "${SCRIPT_DIR}"
+        cd "${PROJECT_DIR}"
         resolve_variant "${@:2}"
 
         if [ -n "$CMAKE_EXTRA" ]; then
@@ -176,14 +179,14 @@ case "$cmd" in
 
     menuconfig)
         activate_env
-        cd "${SCRIPT_DIR}"
+        cd "${PROJECT_DIR}"
         resolve_variant "${@:2}"
         idf.py -B "${BUILD_DIR}" -D SDKCONFIG="${BUILD_DIR}/sdkconfig" menuconfig
         ;;
 
     flash)
         activate_env
-        cd "${SCRIPT_DIR}"
+        cd "${PROJECT_DIR}"
         port="${2:-}"
         [ -n "$port" ] || { echo "Usage: $0 flash <PORT> [--wifi|--ble|--sensor] [--clickboard]"; exit 1; }
         resolve_variant "${@:3}"
@@ -192,7 +195,7 @@ case "$cmd" in
 
     monitor)
         activate_env
-        cd "${SCRIPT_DIR}"
+        cd "${PROJECT_DIR}"
         port="${2:-}"
         [ -n "$port" ] || { echo "Usage: $0 monitor <PORT> [--wifi|--ble|--sensor]"; exit 1; }
         resolve_variant "${@:3}"
@@ -200,7 +203,7 @@ case "$cmd" in
         ;;
 
     clean)
-        rm -rf "${SCRIPT_DIR}/build" "${SCRIPT_DIR}/sdkconfig"
+        rm -rf "${PROJECT_DIR}/build" "${PROJECT_DIR}/sdkconfig"
         echo "Cleaned."
         ;;
 
