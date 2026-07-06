@@ -261,7 +261,8 @@ extern "C" void app_main()
     // --- Wi-Fi AP variant: open SoftAP "AkvaLink" + a captive web page showing
     // the live temperature. No Matter, no BLE. NEEDS EXTERNAL POWER (the Wi-Fi
     // radio stays awake for the AP — not battery friendly).
-    ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi AP variant — SoftAP \"AkvaLink\" + web page (needs external power)");#if CONFIG_AKVALINK_BLE_ESCAPE_HATCH
+    ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi AP variant — SoftAP \"AkvaLink\" + web page (needs external power)");
+#if CONFIG_AKVALINK_BLE_ESCAPE_HATCH
     // GPIO9 escape hatch: hold BOOT button at power-on to skip SoftAP and
     // boot into standalone BLE GATT mode (Option C, CONNECTIVITY.md).
     {
