@@ -32,14 +32,14 @@ if not exist "%IMG_DIR%\akvalink.bin" (
 
 REM --- Choose esptool ------------------------------------------------------
 REM Use the user's system esptool.py. The canonical flasher
-REM (launch-akvalink-wsl.cmd --flash) uses the ESP-IDF-bundled esptool.
+REM (akvalink.cmd --flash) uses the ESP-IDF-bundled esptool.
 set "ESPTOOL="
 where esptool.py >nul 2>&1
 if not errorlevel 1 set "ESPTOOL=esptool.py"
 if "%ESPTOOL%"=="" (
     echo ERROR: esptool not found. Install it with:
     echo   py -m pip install esptool
-    echo Or use the canonical flasher:  launch-akvalink-wsl.cmd --flash %PORT%
+    echo Or use the canonical flasher:  akvalink.cmd --flash %PORT%
     exit /b 3
 )
 
@@ -69,5 +69,5 @@ exit /b 0
 :monitor
 REM Defer to the canonical launcher's serial monitor (needs the IDF env).
 echo.
-echo Use:  launch-akvalink-wsl.cmd --log %PORT%
+echo Use:  akvalink.cmd --log %PORT%
 exit /b 0

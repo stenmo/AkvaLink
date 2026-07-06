@@ -8,9 +8,9 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 KEY_FILES = [
     "CMakeLists.txt",
-    "partitions.csv",
-    "sdkconfig.defaults",
-    "launch-akvalink-wsl.cmd",
+    "config/partitions.csv",
+    "config/sdkconfig.defaults",
+    "akvalink.cmd",
     "main/app_main.cpp",
     "main/ds18b20_task.cpp",
     "main/ds2482_onewire.cpp",
@@ -32,7 +32,7 @@ def test_pyserial_available():
 
 def _partition_rows():
     rows = []
-    for line in (REPO_ROOT / "partitions.csv").read_text(encoding="utf-8").splitlines():
+    for line in (REPO_ROOT / "config" / "partitions.csv").read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue

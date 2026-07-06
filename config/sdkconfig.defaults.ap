@@ -1,8 +1,8 @@
 # AkvaLink Wi-Fi AP variant (--ap) — open SoftAP "AkvaLink" + captive web page.
 #
 # Layer on top of the base defaults:
-#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.ap" reconfigure
-# or via the launcher:  launch-akvalink-wsl.cmd --ap --rebuild
+#   idf.py -DSDKCONFIG_DEFAULTS="config/sdkconfig.defaults;config/sdkconfig.defaults.ap" reconfigure
+# or via the launcher:  akvalink.cmd --ap --rebuild
 #
 # NO Matter, NO BLE, NO home network. Any phone/laptop joins the open "AkvaLink"
 # Wi-Fi and a captive page shows the live temperature. See main/ap_web.cpp.

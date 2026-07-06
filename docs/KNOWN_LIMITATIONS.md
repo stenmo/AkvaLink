@@ -49,7 +49,7 @@
 
 - **WSL2 only on Windows.** Native Windows build is not supported (esp-matter
   upstream limitation, not ours).
-- **`launch-akvalink-wsl.cmd flash` requires the EVK on a native Windows COM
+- **`akvalink.cmd flash` requires the EVK on a native Windows COM
   port.** USB pass-through into WSL via `usbipd-win` is not used; we flash
   from Windows-side `esptool` against the WSL-built artifacts.
 - **Build artifacts live in `/mnt/c/...`** which is slower than WSL's native

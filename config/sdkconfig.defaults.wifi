@@ -4,7 +4,7 @@
 # a custom mDNS-based app instead of the Matter ecosystem.
 #
 # Apply with:
-#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.wifi" reconfigure
+#   idf.py -DSDKCONFIG_DEFAULTS="config/sdkconfig.defaults;config/sdkconfig.defaults.wifi" reconfigure
 #
 # Trade-offs vs the default Thread/SED build:
 #   - Always-on Wi-Fi: ~80–150 mA peaks, ~10 mA average → wall power, not battery

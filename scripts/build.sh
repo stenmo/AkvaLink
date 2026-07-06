@@ -99,20 +99,22 @@ resolve_variant() {
             *) echo "Unknown build option: $arg" >&2; exit 1 ;;
         esac
     done
+    # sdkconfig.defaults* templates live in config/ (paths are relative to the
+    # project root, which is where idf.py runs). Base + per-variant overlay.
     if [ "$ble" -eq 1 ]; then
-        VARIANT="ble";    SDKCFG="sdkconfig.defaults;sdkconfig.defaults.ble"
+        VARIANT="ble";    SDKCFG="config/sdkconfig.defaults;config/sdkconfig.defaults.ble"
     elif [ "$sensor" -eq 1 ]; then
-        VARIANT="sensor"; SDKCFG="sdkconfig.defaults;sdkconfig.defaults.sensor"
+        VARIANT="sensor"; SDKCFG="config/sdkconfig.defaults;config/sdkconfig.defaults.sensor"
     elif [ "$ap" -eq 1 ]; then
-        VARIANT="ap";     SDKCFG="sdkconfig.defaults;sdkconfig.defaults.ap"
+        VARIANT="ap";     SDKCFG="config/sdkconfig.defaults;config/sdkconfig.defaults.ap"
     elif [ "$station" -eq 1 ]; then
-        VARIANT="station"; SDKCFG="sdkconfig.defaults;sdkconfig.defaults.station"
+        VARIANT="station"; SDKCFG="config/sdkconfig.defaults;config/sdkconfig.defaults.station"
     elif [ "$espnow" -eq 1 ]; then
-        VARIANT="espnow"; SDKCFG="sdkconfig.defaults;sdkconfig.defaults.espnow"
+        VARIANT="espnow"; SDKCFG="config/sdkconfig.defaults;config/sdkconfig.defaults.espnow"
     elif [ "$wifi" -eq 1 ]; then
-        VARIANT="wifi";   SDKCFG="sdkconfig.defaults;sdkconfig.defaults.wifi"
+        VARIANT="wifi";   SDKCFG="config/sdkconfig.defaults;config/sdkconfig.defaults.wifi"
     else
-        VARIANT="thread"; SDKCFG="sdkconfig.defaults"
+        VARIANT="thread"; SDKCFG="config/sdkconfig.defaults"
     fi
     CMAKE_EXTRA=""
     if [ "$clickboard" -eq 1 ]; then
@@ -228,7 +230,7 @@ Paths:
   ESP_MATTER_PATH  = ${ESP_MATTER_PATH}
 
 This script is intended for Linux / WSL2. From Windows, run:
-  launch-akvalink-wsl.cmd build
+  akvalink.cmd --build --wifi
 EOF
         ;;
 esac

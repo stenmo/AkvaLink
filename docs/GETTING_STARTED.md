@@ -32,7 +32,7 @@ code .
 This installs ESP-IDF v5.4.1 and esp-matter release/v1.5 inside WSL:
 
 ```powershell
-.\launch-akvalink-wsl.cmd setup
+.\akvalink.cmd setup
 ```
 
 The launcher will:
@@ -48,17 +48,17 @@ You only run `setup` once per machine.
 
 **Default — Matter over Thread, direct GPIO sensor:**
 ```powershell
-.\launch-akvalink-wsl.cmd build
+.\ akvalink.cmd build
 ```
 
 **Wi-Fi variant (no Thread Border Router needed):**
 ```powershell
-.\launch-akvalink-wsl.cmd --wifi build
+.\akvalink.cmd --wifi build
 ```
 
 **DS2482 Click board variant (I2C bridge for long cable runs):**
 ```powershell
-.\launch-akvalink-wsl.cmd --clickboard build
+.\akvalink.cmd --clickboard build
 ```
 
 A cold build takes 5–10 min; subsequent incremental builds are < 1 min.
@@ -77,8 +77,8 @@ Note the COM port number (e.g., `COM62`).
 ## 5. Flash and monitor
 
 ```powershell
-.\launch-akvalink-wsl.cmd flash COM62
-.\launch-akvalink-wsl.cmd monitor COM62
+.\akvalink.cmd flash COM62
+.\akvalink.cmd monitor COM62
 ```
 
 In the monitor output you should see:

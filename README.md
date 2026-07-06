@@ -61,29 +61,29 @@ supported (`--clickboard` build flag).
 
 ```powershell
 # One-time setup (installs ESP-IDF + esp-matter in WSL, ~10 GB)
-.\launch-akvalink-wsl.cmd setup
+.\akvalink.cmd setup
 
 # Build & flash (Thread variant — needs a Thread Border Router)
-.\launch-akvalink-wsl.cmd build
-.\launch-akvalink-wsl.cmd flash COM62
+.\akvalink.cmd build
+.\akvalink.cmd flash COM62
 
 # Or build the Wi-Fi variant (no border router needed)
-.\launch-akvalink-wsl.cmd --wifi build
+.\akvalink.cmd --wifi build
 
 # Or the Wi-Fi AP variant — open "AkvaLink" hotspot + captive web page showing
 # the temperature. No hub, no app, works on ANY phone (incl. iPhone).
 # NOTE: an always-on SoftAP is NOT battery-friendly — this variant needs
 # external (mains/USB) power.
-.\launch-akvalink-wsl.cmd --ap build
+.\akvalink.cmd --ap build
 
 # Or the Wi-Fi station variant — joins your home Wi-Fi (provisioned once over
 # BLE with the free "ESP BLE Provisioning" app), then serves the temperature
 # page at http://akvalink-<last4mac>.local (unique per device). Also publishes
 # to MQTT for Home Assistant autodiscovery (default broker: homeassistant.local:1883).
-.\launch-akvalink-wsl.cmd --station build
+.\akvalink.cmd --station build
 
 # Or just bench-test the DS18B20 probe (no Matter/BLE — logs temp every 30 s)
-.\launch-akvalink-wsl.cmd --sensor build
+.\akvalink.cmd --sensor build
 ```
 
 Commission with the Apple Home, Google Home, or Alexa app — scan the QR code

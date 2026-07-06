@@ -54,14 +54,14 @@ AkvaLink is the productised, demo-focused clean-room version.
 
 ```powershell
 # Default (Thread, GPIO sensor)
-.\launch-akvalink-wsl.cmd build
-.\launch-akvalink-wsl.cmd flash COM62
+.\akvalink.cmd build
+.\akvalink.cmd flash COM62
 
 # Wi-Fi variant
-.\launch-akvalink-wsl.cmd --wifi build
+.\akvalink.cmd --wifi build
 
 # DS2482 Click board
-.\launch-akvalink-wsl.cmd --clickboard build
+.\akvalink.cmd --clickboard build
 ```
 
 Build runs in **WSL Ubuntu-24.04**, sourcing:

@@ -28,7 +28,7 @@ Safety
 - Rolls back the version bump if a build fails.
 
 Requires: git and esptool. The build step uses the WSL launcher on Windows and
-build.sh elsewhere.
+scripts/build.sh elsewhere.
 """
 
 from __future__ import annotations
@@ -141,7 +141,7 @@ def _run(cmd: list[str], dry_run: bool) -> None:
 
 def _build_cmd(variant: str) -> list[str]:
     if variant == "esphome":
-        # ESPHome uses its own build system (not ESP-IDF / launch-akvalink-wsl)
+        # ESPHome uses its own build system (not ESP-IDF / akvalink.cmd)
         if os.name == "nt":
             drive = REPO_ROOT.drive[0].lower()
             rest = REPO_ROOT.as_posix()[3:]  # strip "E:/"
@@ -152,13 +152,13 @@ def _build_cmd(variant: str) -> list[str]:
                 f"cd '{REPO_ROOT}' && esphome compile esphome/akvalink.yaml"]
     FLAG = {"wifi": "--wifi", "ble": "--ble", "ap": "--ap", "station": "--station", "espnow": "--espnow"}
     if os.name == "nt":
-        cmd = ["cmd", "/c", str(REPO_ROOT / "launch-akvalink-wsl.cmd")]
+        cmd = ["cmd", "/c", str(REPO_ROOT / "akvalink.cmd")]
         flag = FLAG.get(variant)
         if flag:
             cmd.append(flag)
         cmd.append("--rebuild")
         return cmd
-    cmd = ["bash", str(REPO_ROOT / "build.sh"), "build"]
+    cmd = ["bash", str(REPO_ROOT / "scripts" / "build.sh"), "build"]
     flag = FLAG.get(variant)
     if flag:
         cmd.append(flag)

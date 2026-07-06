@@ -15,10 +15,11 @@ REM   build.cmd build --wifi     Build the Matter-over-Wi-Fi variant
 REM   build.cmd menuconfig       idf.py menuconfig
 REM   build.cmd clean            Wipe build/ + sdkconfig
 REM
-REM Canonical launcher (more options): launch-akvalink-wsl.cmd --help
+REM Canonical launcher (more options): akvalink.cmd --help
 REM ========================================================================
 
 setlocal
 set "SCRIPT_DIR=%~dp0"
-call "%SCRIPT_DIR%launch-akvalink-wsl.cmd" %*
+REM Now lives in scripts\, so the canonical launcher is one level up.
+call "%SCRIPT_DIR%..\akvalink.cmd" %*
 exit /b %errorlevel%

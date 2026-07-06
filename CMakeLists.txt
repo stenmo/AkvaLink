@@ -3,7 +3,7 @@
 #
 # Modelled on esp-matter/examples/light/CMakeLists.txt to ensure all
 # MATTER_SDK_PATH-derived include/source paths resolve. Built via the
-# WSL launcher (launch-akvalink-wsl.cmd) which sources export.sh from
+# WSL launcher (akvalink.cmd) which sources export.sh from
 # both ESP-IDF v5.4.1 and esp-matter release/v1.5.
 
 cmake_minimum_required(VERSION 3.16)
@@ -31,7 +31,7 @@ else()
     if(NOT DEFINED ENV{ESP_MATTER_PATH})
         message(FATAL_ERROR
             "ESP_MATTER_PATH is not set. Source ~/esp/esp-matter/export.sh, "
-            "or run via launch-akvalink-wsl.cmd.")
+            "or run via akvalink.cmd.")
     endif()
 
     # Per-chip device HAL path (drives BSP, default pins, etc).

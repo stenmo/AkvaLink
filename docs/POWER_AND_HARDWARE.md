@@ -379,14 +379,14 @@ Average current depends on report frequency:
 
 ```powershell
 :: First time only — install ESP-IDF v5.4.1 + esp-matter v1.5 in WSL (~10 GB).
-.\launch-akvalink-wsl.cmd setup
+.\akvalink.cmd setup
 
 :: Build the firmware (≈ 5–10 min cold, < 1 min warm).
-.\launch-akvalink-wsl.cmd build
+.\akvalink.cmd build
 
 :: Flash and watch the boot log.
-.\launch-akvalink-wsl.cmd --flash COM5
-.\launch-akvalink-wsl.cmd --log COM5
+.\akvalink.cmd --flash COM5
+.\akvalink.cmd --log COM5
 ```
 
 Linux / macOS — substitute `.sh` and `/dev/ttyUSB0`.
@@ -396,8 +396,9 @@ Linux / macOS — substitute `.sh` and `/dev/ttyUSB0`.
 ```
 opencpu/nora-w40-thermometer/
 ├── CMakeLists.txt              ← ESP-IDF project root
-├── sdkconfig.defaults          ← Matter / Wi-Fi / BLE / partition defaults
-├── partitions.csv              ← 4 MB layout with factory + OTA partitions
+├── config/
+│   ├── sdkconfig.defaults       ← Matter / Wi-Fi / BLE / partition defaults
+│   └── partitions.csv           ← 4 MB layout with factory + OTA partitions
 ├── main/
 │   ├── CMakeLists.txt
 │   ├── idf_component.yml       ← pulls esp-matter, onewire_bus, ds18b20

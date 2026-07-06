@@ -9,7 +9,7 @@
 #     akvalink.bin                    → flashed at 0x20000  (factory app slot)
 #
 # The flash scripts (flash.cmd / flash.sh) hardcode those four offsets to
-# match `partitions.csv` in the project root. If you change the partition
+# match `config/partitions.csv`. If you change the partition
 # layout, update both.
 #
 # This folder is gitignored *except* for this README — treat it as a build

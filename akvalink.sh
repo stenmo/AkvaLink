@@ -4,11 +4,11 @@
 # ==========================================================================
 # ONE front door for everything, the twin of akvalink.cmd on Windows:
 #
-#   Firmware  (NORA-W40 / ESP32-C6)  -> forwarded to ./build.sh (native IDF).
+#   Firmware  (NORA-W40 / ESP32-C6)  -> forwarded to ./scripts/build.sh (native IDF).
 #   App       (Flutter companion)    -> built natively with the Flutter SDK.
 #
 # Usage:
-#   ./akvalink.sh [firmware args...]        Firmware (forwarded to build.sh)
+#   ./akvalink.sh [firmware args...]        Firmware (forwarded to scripts/build.sh)
 #   ./akvalink.sh --app                     Build the app for THIS host
 #   ./akvalink.sh --app --linux             Build the Linux app
 #   ./akvalink.sh --app --macos             Build the macOS app  (needs a Mac)
@@ -17,7 +17,7 @@
 #   ./akvalink.sh --app --run               Run the app on this machine
 #   ./akvalink.sh --help                    Show this help
 #
-# Firmware examples (see ./build.sh for the full set):
+# Firmware examples (see ./scripts/build.sh for the full set):
 #   ./akvalink.sh build --wifi
 #   ./akvalink.sh flash /dev/ttyUSB0
 # ==========================================================================
@@ -36,7 +36,7 @@ show_help() {
     cat <<EOF
 AkvaLink -- unified launcher (native ${HOST})
 
-FIRMWARE (NORA-W40, forwarded to ./build.sh):
+FIRMWARE (NORA-W40, forwarded to ./scripts/build.sh):
   ./akvalink.sh setup                  One-time ESP-IDF + esp-matter install
   ./akvalink.sh build [--wifi|--ble|--ap|--station|--espnow|--sensor]
   ./akvalink.sh flash <PORT> [variant] Flash the EVK (e.g. /dev/ttyUSB0)
@@ -66,9 +66,9 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     exit 0
 fi
 
-# --- Firmware path: forward everything to build.sh ------------------------
+# --- Firmware path: forward everything to scripts/build.sh ----------------
 if [ "$app_mode" -eq 0 ]; then
-    exec "${SCRIPT_DIR}/build.sh" "$@"
+    exec "${SCRIPT_DIR}/scripts/build.sh" "$@"
 fi
 
 # --- App path -------------------------------------------------------------

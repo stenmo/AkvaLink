@@ -45,11 +45,11 @@ full toolchain setup.
 
 ```powershell
 # Default (Thread, direct-GPIO DS18B20)
-.\launch-akvalink-wsl.cmd --rebuild
-.\launch-akvalink-wsl.cmd --flash --log
+.\akvalink.cmd --rebuild
+.\akvalink.cmd --flash --log
 
 # Wi-Fi variant
-.\launch-akvalink-wsl.cmd --wifi --rebuild
+.\akvalink.cmd --wifi --rebuild
 ```
 
 Please confirm your change **builds cleanly** and, where you can, test it on

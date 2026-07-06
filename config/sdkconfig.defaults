@@ -8,8 +8,8 @@
 #
 # Want plain Wi-Fi instead (no Thread BR available, or want a Home Assistant /
 # custom app target)? Use the alternate defaults file:
-#   idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.wifi" reconfigure
-# See `sdkconfig.defaults.wifi` and the README for the trade-offs.
+#   idf.py -DSDKCONFIG_DEFAULTS="config/sdkconfig.defaults;config/sdkconfig.defaults.wifi" reconfigure
+# See `config/sdkconfig.defaults.wifi` and the README for the trade-offs.
 
 # --- Target & toolchain ------------------------------------------------------
 CONFIG_IDF_TARGET="esp32c6"
@@ -19,8 +19,10 @@ CONFIG_FREERTOS_HZ=1000
 CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
 CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
 CONFIG_PARTITION_TABLE_CUSTOM=y
-CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
-CONFIG_PARTITION_TABLE_FILENAME="partitions.csv"
+# Path is relative to the project root (where the top-level CMakeLists.txt is),
+# NOT to this config/ directory — ESP-IDF resolves it from the project dir.
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="config/partitions.csv"
+CONFIG_PARTITION_TABLE_FILENAME="config/partitions.csv"
 
 # --- Matter / esp-matter -----------------------------------------------------
 CONFIG_USE_ESP_MATTER_DATA_MODEL=y
