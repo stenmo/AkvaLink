@@ -193,7 +193,11 @@ class AkvaLinkController extends ChangeNotifier {
       try {
         await UniversalBle.requestMtu(id, 247);
       } catch (_) {}
-      await UniversalBle.discoverServices(id);
+      // withDescriptors: true is required on Windows — the WinRT GATT stack
+      // only populates its internal characteristic cache when descriptors are
+      // also discovered; without it, subscribeNotifications throws serviceNotFound
+      // (ATT error 0x13) because the characteristic handles are unknown.
+      await UniversalBle.discoverServices(id, withDescriptors: true);
       await _subscribeTemperature(id);
       await _readDeviceInfo(id);
       _set(AkvaConnState.connected);
@@ -208,12 +212,24 @@ class AkvaLinkController extends ChangeNotifier {
       id,
       AkvaUuids.tempChar,
     ).listen(_onTemperature);
-    await UniversalBle.subscribeNotifications(
-      id,
-      AkvaUuids.essService,
-      AkvaUuids.tempChar,
-    );
-    // Prime with an initial read so the UI isn't blank until the next notify.
+
+    // Try NOTIFY subscription first; fall back to polling if the platform
+    // (notably Windows) rejects the subscription (e.g. serviceNotFound on
+    // WinRT when the CCCD write is rejected or the cache is stale).
+    var subscribed = false;
+    try {
+      await UniversalBle.subscribeNotifications(
+        id,
+        AkvaUuids.essService,
+        AkvaUuids.tempChar,
+      );
+      subscribed = true;
+    } catch (e) {
+      // Subscription failed — fall through to poll mode below.
+      debugPrint('BLE notify unavailable ($e), falling back to polling');
+    }
+
+    // Prime with an initial read regardless of subscription success.
     try {
       final v = await UniversalBle.read(
         id,
@@ -222,6 +238,24 @@ class AkvaLinkController extends ChangeNotifier {
       );
       _onTemperature(v);
     } catch (_) {}
+
+    // Poll mode: if subscription failed, read every 5 s until disconnected.
+    if (!subscribed) {
+      _startPolling(id);
+    }
+  }
+
+  Timer? _pollTimer;
+
+  void _startPolling(String id) {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      if (!isConnected) { _pollTimer?.cancel(); return; }
+      try {
+        final v = await UniversalBle.read(id, AkvaUuids.essService, AkvaUuids.tempChar);
+        _onTemperature(v);
+      } catch (_) {}
+    });
   }
 
   void _onTemperature(Uint8List value) {
@@ -255,6 +289,8 @@ class AkvaLinkController extends ChangeNotifier {
   }
 
   void _onDisconnected() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
     _temperatureC = null;
     _batteryPercent = null;
     _set(AkvaConnState.idle);
@@ -262,6 +298,8 @@ class AkvaLinkController extends ChangeNotifier {
 
   Future<void> disconnect() async {
     final id = _deviceId;
+    _pollTimer?.cancel();
+    _pollTimer = null;
     await _stopScan();
     await _tempSub?.cancel();
     _tempSub = null;
@@ -277,6 +315,7 @@ class AkvaLinkController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _stopScan();
     _tempSub?.cancel();
     _connSub?.cancel();

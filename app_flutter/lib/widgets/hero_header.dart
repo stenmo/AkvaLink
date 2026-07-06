@@ -51,7 +51,7 @@ class HeroHeader extends StatelessWidget {
             ),
             Row(
               children: const [
-                Text('🏊', style: TextStyle(fontSize: 30)),
+                Text('💧', style: TextStyle(fontSize: 30)),
                 SizedBox(width: 8),
                 Text(
                   'AkvaLink',
@@ -63,7 +63,7 @@ class HeroHeader extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: 8),
-                Text('🌊', style: TextStyle(fontSize: 26)),
+                Text('😎', style: TextStyle(fontSize: 26)),
               ],
             ),
             const SizedBox(height: 6),
