@@ -23,8 +23,10 @@
 // Coded PHY S=8), and serves the GATT services over the --ble sdkconfig.
 
 #include "ble_gatt.h"
+#include "app_priv.h"   // AKVALINK_VARIANT_STR
 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "esp_log.h"
@@ -230,9 +232,11 @@ static int gatt_access(uint16_t /*conn*/, uint16_t /*attr*/,
         case 0x2A24:  // Model
             return os_mbuf_append(ctxt->om, MODEL, strlen(MODEL)) == 0
                        ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
-        case 0x2A26: {  // Firmware revision
-            const esp_app_desc_t *desc = esp_app_get_description();
-            return os_mbuf_append(ctxt->om, desc->version, strlen(desc->version)) == 0
+        case 0x2A26: {  // Firmware revision — "{version}-{variant}" for OTA auto-select
+            char buf[48];
+            snprintf(buf, sizeof(buf), "%s-" AKVALINK_VARIANT_STR,
+                     esp_app_get_description()->version);
+            return os_mbuf_append(ctxt->om, buf, strlen(buf)) == 0
                        ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
         }
         case 0x2A6E:  // Temperature (sint16, 0.01 \u00b0C)
@@ -362,6 +366,18 @@ static int ota_access(uint16_t /*conn*/, uint16_t /*attr*/,
                 }
                 if (!s_ota_stream) { ota_notify(0x01, 7); return 0; }
                 xStreamBufferReset(s_ota_stream);
+                // Tighten connection interval to 7.5 ms for maximum OTA throughput.
+                // The central can reject, but iOS and recent Android accept this.
+                {
+                    struct ble_gap_upd_params cp = {};
+                    cp.itvl_min            = 6;    // 7.5 ms
+                    cp.itvl_max            = 6;    // 7.5 ms
+                    cp.latency             = 0;
+                    cp.supervision_timeout = 400;  // 5 s
+                    cp.min_ce_len          = 0;
+                    cp.max_ce_len          = 0;
+                    ble_gap_update_params(s_conn_handle, &cp);
+                }
                 if (xTaskCreate(ota_task, "ble_ota", 4096, NULL,
                                 tskIDLE_PRIORITY + 4, &s_ota_task) != pdPASS) {
                     s_ota_task = nullptr;

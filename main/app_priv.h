@@ -46,6 +46,23 @@ extern "C" {
 // Endpoint id of the Matter Temperature Sensor (assigned in app_main.cpp).
 extern uint16_t g_temp_endpoint_id;
 
+// Compile-time variant string baked into DIS Firmware Revision (0x2A26) as
+// "{version}-{variant}" e.g. "0.3.1-ble" or "0.3.1-thread".
+// A BLE app reads this to auto-select the matching OTA binary on GitHub.
+#if defined(CONFIG_AKVALINK_BLE_ONLY)
+#  define AKVALINK_VARIANT_STR "ble"
+#elif defined(CONFIG_AKVALINK_STATION)
+#  define AKVALINK_VARIANT_STR "station"
+#elif defined(CONFIG_AKVALINK_AP)
+#  define AKVALINK_VARIANT_STR "ap"
+#elif defined(CONFIG_AKVALINK_ESPNOW)
+#  define AKVALINK_VARIANT_STR "espnow"
+#elif defined(CONFIG_OPENTHREAD_ENABLED)
+#  define AKVALINK_VARIANT_STR "thread"
+#else
+#  define AKVALINK_VARIANT_STR "wifi"
+#endif
+
 #ifdef __cplusplus
 }
 #endif

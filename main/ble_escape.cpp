@@ -16,8 +16,10 @@
 // flash cost when the feature is disabled.
 
 #include "ble_escape.h"
+#include "app_priv.h"   // AKVALINK_VARIANT_STR
 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "esp_log.h"
@@ -56,8 +58,11 @@ static int dis_mfr_cb(uint16_t /*conn*/, uint16_t /*attr*/,
 static int dis_fw_cb(uint16_t /*conn*/, uint16_t /*attr*/,
                      struct ble_gatt_access_ctxt *ctx, void * /*arg*/)
 {
-    const char *ver = esp_app_get_description()->version;
-    return os_mbuf_append(ctx->om, ver, strlen(ver))
+    // "{version}-{variant}" so a BLE app can auto-select the right OTA binary.
+    char buf[48];
+    snprintf(buf, sizeof(buf), "%s-" AKVALINK_VARIANT_STR,
+             esp_app_get_description()->version);
+    return os_mbuf_append(ctx->om, buf, strlen(buf))
                ? BLE_ATT_ERR_INSUFFICIENT_RES : 0;
 }
 
@@ -181,6 +186,17 @@ static int gap_event(struct ble_gap_event *ev, void * /*arg*/)
             // Request MTU exchange immediately so we don't stay at 23 bytes.
             // CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU controls the upper bound.
             ble_gattc_exchange_mtu(s_conn_handle, NULL, NULL);
+            // Request 15 ms connection interval (12 × 1.25 ms = iOS minimum).
+            {
+                struct ble_gap_upd_params cp = {};
+                cp.itvl_min            = 12;   // 15 ms
+                cp.itvl_max            = 24;   // 30 ms
+                cp.latency             = 0;
+                cp.supervision_timeout = 400;  // 5 s
+                cp.min_ce_len          = 0;
+                cp.max_ce_len          = 0;
+                ble_gap_update_params(s_conn_handle, &cp);
+            }
         } else {
             s_conn_handle = BLE_HS_CONN_HANDLE_NONE;
             adv_start();
