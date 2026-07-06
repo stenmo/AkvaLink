@@ -22,6 +22,7 @@
 #include "nvs_flash.h"
 #include "esp_pm.h"
 #include "driver/gpio.h"   // GPIO9 escape hatch in --station (boot into BLE mode)
+#include <cstring>         // strcmp — NVS variant mismatch check
 
 #if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && \
     !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW
