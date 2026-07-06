@@ -280,7 +280,8 @@ extern "C" void app_main()
             return;
         }
     }
-#endif    ESP_ERROR_CHECK(akvalink_ap_start());
+#endif
+    ESP_ERROR_CHECK(akvalink_ap_start());
     ds18b20_task_start();
     ESP_LOGI(TAG, "✨ AkvaLink AP up — join open Wi-Fi \"AkvaLink\", the page opens (or http://192.168.4.1)");
 
