@@ -173,6 +173,9 @@ static int gap_event(struct ble_gap_event *ev, void * /*arg*/)
         if (ev->connect.status == 0) {
             s_conn_handle = ev->connect.conn_handle;
             ESP_LOGI(TAG, "connected (handle %d)", s_conn_handle);
+            // Request MTU exchange immediately so we don't stay at 23 bytes.
+            // CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU controls the upper bound.
+            ble_gattc_exchange_mtu(s_conn_handle, NULL, NULL);
         } else {
             s_conn_handle = BLE_HS_CONN_HANDLE_NONE;
             adv_start();
@@ -184,6 +187,9 @@ static int gap_event(struct ble_gap_event *ev, void * /*arg*/)
         ESP_LOGI(TAG, "disconnected (reason %d) — restarting adv",
                  ev->disconnect.reason);
         adv_start();
+        break;
+    case BLE_GAP_EVENT_MTU:
+        ESP_LOGI(TAG, "ATT MTU negotiated: %u", ev->mtu.value);
         break;
     case BLE_GAP_EVENT_SUBSCRIBE:
         s_subscribed = (ev->subscribe.cur_notify != 0);

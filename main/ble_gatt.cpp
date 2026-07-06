@@ -498,6 +498,11 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
                     BLE_GAP_LE_PHY_2M_MASK | BLE_GAP_LE_PHY_1M_MASK,
                     BLE_GAP_LE_PHY_2M_MASK | BLE_GAP_LE_PHY_1M_MASK,
                     0);
+                // Request MTU exchange immediately — don't wait for the central.
+                // Many phone apps never send MTU Request, leaving us at 23 bytes.
+                // With CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=517 this negotiates up
+                // to 512-byte payload (iOS caps at 512, Android usually 517).
+                ble_gattc_exchange_mtu(s_conn_handle, NULL, NULL);
             } else {
                 adv_start();  // failed \u2014 resume advertising
             }
