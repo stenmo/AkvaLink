@@ -20,10 +20,12 @@ permissions:
   contents: read
   pages: write
   id-token: write
-# Allow one concurrent deployment; don't cancel an in-progress run.
+# Only one Pages deployment at a time. If a new commit lands while a deploy
+# is in progress, cancel the old one — leaving two concurrent artifact uploads
+# causes "Multiple artifacts named 'github-pages'" and the deploy fails.
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
