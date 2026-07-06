@@ -306,6 +306,7 @@ REM ========================================================================
 REM Flutter companion app. Default target = windows (this host).
 set "TARGET=windows"
 set "DO_RUN=0"
+set "DO_RELEASE=0"
 
 :app_parse
 if "%~1"=="" goto app_go
@@ -314,6 +315,7 @@ if /I "%~1"=="--windows" ( set "TARGET=windows" & shift & goto app_parse )
 if /I "%~1"=="--android" ( set "TARGET=apk"     & shift & goto app_parse )
 if /I "%~1"=="--ios"     ( set "TARGET=ios"     & shift & goto app_parse )
 if /I "%~1"=="--macos"   ( set "TARGET=macos"   & shift & goto app_parse )
+if /I "%~1"=="--release" ( set "DO_RELEASE=1"   & shift & goto app_parse )
 if /I "%~1"=="--run"     ( set "DO_RUN=1"       & shift & goto app_parse )
 echo [ERROR] Unknown --app option: %~1
 echo Run: akvalink.cmd --help
@@ -337,6 +339,8 @@ pushd "%SCRIPT_DIR%\app_flutter"
 echo === app: flutter pub get ===
 call flutter pub get || ( popd & exit /b 1 )
 
+if "%DO_RELEASE%"=="1" goto app_release
+
 if "%DO_RUN%"=="1" (
     echo === app: flutter run ^(this machine^) ===
     call flutter run
@@ -347,6 +351,41 @@ if "%DO_RUN%"=="1" (
 set "RC=%errorlevel%"
 popd
 exit /b %RC%
+
+REM ========================================================================
+:app_release
+REM Build all Flutter targets possible on Windows: Windows + Android APK + AAB.
+REM iOS and macOS require a Mac -- run:  ./akvalink.sh --app --release  there.
+set "RELEASE_FAILED=0"
+echo === app --release: windows + android ^(apk + appbundle^) ===
+echo.
+
+echo === flutter build windows ^(1/3^) ===
+call flutter build windows
+if errorlevel 1 ( echo [WARN] windows build failed. & set "RELEASE_FAILED=1" )
+echo.
+
+echo === flutter build apk ^(2/3^) ===
+call flutter build apk
+if errorlevel 1 ( echo [WARN] apk build failed. & set "RELEASE_FAILED=1" )
+echo.
+
+echo === flutter build appbundle ^(3/3^) ===
+call flutter build appbundle
+if errorlevel 1 ( echo [WARN] appbundle build failed. & set "RELEASE_FAILED=1" )
+echo.
+
+if "%RELEASE_FAILED%"=="1" (
+    echo [ERROR] One or more app builds failed.
+    popd & exit /b 1
+)
+echo === app --release done ===
+echo   Windows exe: app_flutter\build\windows\x64\runner\Release\
+echo   Android APK: app_flutter\build\app\outputs\flutter-apk\app-release.apk
+echo   Android AAB: app_flutter\build\app\outputs\bundle\release\app-release.aab
+echo   iOS / macOS : run  ./akvalink.sh --app --release  on a Mac
+popd
+exit /b 0
 
 REM ========================================================================
 :show_help
@@ -366,6 +405,9 @@ echo.
 echo APP ^(Flutter companion, built natively^):
 echo   akvalink.cmd --app                   Build for Windows ^(default^)
 echo   akvalink.cmd --app --android         Build the Android APK
+echo   akvalink.cmd --app --release         Build ALL targets for this host:
+echo                                         Windows ^(exe^) + Android APK + AAB
+echo                                         iOS/macOS: run ./akvalink.sh --app --release on a Mac
 echo   akvalink.cmd --app --run             Run the app on this machine
 echo   akvalink.cmd --app --ios ^| --macos   ^(require a Mac -- use ./akvalink.sh^)
 echo.

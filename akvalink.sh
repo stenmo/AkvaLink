@@ -49,6 +49,9 @@ APP (Flutter companion, built natively):
   ./akvalink.sh --app --macos          Build the macOS app  (needs a Mac)
   ./akvalink.sh --app --ios            Build the iOS app     (needs a Mac)
   ./akvalink.sh --app --android        Build the Android APK
+  ./akvalink.sh --app --release        Build ALL targets for this host:
+                                       Linux: linux + apk + appbundle
+                                       macOS: macos + ipa + apk + appbundle
   ./akvalink.sh --app --run            Run the app on this machine
 
 On Windows use the sibling script:  akvalink.cmd
@@ -74,6 +77,7 @@ fi
 # --- App path -------------------------------------------------------------
 target="$HOST"     # default to the host platform
 do_run=0
+do_release=0
 for a in "$@"; do
     case "$a" in
         --app)     ;;
@@ -82,6 +86,7 @@ for a in "$@"; do
         --ios)     target="ipa" ;;
         --android) target="apk" ;;
         --windows) target="windows" ;;
+        --release) do_release=1 ;;
         --run)     do_run=1 ;;
         *) echo "[ERROR] Unknown --app option: $a" >&2; exit 2 ;;
     esac
@@ -109,6 +114,45 @@ flutter pub get
 if [ "$do_run" -eq 1 ]; then
     echo "=== app: flutter run (this machine) ==="
     exec flutter run
+fi
+
+if [ "$do_release" -eq 1 ]; then
+    # Build all targets possible on this host.
+    # Linux:  linux + android apk + appbundle
+    # macOS:  macos + ios + android apk + appbundle
+    release_failed=0
+
+    if [ "$HOST" = "macos" ]; then
+        targets=("macos" "ipa" "apk" "appbundle")
+    else
+        targets=("linux" "apk" "appbundle")
+    fi
+
+    total=${#targets[@]}
+    idx=1
+    for t in "${targets[@]}"; do
+        echo "=== flutter build ${t} (${idx}/${total}) ==="
+        flutter build "${t}" || { echo "[WARN] ${t} build failed."; release_failed=1; }
+        echo
+        (( idx++ )) || true
+    done
+
+    if [ "$release_failed" -ne 0 ]; then
+        echo "[ERROR] One or more app builds failed." >&2
+        exit 1
+    fi
+
+    echo "=== app --release done ==="
+    if [ "$HOST" = "macos" ]; then
+        echo "  macOS app: build/macos/Build/Products/Release/"
+        echo "  iOS IPA:   build/ios/iphoneos/"
+    else
+        echo "  Linux app: build/linux/x64/release/bundle/"
+    fi
+    echo "  Android APK: build/app/outputs/flutter-apk/app-release.apk"
+    echo "  Android AAB: build/app/outputs/bundle/release/app-release.aab"
+    echo "  Windows exe: run  akvalink.cmd --app --release  on Windows"
+    exit 0
 fi
 
 echo "=== app: flutter build ${target} ==="
