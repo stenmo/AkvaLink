@@ -34,6 +34,13 @@ CONFIG_BT_NIMBLE_EXT_ADV=y
 CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES=1
 CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=517
 
+# GATT client must be compiled in: ble_gatt.cpp (the escape-hatch GATT server)
+# calls ble_gattc_exchange_mtu() on connect. That needs BT_NIMBLE_GATT_CLIENT,
+# which `depends on BT_NIMBLE_ROLE_CENTRAL` — off by default in the base
+# defaults for the Matter-only variants. Override both back on here.
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=y
+CONFIG_BT_NIMBLE_GATT_CLIENT=y
+
 # Wi-Fi: station on; no SoftAP (the device joins an existing network).
 CONFIG_ESP_WIFI_SOFTAP_SUPPORT=n
 
