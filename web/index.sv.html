@@ -88,6 +88,16 @@
   .card h3 { margin: 8px 0 4px; font-size: 1.08rem; }
   .card p { margin: 0; color: var(--muted); font-size: .96rem; }
 
+  /* Platform status pill (silicon family cards) */
+  .chip-status {
+    display: inline-block; margin-left: 6px; padding: 2px 10px; border-radius: 999px;
+    font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+    vertical-align: middle; white-space: nowrap;
+  }
+  .chip-status.available { background: rgba(26,158,106,.14); color: var(--ok); }
+  .chip-status.dev       { background: rgba(10,162,192,.14); color: var(--water); }
+  .chip-status.soon      { background: rgba(91,114,128,.14); color: var(--muted); }
+
   /* Live BLE card */
   .live-card {
     background: var(--card); border: 1px solid var(--line); border-radius: 16px;
@@ -261,6 +271,22 @@
         <p>Byggd på esp-matter, Apache-2.0-licensierad. Single-SoC — ingen kompanjon-MCU.</p></div>
       <div class="card"><div class="ico">🩺</div><h3>Ärlig ingenjörskonst</h3>
         <p>Batteriräkneexempel, RF-regler och kända begränsningar är dokumenterade, inte bortförklarade.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="platforms">
+  <div class="wrap">
+    <h2>En firmware-familj, mer kisel</h2>
+    <p class="lead">Samma Matter/BLE-app, samma webb- och app-gränssnitt — AkvaLink är inte bundet till ett chip.
+      Allt på den här sidan är NORA-W40-bygget; fler moduler kommer efter hand.</p>
+    <div class="grid">
+      <div class="card"><div class="ico">📟</div><h3>NORA-W40 <span class="chip-status available">Tillgänglig nu</span></h3>
+        <p>Espressif ESP32-C6 — Wi-Fi 6, Thread, BLE 5.3. Flaggskeppsbygget som dokumenteras nedan.</p></div>
+      <div class="card"><div class="ico">🧭</div><h3>NORA-B2 <span class="chip-status dev">Under utveckling</span></h3>
+        <p>Nordic nRF54L — BLE, Thread, Matter. Ett alternativ utan Espressif-kisel, för kunder som vill ha kisel tillverkat utanför Kina.</p></div>
+      <div class="card"><div class="ico">✨</div><h3>ALMA-W1 <span class="chip-status soon">Kommer senare i år</span></h3>
+        <p>Nordics första kombichip med Wi-Fi 6 + BLE + Thread. AkvaLink är redo när det lanseras.</p></div>
     </div>
   </div>
 </section>
@@ -497,6 +523,8 @@
       <li class="todo"><span class="mark">▹</span>E-ink-display (stora siffror, batteri, trend)</li>
       <li class="todo"><span class="mark">▹</span>Batterispänning + låg-batteri Matter-händelse</li>
       <li class="todo"><span class="mark">▹</span>Vattentät produktionskapsling (IP67)</li>
+      <li class="todo"><span class="mark">▹</span>NORA-B2 (Nordic nRF54L) — BLE/Thread/Matter, kisel utan Espressif</li>
+      <li class="todo"><span class="mark">▹</span>ALMA-W1 (Nordic Wi-Fi 6 + BLE + Thread) — när chippet lanseras</li>
     </ul>
   </div>
 </section>

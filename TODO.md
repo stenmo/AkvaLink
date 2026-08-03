@@ -268,20 +268,35 @@ Remaining (not yet done): CI via `esphome/build-action`, ESP Web Tools USB-flash
 - Factory provisioning script (NVS data, unique QR code).
 - Matter DAC/PAI certification — *research only*, no CSA fees for a demo.
 
-## Other silicon families — investigated, not started
+## Other silicon families — decided, not started
 - **u-blox NORA-B2 (Nordic nRF54L15/10/05, Open CPU) — Matter/Thread/BLE.**
-  Confirmed via u-blox docs it's a real single-SoC option (like NORA-W40),
-  but it's Nordic's nRF Connect SDK (Zephyr) — different RTOS, build tool
-  (`west`, not `idf.py`), toolchain, flashing (`nrfjprog`), Bluetooth stack,
-  and no portable code from `main/*.cpp` (all ESP-IDF/esp-matter APIs).
-  This repo is explicitly single-SoC-ESP32-C6 and *not* a multi-platform
-  framework (see `.github/copilot-instructions.md`) — adding it would mean
-  a second, parallel firmware project (own toolchain, own release pipeline,
-  own hardware docs) living alongside this one. If it's ever pursued,
-  do it as either a clearly separate top-level folder (e.g. `nrf/`) or a
+  Real single-SoC option (like NORA-W40) — Nordic's nRF Connect SDK (Zephyr),
+  a second firmware project: different RTOS, build tool (`west`, not
+  `idf.py`), toolchain (installs natively on Windows, no WSL), flashing
+  (`nrfjprog`/`west flash`), Bluetooth stack. No portable code from
+  `main/*.cpp` (all ESP-IDF/esp-matter APIs) — but the BLE GATT UUIDs,
+  web page, and app frontend need no changes (Web Bluetooth/Matter
+  commissioning are silicon-agnostic).
+  Sensor path: Zephyr's native W1 (1-Wire) subsystem is experimental and
+  only supports bit-banging over a dedicated UART (`zephyr,w1-serial`), no
+  plain-GPIO driver yet, and there's no in-tree DS18B20 driver. **Use the
+  existing DS2482-800 I2C-to-1-Wire bridge path instead** (like the
+  `--clickboard` option on ESP32) — Zephyr's I2C is mature/production, and
+  `main/ds2482_onewire.cpp` is pure register-level I2C (no ESP-IDF-specific
+  logic), so the DS2482/DS18B20 protocol code carries over, only the
+  transport calls change. EVK-NORA-B2 has two mikroBUS sockets (same click
+  form factor) plus a dedicated Qwiic I2C connector, so the hardware side
+  is straightforward.
+  Motivation: cheaper, more flexible, and some customers want silicon made
+  outside China (ESP32-C6 is Espressif; nRF54L is Nordic/Norwegian).
+  Decision: do it as a clearly separate top-level folder (e.g. `nrf/`) or a
   sibling repo (`AkvaLink-nRF`) cross-linked from the README — not folded
-  into the existing `main/` tree. Not started; revisit only if there's
-  concrete demand.
+  into the existing `main/` tree. Not started; revisit when picked up as
+  the one thing in flight.
+- **ALMA-W1 (future u-blox module, Nordic's first Wi-Fi 6 + BLE + Thread
+  combo chip)** — not yet released. When it ships, same nRF Connect
+  SDK/Zephyr family as NORA-B2 above, so a NORA-B2 port should make this a
+  much smaller follow-on rather than a third from-scratch project.
 
 ## Nice-to-haves
 - Multi-probe support (DS2482-800 already gives 8 channels).
