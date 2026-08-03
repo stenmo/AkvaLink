@@ -99,21 +99,31 @@ def _fmt_battery(data: bytes) -> str:
 async def scan(timeout: float) -> list:
     print(f"Scanning {timeout:.0f} s for AkvaLink devices…")
     devices = []
-    async with BleakScanner() as _:
-        await asyncio.sleep(timeout)
-        for dev, adv in BleakScanner.discovered_devices_and_advertisement_data.values():
-            name = dev.name or ""
-            svc_uuids = [str(u).lower() for u in adv.service_uuids]
-            if name.startswith(SCAN_PREFIX) or ESS_SVC in svc_uuids:
-                devices.append((dev, adv))
+    scanner = BleakScanner()
+    await scanner.start()
+    await asyncio.sleep(timeout)
+    await scanner.stop()
+    for dev, adv in scanner.discovered_devices_and_advertisement_data.values():
+        name = dev.name or ""
+        svc_uuids = [str(u).lower() for u in adv.service_uuids]
+        if name.startswith(SCAN_PREFIX) or ESS_SVC in svc_uuids:
+            devices.append((dev, adv))
     return devices
 
 
 async def explore(address: str, stay: int) -> None:
     print(f"\nConnecting to {address} …")
-    async with BleakClient(address, timeout=20.0) as c:
-        print(f"Connected ✓  MTU={c.mtu_size} bytes")
-        svcs = list(c.services)
+    # On Windows the WinRT GATT stack caches service tables per device address.
+    # Pass use_cached_services=False to force a fresh ATT discovery so we see
+    # exactly what the current firmware registered, not a stale table.
+    try:
+        kwargs = {"winrt": {"use_cached_services": False}}
+        client = BleakClient(address, timeout=20.0, **kwargs)
+    except TypeError:
+        client = BleakClient(address, timeout=20.0)
+    async with client:
+        print(f"Connected ✓  MTU={client.mtu_size} bytes")
+        svcs = list(client.services)
         print(f"\n{'═'*65}")
         print(f"  {len(svcs)} service(s) discovered")
         print(f"{'═'*65}")
@@ -144,7 +154,7 @@ async def explore(address: str, stay: int) -> None:
         ]
         for uuid, name, fmt in reads:
             try:
-                val = await c.read_gatt_char(uuid)
+                val = await client.read_gatt_char(uuid)
                 print(f"  {name:<22} {fmt(val)}")
             except Exception as e:
                 print(f"  {name:<22} ✗  {e}")
@@ -158,9 +168,9 @@ async def explore(address: str, stay: int) -> None:
             print(f"  NOTIFY #{count[0]:>3}  {_fmt_temp(data)}", flush=True)
 
         try:
-            await c.start_notify(TEMP_CHR, _on_temp)
+            await client.start_notify(TEMP_CHR, _on_temp)
             await asyncio.sleep(stay)
-            await c.stop_notify(TEMP_CHR)
+            await client.stop_notify(TEMP_CHR)
         except Exception as e:
             print(f"  Notify failed: {e}")
 
