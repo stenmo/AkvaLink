@@ -268,6 +268,21 @@ Remaining (not yet done): CI via `esphome/build-action`, ESP Web Tools USB-flash
 - Factory provisioning script (NVS data, unique QR code).
 - Matter DAC/PAI certification — *research only*, no CSA fees for a demo.
 
+## Other silicon families — investigated, not started
+- **u-blox NORA-B2 (Nordic nRF54L15/10/05, Open CPU) — Matter/Thread/BLE.**
+  Confirmed via u-blox docs it's a real single-SoC option (like NORA-W40),
+  but it's Nordic's nRF Connect SDK (Zephyr) — different RTOS, build tool
+  (`west`, not `idf.py`), toolchain, flashing (`nrfjprog`), Bluetooth stack,
+  and no portable code from `main/*.cpp` (all ESP-IDF/esp-matter APIs).
+  This repo is explicitly single-SoC-ESP32-C6 and *not* a multi-platform
+  framework (see `.github/copilot-instructions.md`) — adding it would mean
+  a second, parallel firmware project (own toolchain, own release pipeline,
+  own hardware docs) living alongside this one. If it's ever pursued,
+  do it as either a clearly separate top-level folder (e.g. `nrf/`) or a
+  sibling repo (`AkvaLink-nRF`) cross-linked from the README — not folded
+  into the existing `main/` tree. Not started; revisit only if there's
+  concrete demand.
+
 ## Nice-to-haves
 - Multi-probe support (DS2482-800 already gives 8 channels).
 - Cold-storage / freezer alarm endpoint (Boolean State cluster).
