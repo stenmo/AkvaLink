@@ -558,6 +558,16 @@
   var OTA_CTRL    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0011';   // write + notify status
   var OTA_DATA    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0012';   // write firmware chunks
 
+  // Mirror the footer version into the upper-left badge so the loaded build is
+  // obvious at a glance. (Deploy stamps #siteVer from version.txt.) Runs first,
+  // unconditionally — everything below can bail out early on unsupported
+  // browsers (e.g. all of iOS lacks Web Bluetooth) and must not gate this.
+  (function () {
+    var v = document.getElementById('siteVer');
+    var badge = document.getElementById('verBadge');
+    if (v && badge) badge.textContent = 'v' + v.textContent.trim().replace(/^v/, '');
+  })();
+
   // Web Bluetooth is Chromium-only (Chrome/Edge desktop, Chrome Android).
   var supported = typeof navigator !== 'undefined' && !!navigator.bluetooth;
   if (!supported) {
@@ -886,14 +896,6 @@
       statusEl.textContent = 'Not connected';
       statusEl.className = 'status';
     }
-  })();
-
-  // Mirror the footer version into the upper-left badge so the loaded build is
-  // obvious at a glance. (Deploy stamps #siteVer from version.txt.)
-  (function () {
-    var v = document.getElementById('siteVer');
-    var badge = document.getElementById('verBadge');
-    if (v && badge) badge.textContent = 'v' + v.textContent.trim().replace(/^v/, '');
   })();
 })();
 </script>
