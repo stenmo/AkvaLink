@@ -293,10 +293,7 @@ Remaining (not yet done): CI via `esphome/build-action`, ESP Web Tools USB-flash
   sibling repo (`AkvaLink-nRF`) cross-linked from the README — not folded
   into the existing `main/` tree. Not started; revisit when picked up as
   the one thing in flight.
-- **ALMA-W1 (future u-blox module, Nordic's first Wi-Fi 6 + BLE + Thread
-  combo chip)** — not yet released. When it ships, same nRF Connect
-  SDK/Zephyr family as NORA-B2 above, so a NORA-B2 port should make this a
-  much smaller follow-on rather than a third from-scratch project.
+
 
 ## Nice-to-haves
 - Multi-probe support (DS2482-800 already gives 8 channels).
