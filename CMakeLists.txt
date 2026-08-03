@@ -4,7 +4,7 @@
 # Modelled on esp-matter/examples/light/CMakeLists.txt to ensure all
 # MATTER_SDK_PATH-derived include/source paths resolve. Built via the
 # WSL launcher (akvalink.cmd) which sources export.sh from
-# both ESP-IDF v5.4.4 and esp-matter release/v1.5.
+# both ESP-IDF v5.5.5 and esp-matter release/v1.5.
 
 cmake_minimum_required(VERSION 3.16)
 

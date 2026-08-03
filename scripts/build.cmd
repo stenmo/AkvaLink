@@ -6,7 +6,7 @@ REM Native-Windows esp-matter builds are NOT supported: on Windows Espressif
 REM requires WSL2 for the esp-matter toolchain (the nested connectedhomeip
 REM submodules break the native IDF Component Manager workflow). This shim
 REM forwards every argument to the canonical WSL launcher, which builds via
-REM ESP-IDF v5.4.4 + esp-matter release/v1.5 -- the latest combination that
+REM ESP-IDF v5.5.5 + esp-matter release/v1.5 -- the latest combination that
 REM esp-matter officially supports on the ESP32-C6.
 REM
 REM   build.cmd setup            One-time IDF + esp-matter install (in WSL)

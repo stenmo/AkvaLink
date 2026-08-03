@@ -72,11 +72,10 @@ After the EVK works, **one** small step. No new features yet.
 - Design docs for power, winter mode, e-ink, enclosure, RF, connectivity.
 - Repo cleaned of upstream `u-connectMatter` naming; binary is `akvalink.bin`;
   launcher/build/flash scripts drive-agnostic (WSL `wslpath`, not hardcoded C:).
-- Toolchain: ESP-IDF v5.4.4 + esp-matter release/v1.5 (bumped from v5.4.1,
-  same branch, bugfix-only patch — Aug 2026). esp-matter's own release/v1.5
-  README now recommends ESP-IDF v5.5.5 generally (previously C5/C61-only vs
-  our ESP32-C6) — worth trying once there's time to rebuild + flash-verify on
-  real hardware; not adopted blind since it's untested on this project.
+- Toolchain: ESP-IDF v5.5.5 + esp-matter release/v1.5 (Aug 2026) — confirmed
+  with a real WSL build for ESP32-C6 (was previously thought C5/C61-only;
+  esp-matter's tip now builds clean on C6 too). Watch partition headroom:
+  the thread variant is down to ~2% free app-partition space after this bump.
 - DS18B20 at full 12-bit (0.0625 °C); power managed via adaptive modes +
   report threshold, not resolution (measure vs Nordic PPK2 before tuning).
 
