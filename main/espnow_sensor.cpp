@@ -109,7 +109,9 @@ cleanup_bus:
 // ---------------------------------------------------------------------------
 // ESP-NOW send callback
 // ---------------------------------------------------------------------------
-static void on_send(const uint8_t * /*mac*/, esp_now_send_status_t status)
+// ESP-IDF v5.5+: esp_now_send_cb_t takes esp_now_send_info_t (aka wifi_tx_info_t),
+// not a raw MAC pointer.
+static void on_send(const esp_now_send_info_t * /*tx_info*/, esp_now_send_status_t status)
 {
     s_send_ok = (status == ESP_NOW_SEND_SUCCESS);
     xSemaphoreGiveFromISR(s_send_done, NULL);
