@@ -1,4 +1,4 @@
-# AkvaLink 🏊
+# AkvaLink 💧
 
 [![Latest release](https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&label=latest&logo=github)](https://github.com/stenmo/AkvaLink/releases/latest)
 
@@ -132,7 +132,7 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 - ⚡ [docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md) — battery math, schematic
 - ❄️ [docs/WINTER_STORAGE_MODE.md](docs/WINTER_STORAGE_MODE.md) — "drop it in the pool and forget it" mode
 - 📺 [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md) — e-ink panel shortlist + integration plan
-- 🏊 [docs/ENCLOSURE_DESIGN.md](docs/ENCLOSURE_DESIGN.md) — Smart Float industrial design + mechanical details
+- 💧 [docs/ENCLOSURE_DESIGN.md](docs/ENCLOSURE_DESIGN.md) — Smart Float industrial design + mechanical details
 - 📡 [docs/RF_AND_ANTENNA.md](docs/RF_AND_ANTENNA.md) — NORA-W40 antenna keep-out + over-water RF rules
 - ✅ [TODO.md](TODO.md) — prioritised roadmap (power, smart reporting, e-ink, winter mode)
 - ⚠️ [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) — what doesn't work yet, honestly

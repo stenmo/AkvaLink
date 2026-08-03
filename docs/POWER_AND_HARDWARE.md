@@ -176,7 +176,7 @@ t=27s  10.5°C → 5 stable reads → SLOW mode (60s)
 
 Total time: **~15s of live updates**, then energy-saving 60s idle.
 
-### Pool temperature scenario 🏊
+### Pool temperature scenario 💧
 
 A heated pool in Sweden at 28–29 °C is one of the **most battery-friendly**
 scenarios: temperature barely changes, so reports are extremely rare.

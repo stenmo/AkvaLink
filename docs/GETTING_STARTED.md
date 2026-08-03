@@ -81,7 +81,7 @@ Note the COM port number (e.g., `COM62`).
 In the monitor output you should see:
 
 ```
-I (1234) AkvaLink: 🏊 AkvaLink v0.1.0 starting...
+I (1234) AkvaLink: 💧 AkvaLink v0.1.0 starting...
 I (1416) ds2482: 1-Wire ROM: 28-0417C4A2D3FF-2A (DS18B20)
 I (1420) ds2482: Power supply: external VDD
 I (1425) ds2482: Resolution: 12-bit

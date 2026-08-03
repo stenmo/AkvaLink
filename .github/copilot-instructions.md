@@ -262,7 +262,7 @@ Rules of engagement when implementing in this repo:
 ## Have fun
 
 This is u-blox showcase material. Make the demo delightful:
-- ASCII banner at boot with a 🏊 / 🌊 / 💧 emoji
+- ASCII banner at boot with a  / 💧 emoji
 - ANSI colors in logs for state transitions (heating ↑ red, cooling ↓ blue)
 - Memorable startup line: `[AkvaLink] Online · pool · 28.4 °C · battery 87%`
 

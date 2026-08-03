@@ -83,7 +83,7 @@ static void print_banner(void)
 {
     ESP_LOGI(TAG, "");
     ESP_LOGI(TAG, "\033[96m   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\033[0m");
-    ESP_LOGI(TAG, "\033[96m  ~  \033[1;97m🏊  AkvaLink  \033[1;96m\xF0\x9F\x8C\x8A\033[0m\033[96m   ~\033[0m");
+    ESP_LOGI(TAG, "\033[96m  ~  \033[1;97m💧  AkvaLink  \033[1;96m\xF0\x9F\x8C\x8A\033[0m\033[96m   ~\033[0m");
     ESP_LOGI(TAG, "\033[96m   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\033[0m");
     ESP_LOGI(TAG, "  \033[37mbattery-powered Matter pool sensor · NORA-W40\033[0m");
     ESP_LOGI(TAG, "  \033[37minspired by \033[96mpoolmicke.se\033[37m — tack Micke! \xF0\x9F\x87\xB8\xF0\x9F\x87\xAA\033[0m");
