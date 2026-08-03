@@ -84,12 +84,32 @@ supported (`--clickboard` build flag).
 
 # Or just bench-test the DS18B20 probe (no Matter/BLE — logs temp every 30 s)
 .\akvalink.cmd --sensor build
+
+# Or the ESP-NOW variant — deep-sleep broadcast, no hub, no provisioning,
+# maximum battery life (receiver needs its own ESP32 sketch).
+.\akvalink.cmd --espnow build
+
+# Or ESPHome — native Home Assistant API, adopted + OTA-updated straight from
+# the ESPHome dashboard. Builds with ESPHome directly, not akvalink.cmd:
+esphome compile esphome/akvalink.yaml
 ```
 
 Commission with the Apple Home, Google Home, or Alexa app — scan the QR code
 printed on the serial console at first boot.
 
 📖 **Full step-by-step:** see [GETTING_STARTED.md](docs/GETTING_STARTED.md)
+
+### Companion app (optional)
+
+A native **Flutter** app (Windows/Linux/macOS/Android/iOS) shows live
+temperature over Bluetooth and one-click OTA-updates the device — same GATT
+contract as the web page, no browser needed:
+
+```powershell
+.\akvalink.cmd --app --run
+```
+
+📖 See [app_flutter/README.md](app_flutter/README.md).
 
 ## Battery life examples
 
@@ -129,6 +149,9 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 - [x] Live temperature in the browser over Web Bluetooth — on the [landing page](https://stenmo.github.io/AkvaLink/)
 - [x] Wi-Fi AP variant (`--ap`) — open hotspot + captive web page, any phone incl. iPhone (needs external power)
 - [x] Wi-Fi station variant (`--station`) — BLE-provisioned, `akvalink.local`, **Home Assistant MQTT autodiscovery**, no hub
+- [x] ESP-NOW variant (`--espnow`) — deep-sleep broadcast, no hub, no provisioning
+- [x] ESPHome variant — native Home Assistant API, dashboard-adopted + dashboard OTA
+- [x] Native Flutter companion app (Windows/Linux/macOS/Android/iOS) — live temperature + one-click OTA
 - [ ] **Real power measurement (Joulescope/PPK2) + deep sleep** — see [TODO.md](TODO.md)
 - [ ] **E-ink display** (big-digit, battery, trend) — see [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md)
 - [ ] Wi-Fi 6 TWT integration in code (currently DTIM only)

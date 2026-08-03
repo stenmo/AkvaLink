@@ -11,15 +11,9 @@
 
 ## 1. Get the code
 
-**If the repo is on GitHub:**
 ```powershell
-git clone https://github.com/u-blox/AkvaLink.git
+git clone https://github.com/stenmo/AkvaLink.git
 cd AkvaLink
-```
-
-**If you only have the local copy** (current state — May 2026):
-```powershell
-cd C:\Users\cmag\u-blox\AkvaLink
 ```
 
 Open in VS Code:
@@ -48,7 +42,7 @@ You only run `setup` once per machine.
 
 **Default — Matter over Thread, direct GPIO sensor:**
 ```powershell
-.\ akvalink.cmd build
+.\akvalink.cmd build
 ```
 
 **Wi-Fi variant (no Thread Border Router needed):**
@@ -60,6 +54,9 @@ You only run `setup` once per machine.
 ```powershell
 .\akvalink.cmd --clickboard build
 ```
+
+Other variants (`--ble`, `--ap`, `--station`, `--espnow`, `--sensor`, and the
+ESPHome/Flutter builds) are covered in the [README Quick start](../README.md#quick-start).
 
 A cold build takes 5–10 min; subsequent incremental builds are < 1 min.
 
@@ -104,19 +101,10 @@ For Thread builds you also need a **Thread Border Router** on the network
 (Apple HomePod mini / Apple TV 4K, Google Nest Hub 2nd gen, Amazon Echo Hub,
 or a self-hosted OTBR like the ones in the upstream `u-connectMatter/borderrouters/`).
 
-## 7. (Optional) Push to GitHub
+## 7. Contributing
 
-The repo currently has no remote. To back it up to GitHub:
-
-```powershell
-# 1. Create an empty repo at https://github.com/new (e.g., u-blox/AkvaLink)
-#    Do NOT initialize with README/license — we already have those.
-
-# 2. Add remote and push
-cd C:\Users\cmag\u-blox\AkvaLink
-git remote add origin https://github.com/u-blox/AkvaLink.git
-git push -u origin main
-```
+See [.github/CONTRIBUTING.md](../.github/CONTRIBUTING.md) for how to build,
+test, and submit changes.
 
 ## Troubleshooting
 

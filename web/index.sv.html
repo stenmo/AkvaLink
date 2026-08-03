@@ -457,6 +457,7 @@
     </div>
     <p class="ble-note"><strong>esptool&nbsp;.bin</strong> — fullständig bild, flasha på 0x0. Använd vid första installation eller variantbyte: <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code><br>
     <strong>OTA&nbsp;.bin</strong> — enbart app-partition. Använd för uppdatering <em>inom samma variant</em> (BLE→BLE, Thread→Thread osv.) utan att påverka NVS eller driftsättningsdata. Korsvariant-OTA (t.ex. BLE→Thread) är möjlig men kräver fabråterställning efterpå. · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
+    <p class="ble-note">Föredrar du en egen app framför webbläsaren? <a href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">AkvaLink-appen</a> (Windows/Linux/macOS/Android/iOS) visar live-temperatur och flashar OTA-uppdateringar också — bygg den själv från källkoden.</p>
     <div class="live-card ota-card" id="otaCard">
       <h3 class="ota-title">Firmware-uppdatering via Bluetooth</h3>
       <p class="ota-hint">Ett klick — sidan hämtar senaste firmware och flashar den via BLE (Chrome/Edge).</p>
@@ -491,6 +492,7 @@
       <li class="done"><span class="mark">✓</span>Wi-Fi station — BLE-driftsätts, hemma-Wi-Fi, unik akvalink-&lt;sista4mac&gt;.local, Home Assistant MQTT-autodetektering (nät/USB)</li>
       <li class="done"><span class="mark">✓</span>ESP-NOW-utsändning — deep-sleep-givare, ingen hub, ingen driftsättning</li>
       <li class="done"><span class="mark">✓</span>ESPHome / Home Assistant inbyggt API-variant (anpassa YAML, OTA från dashboarden)</li>
+      <li class="done"><span class="mark">✓</span>Egen app (Windows/Linux/macOS/Android/iOS) — live-temperatur + ett-klicks OTA</li>
       <li class="todo"><span class="mark">▹</span>Riktig effektmätning + djupt viloläge</li>
       <li class="todo"><span class="mark">▹</span>E-ink-display (stora siffror, batteri, trend)</li>
       <li class="todo"><span class="mark">▹</span>Batterispänning + låg-batteri Matter-händelse</li>
@@ -507,7 +509,7 @@
       <a href="https://github.com/project-chip/connectedhomeip">connectedhomeip</a> och
       <a href="https://www.u-blox.com/en/product/nora-w40-series">u-blox NORA-W40</a>.</p>
     <p class="muted">Inspirerad av <a href="https://poolmicke.se/">poolmicke.se</a> — tack Micke! 🇸🇪 ·
-      Apache-2.0 · Senast uppdaterad juli 2026.</p>
+      Apache-2.0 · Senast uppdaterad augusti 2026.</p>
     <p class="muted">☕ Gillar du AkvaLink? <a href="https://buymeacoffee.com/bfdVWaxCj" target="_blank" rel="noopener">Bjud på en kaffe</a> eller <a href="https://github.com/sponsors/stenmo" target="_blank" rel="noopener">sponsra på GitHub</a> — helt frivilligt, alltid uppskattat.</p>
     <p class="muted" id="siteVerLine">Sida v<span id="siteVer">0.1.4</span></p>
   </div>

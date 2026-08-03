@@ -65,7 +65,10 @@ After the EVK works, **one** small step. No new features yet.
 - Threshold-gated reporting (default 0.25 °C).
 - Light sleep + DFS + flash power-down.
 - AkvaLink boot banner with PoolMicke nod.
-- Local-only git repo, no remote (private project).
+- Public GitHub repo (github.com/stenmo/AkvaLink) with CI, GitHub Pages demo,
+  tagged releases.
+- Wi-Fi AP, Wi-Fi station, ESP-NOW, ESPHome, and BLE-only (+ BLE OTA) variants.
+- Native Flutter companion app (Windows/Linux/macOS/Android/iOS).
 - Design docs for power, winter mode, e-ink, enclosure, RF, connectivity.
 - Repo cleaned of upstream `u-connectMatter` naming; binary is `akvalink.bin`;
   launcher/build/flash scripts drive-agnostic (WSL `wslpath`, not hardcoded C:).
