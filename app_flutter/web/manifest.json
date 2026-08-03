@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#033f63",
     "theme_color": "#033f63",
-    "description": "AkvaLink \u2014 battery-powered Matter pool & aquatic temperature sensor companion.",
+    "description": "AkvaLink — battery-powered Matter pool & aquatic temperature sensor companion.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
