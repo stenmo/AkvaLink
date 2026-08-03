@@ -250,9 +250,16 @@ class AkvaLinkController extends ChangeNotifier {
   void _startPolling(String id) {
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
-      if (!isConnected) { _pollTimer?.cancel(); return; }
+      if (!isConnected) {
+        _pollTimer?.cancel();
+        return;
+      }
       try {
-        final v = await UniversalBle.read(id, AkvaUuids.essService, AkvaUuids.tempChar);
+        final v = await UniversalBle.read(
+          id,
+          AkvaUuids.essService,
+          AkvaUuids.tempChar,
+        );
         _onTemperature(v);
       } catch (_) {}
     });
