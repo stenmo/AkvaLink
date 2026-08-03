@@ -17,7 +17,7 @@ idf_component_manifest_schema: 1.0.0
 
 dependencies:
   idf:
-    version: ">=5.4.1"
+    version: ">=5.4.4"
 
   # 1-Wire bus driver (RMT-based, RISC-V friendly).
   espressif/onewire_bus:

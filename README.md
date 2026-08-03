@@ -169,7 +169,7 @@ internal to u-blox).
 
 Built on:
 - [esp-matter](https://github.com/espressif/esp-matter) (release/v1.5)
-- [ESP-IDF](https://github.com/espressif/esp-idf) (v5.4.1)
+- [ESP-IDF](https://github.com/espressif/esp-idf) (v5.4.4)
 - [connectedhomeip](https://github.com/project-chip/connectedhomeip) (Matter SDK)
 - u-blox NORA-W40 module ([product page](https://www.u-blox.com/en/product/nora-w40-series))
 

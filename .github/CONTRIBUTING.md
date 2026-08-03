@@ -39,7 +39,7 @@ AkvaLink is intentionally small. When contributing, please:
 
 ## Building and testing
 
-The firmware builds in **WSL** (Ubuntu-24.04) with ESP-IDF v5.4.1 and
+The firmware builds in **WSL** (Ubuntu-24.04) with ESP-IDF v5.4.4 and
 esp-matter release/v1.5. See [GETTING_STARTED.md](../docs/GETTING_STARTED.md) for the
 full toolchain setup.
 

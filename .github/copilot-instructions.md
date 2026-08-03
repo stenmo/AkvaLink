@@ -65,7 +65,7 @@ AkvaLink is the productised, demo-focused clean-room version.
 ```
 
 Build runs in **WSL Ubuntu-24.04**, sourcing:
-- ESP-IDF v5.4.1 from `~/esp/esp-idf`
+- ESP-IDF v5.4.4 from `~/esp/esp-idf`
 - esp-matter release/v1.5 from `~/esp/esp-matter`
 
 **Per-variant build dirs:** each variant builds into its own isolated directory

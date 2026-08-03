@@ -146,7 +146,7 @@ if not "%DO_BUILD%"=="1" if not "%DO_CLEAN%"=="1" if not "%DO_FLASH%"=="1" if no
 
 REM --- Setup / menuconfig ---------------------------------------------------
 if "%DO_SETUP%"=="1" (
-    echo === setup: ESP-IDF v5.4.1 + esp-matter v1.5 ===
+    echo === setup: ESP-IDF v5.4.4 + esp-matter v1.5 ===
     wsl -- bash -lc "cd '%DEV_DIR_WSL%' && ./scripts/build.sh setup"
     exit /b !errorlevel!
 )

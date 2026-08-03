@@ -2,7 +2,7 @@
 # build.sh — Linux/WSL build for the NORA-W40 Matter Thermometer.
 #
 # Uses Espressif's officially-supported workflow:
-#   • ESP-IDF v5.4.1            ($IDF_PATH        = ~/esp/esp-idf)
+#   • ESP-IDF v5.4.4            ($IDF_PATH        = ~/esp/esp-idf)
 #   • esp-matter release/v1.5   ($ESP_MATTER_PATH = ~/esp/esp-matter)
 #
 # Both are cloned and installed manually (NOT via IDF Component Manager —
@@ -27,7 +27,7 @@ PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
 
 # --- Tool locations (WSL home, NOT mounted Windows paths) -------------------
 # Espressif explicitly warns against running esp-matter from a /mnt/c path.
-IDF_VERSION="v5.4.1"
+IDF_VERSION="v5.4.4"
 IDF_PATH="${IDF_PATH:-${HOME}/esp/esp-idf}"
 ESP_MATTER_PATH="${ESP_MATTER_PATH:-${HOME}/esp/esp-matter}"
 
@@ -212,7 +212,7 @@ case "$cmd" in
 Usage: $0 <command> [args]
 
 Commands:
-  setup                     One-time install of ESP-IDF v5.4.1 + esp-matter v1.5
+  setup                     One-time install of ESP-IDF v5.4.4 + esp-matter v1.5
   build                     Build firmware (default = Thread SED, battery)
   build --wifi              Build the Matter-over-Wi-Fi variant
   build --ble               Build the standalone BLE GATT variant (no Matter)

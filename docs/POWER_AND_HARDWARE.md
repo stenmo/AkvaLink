@@ -33,7 +33,7 @@ at the repo root for hardware wiring, commissioning, and full usage.
 | Endpoints | EP0 root, EP1 temperature sensor |
 | Network | Matter-over-Thread (802.15.4), Sleepy End Device |
 | Commissioning | BLE 5.3 (off after pairing to save power) |
-| Framework | esp-matter release/v1.5 (connectedhomeip, ESP-IDF v5.4.1) |
+| Framework | esp-matter release/v1.5 (connectedhomeip, ESP-IDF v5.4.4) |
 
 ## GPIO map
 
@@ -378,7 +378,7 @@ Average current depends on report frequency:
 ## Build / flash
 
 ```powershell
-:: First time only — install ESP-IDF v5.4.1 + esp-matter v1.5 in WSL (~10 GB).
+:: First time only — install ESP-IDF v5.4.4 + esp-matter v1.5 in WSL (~10 GB).
 .\akvalink.cmd setup
 
 :: Build the firmware (≈ 5–10 min cold, < 1 min warm).

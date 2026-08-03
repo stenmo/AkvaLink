@@ -23,7 +23,7 @@ code .
 
 ## 2. One-time WSL setup (~10 GB, takes ~30 min on first run)
 
-This installs ESP-IDF v5.4.1 and esp-matter release/v1.5 inside WSL:
+This installs ESP-IDF v5.4.4 and esp-matter release/v1.5 inside WSL:
 
 ```powershell
 .\akvalink.cmd setup
