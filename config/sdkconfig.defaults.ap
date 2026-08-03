@@ -43,11 +43,20 @@ CONFIG_BT_NIMBLE_ENABLED=y
 CONFIG_BT_NIMBLE_EXT_ADV=n          # legacy adv only — ble_escape.cpp uses ble_gap_adv_start()
 CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
 CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=517  # negotiate up to 512-byte payload; phone/OS caps it
-CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
 CONFIG_BT_NIMBLE_ROLE_OBSERVER=n
 CONFIG_BT_NIMBLE_NVS_PERSIST=n
 CONFIG_BT_NIMBLE_LOG_LEVEL_WARNING=y
 CONFIG_AKVALINK_BLE_ESCAPE_HATCH=y  # enabled by default for AP
+
+# GATT client must be compiled in: ble_escape.cpp calls ble_gattc_exchange_mtu()
+# to kick off the MTU exchange ourselves on connect. That function lives in
+# NimBLE's gattc source, which is only built when BT_NIMBLE_GATT_CLIENT is on —
+# and that in turn `depends on BT_NIMBLE_ROLE_CENTRAL`, which the base defaults
+# turn off for the Matter chipoBLE-only variants. Override both back on here
+# (we still don't scan or connect out as a real central — this is just to
+# link the MTU-exchange call).
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=y
+CONFIG_BT_NIMBLE_GATT_CLIENT=y
 
 # POWER: an AP must stay awake to beacon + serve clients, so disable the light
 # sleep / power management the base enables for the Thread SED.
