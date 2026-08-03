@@ -277,16 +277,21 @@ Remaining (not yet done): CI via `esphome/build-action`, ESP Web Tools USB-flash
   `main/*.cpp` (all ESP-IDF/esp-matter APIs) — but the BLE GATT UUIDs,
   web page, and app frontend need no changes (Web Bluetooth/Matter
   commissioning are silicon-agnostic).
-  Sensor path: Zephyr's native W1 (1-Wire) subsystem is experimental and
-  only supports bit-banging over a dedicated UART (`zephyr,w1-serial`), no
-  plain-GPIO driver yet, and there's no in-tree DS18B20 driver. **Use the
-  existing DS2482-800 I2C-to-1-Wire bridge path instead** (like the
-  `--clickboard` option on ESP32) — Zephyr's I2C is mature/production, and
-  `main/ds2482_onewire.cpp` is pure register-level I2C (no ESP-IDF-specific
-  logic), so the DS2482/DS18B20 protocol code carries over, only the
-  transport calls change. EVK-NORA-B2 has two mikroBUS sockets (same click
-  form factor) plus a dedicated Qwiic I2C connector, so the hardware side
-  is straightforward.
+  Sensor path: Zephyr does have a native GPIO 1-Wire master (`zephyr,w1-gpio`,
+  since 3.6) as well as the UART one, but on any Nordic BLE part the
+  SoftDevice Controller's radio ISRs run as zero-latency IRQs that busy-wait
+  bit-banging can't mask — expect intermittent scratchpad CRC failures
+  correlated with BLE connection events. **Use the DS2482-800 I2C-to-1-Wire
+  bridge path instead** (like the `--clickboard` option on ESP32) — and
+  better still, Zephyr already ships a native, in-tree `maxim,ds2482-800`
+  W1 master driver plus a `maxim,ds18b20` sensor driver on top (mainline
+  since 3.2, CI-tested combination). No porting of `main/ds2482_onewire.cpp`
+  needed at all — just Kconfig (`CONFIG_W1_DS2482_800`, `CONFIG_SENSOR`) and
+  a devicetree overlay. The DS2482 chip does the 1-Wire bit timing in its
+  own silicon over I2C, so it's immune to the radio-ISR jitter problem that
+  affects native GPIO bit-bang. EVK-NORA-B2 has two mikroBUS sockets (same
+  click form factor already used) plus a dedicated Qwiic I2C connector, so
+  the hardware side is straightforward too.
   Motivation: cheaper, more flexible, and some customers want silicon made
   outside China (ESP32-C6 is Espressif; nRF54L is Nordic/Norwegian).
   Decision: do it as a clearly separate top-level folder (e.g. `nrf/`) or a
