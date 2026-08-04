@@ -169,6 +169,12 @@ publishable as-is via GitHub Pages. A language toggle (EN | SV) links between th
     dependency without a similarly strong reason; keep everything else vendor-free.
 - **On brand:** water/pool theme (cyan/teal), plain-spoken, honest — same voice
   as the README. No cloud claims, no vaporware presented as shipping.
+- **Look professional and clean — no clutter.** This is a u-blox showcase and a
+  real product page, not a hobby project readme. Every icon, emoji, badge, and
+  button must earn its place. Prefer one consistent monochrome SVG icon system
+  over mixing emoji and SVGs. When adding a new UI element, ask "does this add
+  clarity or just noise?" — if it's noise, cut it. Fewer, sharper elements beat
+  more decoration.
 
 ## Native app ↔ web page — keep in sync (web is primary)
 
