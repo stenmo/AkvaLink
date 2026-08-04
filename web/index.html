@@ -157,6 +157,11 @@
   .dl-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
   .dl-ota { background: transparent; border: 1.5px solid var(--water); color: var(--water); }
   .dl-card:hover .dl-ota { background: var(--water); color: #fff; }
+  .dl-subhead { display: flex; align-items: center; gap: 10px; margin: 34px 0 6px; color: var(--deep); font-size: 1.2rem; }
+  .dl-subhead:first-of-type { margin-top: 22px; }
+  .dl-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
+    border-radius: 50%; background: var(--water); color: #fff; font-size: .9rem; font-weight: 700; flex: none; }
+  .dl-divider { border: none; border-top: 1px solid var(--line); margin: 30px 0 0; }
 
   /* Wiring schematic */
   .schematic { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 8px; margin-top: 16px; }
@@ -468,6 +473,9 @@
     <p class="lead">Prebuilt single-image binaries for the NORA-W40 (ESP32-C6) — always the latest release.</p>
     <p class="lead">Not sure which? <strong>Thread</strong> and <strong>Wi-Fi</strong> join Apple / Google / Alexa as a standard Matter sensor. <strong>ESPHome</strong> integrates natively with Home Assistant. <strong>BLE-only</strong> talks straight to your phone. <strong>AP</strong> and <strong>Station</strong> serve a live web page — no hub, no app, just a browser (need mains/USB power).</p>
     <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=latest&amp;logo=github"></a></p>
+
+    <h3 class="dl-subhead"><span class="dl-num">1</span>Flash it</h3>
+    <p class="ota-hint">Pick a variant, then flash the full image — command line, or straight from the browser over USB.</p>
     <div class="grid">
       <div class="dl-card">
         <span class="ico">🧵</span><h3>Thread</h3><p>Matter over Thread · best battery. Needs a hub — HomePod, Apple TV, Nest or Echo.</p>
@@ -499,9 +507,13 @@
       </div>
     </div>
     <p class="ble-note"><strong>⚡&nbsp;Flash via USB</strong> — click it, pick the serial port, done. No install, no drivers: it flashes straight from the browser over the <strong>Web Serial API</strong>. Needs <strong>Chrome, Edge, or Opera</strong> (desktop, v89+) — Firefox and Safari don't support Web Serial, so the button hides itself there.</p>
-    <p class="ble-note"><strong>esptool&nbsp;.bin</strong> — the same full merged image, flashed from the command line instead: <code>pip install esptool</code> (a small standalone PyPI package — no full ESP-IDF needed), then <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code>. Rather not touch Python? Grab a prebuilt binary from the <a href="https://github.com/espressif/esptool/releases" target="_blank" rel="noopener">esptool releases page</a> instead. Note: esptool v5 renamed subcommands with hyphens (<code>write-flash</code>, <code>merge-bin</code>) — v4 used underscores (<code>write_flash</code>); if a copied command errors, that's usually why.<br>
-    <strong>OTA&nbsp;.bin</strong> — app partition only. Use for updating <em>within the same variant</em> (BLE→BLE, Thread→Thread, etc.) without touching NVS or commissioning data. Cross-variant OTA is possible but requires a factory reset after. · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>
-    <p class="ble-note">Prefer a native app over the browser? The <a href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">AkvaLink companion app</a> (Windows/Linux/macOS/Android/iOS) shows live temperature and flashes OTA updates too — build it from source.</p>
+    <p class="ble-note"><strong>esptool&nbsp;.bin</strong> — the same full merged image, flashed from the command line instead: <code>pip install esptool</code> (a small standalone PyPI package — no full ESP-IDF needed), then <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code>. Rather not touch Python? Grab a prebuilt binary from the <a href="https://github.com/espressif/esptool/releases" target="_blank" rel="noopener">esptool releases page</a> instead. Note: esptool v5 renamed subcommands with hyphens (<code>write-flash</code>, <code>merge-bin</code>) — v4 used underscores (<code>write_flash</code>); if a copied command errors, that's usually why.</p>
+    <p class="ble-note"><strong>OTA&nbsp;.bin</strong> — app partition only. Use for updating <em>within the same variant</em> (BLE→BLE, Thread→Thread, etc.) without touching NVS or commissioning data. Cross-variant OTA is possible but requires a factory reset after. · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>
+
+    <hr class="dl-divider">
+
+    <h3 class="dl-subhead"><span class="dl-num">2</span>Update it wirelessly</h3>
+    <p class="ota-hint">Already flashed the <strong>BLE-only</strong> variant? Update it again with no cable at all — this page can fetch and flash new firmware straight over Bluetooth.</p>
     <div class="live-card ota-card" id="otaCard">
       <h3 class="ota-title">Firmware update over Bluetooth</h3>
       <p class="ota-hint">One click — the page fetches the latest firmware and flashes it over BLE (Chrome/Edge).</p>
@@ -515,8 +527,10 @@
       <div id="otaStatus" class="status"></div>
       <p class="cta"><a id="otaBtn" class="primary" role="button">Update firmware</a></p>
     </div>
+    <p class="ble-note">Prefer a native app over the browser? The <a href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">AkvaLink companion app</a> (Windows/Linux/macOS/Android/iOS) shows live temperature and flashes OTA updates too — build it from source.</p>
   </div>
 </section>
+
 
 <section class="band" id="status">
   <div class="wrap">
