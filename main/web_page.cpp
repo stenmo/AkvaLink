@@ -174,7 +174,7 @@ static const char PAGE_HTML[] = R"HTML(<!doctype html>
   .clr:hover{opacity:.7}
 </style></head>
 <body><div class="c">
-  <h1>AkvaLink &#127754;</h1>
+  <h1>AkvaLink <svg width="20" height="20" viewBox="0 0 24 24" fill="#28c2d6" style="vertical-align:-3px"><path d="M12 2.5c3 4 6 7.8 6 11.3a6 6 0 1 1-12 0c0-3.5 3-7.3 6-11.3z"/></svg></h1>
   <div class="row">
     <span class="t" id="t">&ndash;</span><span class="u">&deg;C</span>
     <span class="arrow ok" id="arr">&rarr;</span>
@@ -226,7 +226,8 @@ function stats(){fetch('/stats',{cache:'no-store'}).then(function(r){return r.ok
 function bat(){fetch('/battery',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
   if(!d||d.percent===null)return;
   var el=document.getElementById('b'),p=d.percent;
-  el.textContent=(p<=10?'\ud83e\udeb4':'\ud83d\udd0b')+' '+p+'%';
+  var fill=(p/100*10).toFixed(1);
+  el.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><rect x="2.5" y="7" width="16" height="10" rx="2"/><path d="M21 10.5v3"/><rect x="5" y="9.5" width="'+fill+'" height="5" rx="1" fill="currentColor" stroke="none"/></svg> '+p+'%';
   el.className='b'+(p<=20?' low':'');
 }).catch(function(){});}
 function mq(){fetch('/mqtt-status',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
