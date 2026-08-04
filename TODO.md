@@ -294,10 +294,27 @@ Remaining (not yet done): CI via `esphome/build-action`, ESP Web Tools USB-flash
   the hardware side is straightforward too.
   Motivation: cheaper, more flexible, and some customers want silicon made
   outside China (ESP32-C6 is Espressif; nRF54L is Nordic/Norwegian).
-  Decision: do it as a clearly separate top-level folder (e.g. `nrf/`) or a
-  sibling repo (`AkvaLink-nRF`) cross-linked from the README — not folded
-  into the existing `main/` tree. Not started; revisit when picked up as
-  the one thing in flight.
+  Decision: **sibling repo (`AkvaLink-nRF`)**, cross-linked from this
+  README, not a `nrf/` folder in this repo — different RTOS/toolchain/build
+  system/release pipeline deserves its own git history and CI, and keeps
+  this repo's "single-SoC ESP32-C6" scope honest. Not started; needs the
+  actual EVK-NORA-B2 hardware in hand before any of the spike steps below
+  can run.
+  **Spike plan (first milestone only — no Matter/BLE yet):**
+  1. Install nRF Connect SDK via nRF Connect for Desktop's Toolchain Manager
+     + VS Code extension (native Windows, no WSL).
+  2. `west init`/`west update` a minimal Zephyr app targeting the
+     `ubx_evknorab2` board (confirmed merged into Zephyr mainline).
+  3. Devicetree overlay: I2C node with a `maxim,ds2482-800` child (channel
+     0 wired to the click socket that has I2C — verify against the EVK
+     schematic which mikroBUS socket, not from memory) + a `maxim,ds18b20`
+     leaf under it. Kconfig: `CONFIG_W1_DS2482_800=y`, `CONFIG_SENSOR=y`.
+  4. Read via the standard sensor API (`sensor_sample_fetch`/
+     `sensor_channel_get`) and log the temperature over UART — that's the
+     whole milestone. No Matter, no BLE, no GATT UUIDs yet.
+  5. Only after that works: start on Matter/BLE plumbing in the new
+     `AkvaLink-nRF` repo, reusing the same GATT UUIDs/web/app frontend
+     conventions from this repo (silicon-agnostic, per above).
 
 
 ## Nice-to-haves
