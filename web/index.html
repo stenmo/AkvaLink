@@ -164,12 +164,16 @@
   .dl-card .ico svg { width: 1.7em; height: 1.7em; display: inline-block; vertical-align: middle; color: var(--water); }
   .dl-card h3 { margin: 8px 0 2px; color: var(--deep); font-size: 1.1rem; }
   .dl-card p { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
-  .dl-btn { display: inline-block; background: var(--water); color: #fff; padding: 8px 16px;
-    border-radius: 999px; font-weight: 600; font-size: .9rem; }
+  .dl-btn { display: inline-flex; align-items: center; gap: 5px; background: var(--water); color: #fff;
+    padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: .9rem; }
+  .dl-btn svg { width: 1em; height: 1em; flex: none; }
   .dl-card:hover .dl-btn { background: var(--deep); }
-  .dl-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .dl-btns { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .dl-btns-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
   .dl-ota { background: transparent; border: 1.5px solid var(--water); color: var(--water); }
   .dl-card:hover .dl-ota { background: var(--water); color: #fff; }
+  .dl-or { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .dl-flash { width: 100%; justify-content: center; }
   .dl-subhead { display: flex; align-items: center; gap: 10px; margin: 34px 0 6px; color: var(--deep); font-size: 1.2rem; }
   .dl-subhead:first-of-type { margin-top: 22px; }
   .dl-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
@@ -521,31 +525,80 @@
     <div class="grid">
       <div class="dl-card">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 5 17h14z"/><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="17" r="1.6" fill="currentColor" stroke="none"/></svg></span><h3>Thread</h3><p>Matter over Thread · best battery. Needs a hub — HomePod, Apple TV, Nest or Echo.</p>
-        <div class="dl-btns"><a id="dlThread" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlThreadApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/thread.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlThread" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlThreadApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/thread.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
       </div>
       <div class="dl-card">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8.5a12 12 0 0 1 16 0"/><path d="M7 12a7.5 7.5 0 0 1 10 0"/><path d="M10 15.5a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg></span><h3>Wi-Fi</h3><p>Matter over Wi-Fi · no Thread hub. Runs on battery too — just fewer years. Your router + any Matter app.</p>
-        <div class="dl-btns"><a id="dlWifi" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlWifiApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/wifi.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlWifi" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlWifiApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/wifi.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
       </div>
       <div class="dl-card">
         <span class="ico"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg></span><h3>BLE-only</h3><p>No hub, no cloud · straight to your phone over Bluetooth.</p>
-        <div class="dl-btns"><a id="dlBle" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlBleApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/ble.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlBle" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlBleApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/ble.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
       </div>
       <div class="dl-card">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4"/><path d="M8 9a6 6 0 0 1 8 0"/><path d="M5.5 6.5a10 10 0 0 1 13 0"/><path d="M9 21h6l-1-8h-4z"/></svg></span><h3>Wi-Fi AP</h3><p>Open hotspot “AkvaLink” · join it, the page opens automatically. No router, no app, any phone. <em>Needs mains/USB power.</em></p>
-        <div class="dl-btns"><a id="dlAp" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/ap.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlAp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/ap.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
       </div>
       <div class="dl-card">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg></span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink-&lt;last4mac&gt;.local</strong> in any browser on your LAN. Auto-discovered by <strong>Home Assistant</strong> via MQTT. Multiple devices get unique hostnames. <em>Needs mains/USB power.</em></p>
-        <div class="dl-btns"><a id="dlStation" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/station.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlStation" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/station.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
       </div>
       <div class="dl-card">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></span><h3>ESP-NOW</h3><p>Deep-sleep broadcast — wakes, reads DS18B20, sends one packet to any ESP32 on the same Wi-Fi channel, sleeps. No hub, no provisioning, maximum battery life. <em>Receiver needs an ESP32 sketch.</em></p>
-        <div class="dl-btns"><a id="dlEspnow" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/espnow.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlEspnow" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/espnow.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
       </div>
       <div class="dl-card">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></span><h3>ESPHome</h3><p>Native <strong>Home Assistant</strong> API — no MQTT broker needed. Flash once, adopt in the ESPHome dashboard, OTA-update from Home Assistant. Provisioned with Improv over USB serial.</p>
-        <div class="dl-btns"><a id="dlEsphome" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEsphomeApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/esphome.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlEsphome" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlEsphomeApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/esphome.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
       </div>
     </div>
     <p class="ble-note"><strong>⚡&nbsp;Flash via USB</strong> — click it, pick the serial port, done. No install, no drivers: it flashes straight from the browser over the <strong>Web Serial API</strong>. Needs <strong>Chrome, Edge, or Opera</strong> (desktop, v89+) — Firefox and Safari don't support Web Serial, so the button hides itself there.</p>
