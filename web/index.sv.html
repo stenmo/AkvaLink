@@ -748,31 +748,38 @@
     return false;
   }
 
-  // Reservväg: webbläsarens enhetsväljare (kräver användargest/klick). Provar
-  // först en exakt AkvaLink-träff; om inget matchar breddas sökningen till
-  // alla enheter i närheten (bekräftar också att Bluetooth-radion faktiskt söker).
+  // Reservväg: webbläsarens enhetsväljare (kräver användargest/klick). Första
+  // tryckningen letar bara efter AkvaLink; kommer väljaren tillbaka tom
+  // breddas nästa tryckning till alla Bluetooth-enheter i närheten. Kan inte
+  // kedjas automatiskt i ett klick — varje requestDevice() kräver sin egen
+  // färska användargest.
+  var wantsBroaderScan = false;
   async function connectViaChooser() {
-    statusEl.textContent = 'Letar efter en AkvaLink i närheten\u2026';
+    var broad = wantsBroaderScan;
+    statusEl.textContent = broad ? 'Letar efter alla Bluetooth-enheter i närheten\u2026' : 'Letar efter en AkvaLink i närheten\u2026';
     statusEl.className = 'status';
     try {
-      var dev = await navigator.bluetooth.requestDevice({
+      var dev = await navigator.bluetooth.requestDevice(broad ? {
+        acceptAllDevices: true,
+        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
+      } : {
         // Match by the advertised ESS service (reliable in Chrome AND iOS/Bluefy)
         // OR the device name. The firmware advertises 0x181A in its adv packet.
         filters: [{ services: [ESS_SERVICE] }, { namePrefix: 'AkvaLink' }],
         optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
       });
+      wantsBroaderScan = false;
       await attach(dev);
-      return;
     } catch (err) {
-      if (!err || err.name !== 'NotFoundError') throw err;
-      // Ingen träff på AkvaLink-filtren — fortsätt till den bredare sökningen.
+      if (!broad && err && err.name === 'NotFoundError') {
+        wantsBroaderScan = true;
+        statusEl.textContent = 'Ingen AkvaLink hittades \u2014 tryck Anslut igen för att se alla enheter i närheten';
+        statusEl.className = 'status';
+        return;
+      }
+      wantsBroaderScan = false;
+      throw err;
     }
-    statusEl.textContent = 'Ingen AkvaLink hittades — letar nu efter alla enheter i närheten\u2026';
-    var dev2 = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
-    });
-    await attach(dev2);
   }
 
   btn.addEventListener('click', async function (e) {
@@ -787,7 +794,7 @@
     } catch (err) {
       statusEl.textContent = (err && err.name === 'NotFoundError')
         ? 'Ingen enhet vald'
-        : 'Anslutning misslyckades: ' + ((err && err.message) || err);
+        : 'Anslutning misslyckades';
       statusEl.className = 'status';
     }
   });

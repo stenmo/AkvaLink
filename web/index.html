@@ -767,30 +767,36 @@
   }
 
   // Fallback: the browser chooser (requires a user gesture / click). First
-  // tries an exact AkvaLink match; if nothing matches, broadens to every
-  // nearby BLE device (also confirms the Bluetooth radio is actually scanning).
+  // tap looks only for AkvaLink; if the chooser comes back empty, the next
+  // tap broadens to every nearby Bluetooth device. This can't auto-chain in
+  // one click — each requestDevice() call needs its own fresh user gesture.
+  var wantsBroaderScan = false;
   async function connectViaChooser() {
-    statusEl.textContent = 'Looking for an AkvaLink nearby\u2026';
+    var broad = wantsBroaderScan;
+    statusEl.textContent = broad ? 'Looking for any nearby Bluetooth device\u2026' : 'Looking for an AkvaLink nearby\u2026';
     statusEl.className = 'status';
     try {
-      var dev = await navigator.bluetooth.requestDevice({
+      var dev = await navigator.bluetooth.requestDevice(broad ? {
+        acceptAllDevices: true,
+        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
+      } : {
         // Match by the advertised ESS service (reliable in Chrome AND iOS/Bluefy)
         // OR the device name. The firmware advertises 0x181A in its adv packet.
         filters: [{ services: [ESS_SERVICE] }, { namePrefix: 'AkvaLink' }],
         optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
       });
+      wantsBroaderScan = false;
       await attach(dev);
-      return;
     } catch (err) {
-      if (!err || err.name !== 'NotFoundError') throw err;
-      // Nothing matched the AkvaLink filters — fall through to the broader scan.
+      if (!broad && err && err.name === 'NotFoundError') {
+        wantsBroaderScan = true;
+        statusEl.textContent = 'No AkvaLink found \u2014 tap Connect again to see all nearby devices';
+        statusEl.className = 'status';
+        return;
+      }
+      wantsBroaderScan = false;
+      throw err;
     }
-    statusEl.textContent = 'No AkvaLink found \u2014 now looking for all nearby devices\u2026';
-    var dev2 = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
-    });
-    await attach(dev2);
   }
 
   btn.addEventListener('click', async function (e) {
@@ -805,7 +811,7 @@
     } catch (err) {
       statusEl.textContent = (err && err.name === 'NotFoundError')
         ? 'No device selected'
-        : 'Connection failed: ' + ((err && err.message) || err);
+        : 'Connection failed';
       statusEl.className = 'status';
     }
   });
