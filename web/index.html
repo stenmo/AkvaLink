@@ -661,6 +661,17 @@
     return;
   }
 
+  // Tells us if a Bluetooth radio is present/powered without opening any
+  // chooser — shows a clear message before the user even taps Connect.
+  if (navigator.bluetooth.getAvailability) {
+    navigator.bluetooth.getAvailability().then(function (avail) {
+      if (!avail) {
+        statusEl.textContent = 'Bluetooth is turned off';
+        statusEl.className = 'status';
+      }
+    }).catch(function () { /* not supported everywhere — ignore */ });
+  }
+
   var device = null;
   var tempChar = null;
   var ageTimer = null;
@@ -755,17 +766,31 @@
     return false;
   }
 
-  // Fallback: the browser chooser (requires a user gesture / click).
+  // Fallback: the browser chooser (requires a user gesture / click). First
+  // tries an exact AkvaLink match; if nothing matches, broadens to every
+  // nearby BLE device (also confirms the Bluetooth radio is actually scanning).
   async function connectViaChooser() {
-    statusEl.textContent = 'Choose your AkvaLink\u2026';
+    statusEl.textContent = 'Looking for an AkvaLink nearby\u2026';
     statusEl.className = 'status';
-    var dev = await navigator.bluetooth.requestDevice({
-      // Match by the advertised ESS service (reliable in Chrome AND iOS/Bluefy)
-      // OR the device name. The firmware advertises 0x181A in its adv packet.
-      filters: [{ services: [ESS_SERVICE] }, { namePrefix: 'AkvaLink' }],
+    try {
+      var dev = await navigator.bluetooth.requestDevice({
+        // Match by the advertised ESS service (reliable in Chrome AND iOS/Bluefy)
+        // OR the device name. The firmware advertises 0x181A in its adv packet.
+        filters: [{ services: [ESS_SERVICE] }, { namePrefix: 'AkvaLink' }],
+        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
+      });
+      await attach(dev);
+      return;
+    } catch (err) {
+      if (!err || err.name !== 'NotFoundError') throw err;
+      // Nothing matched the AkvaLink filters — fall through to the broader scan.
+    }
+    statusEl.textContent = 'No AkvaLink found \u2014 now looking for all nearby devices\u2026';
+    var dev2 = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
       optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
     });
-    await attach(dev);
+    await attach(dev2);
   }
 
   btn.addEventListener('click', async function (e) {
@@ -779,7 +804,7 @@
       await connectViaChooser();          // otherwise pick it once
     } catch (err) {
       statusEl.textContent = (err && err.name === 'NotFoundError')
-        ? 'No AkvaLink selected'
+        ? 'No device selected'
         : 'Connection failed: ' + ((err && err.message) || err);
       statusEl.className = 'status';
     }
