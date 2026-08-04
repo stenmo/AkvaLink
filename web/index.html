@@ -116,7 +116,7 @@
   .file-btn { display: inline-block; padding: 9px 18px; border-radius: 999px; border: 1.5px solid var(--water); color: var(--water); font-weight: 600; cursor: pointer; font-size: .9rem; }
   .file-btn:hover { background: var(--water); color: #fff; }
   .file-name { display: block; color: var(--muted); font-size: .82rem; margin: 8px 0 12px; }
-  .progress { height: 8px; background: var(--foam); border-radius: 999px; overflow: hidden; margin: 4px 0 10px; }
+  .progress { height: 8px; background: var(--foam); border-radius: 999px; overflow: hidden; margin: 4px 0 10px; display: none; }
   .progress .bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--water), var(--water-2)); transition: width .2s; }
 
   /* Tables */
@@ -764,7 +764,7 @@
   });
 
   // --- Firmware update over BLE (OTA) ---------------------------------------
-  function otaSetProgress(frac) { otaBar.style.width = Math.round(frac * 100) + '%'; }
+  function otaSetProgress(frac) { otaBar.parentElement.style.display = 'block'; otaBar.style.width = Math.round(frac * 100) + '%'; }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
   // Connect if needed. Called straight from the button click so requestDevice
