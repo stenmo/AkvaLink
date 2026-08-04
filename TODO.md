@@ -268,7 +268,15 @@ Remaining (not yet done): CI via `esphome/build-action`, ESP Web Tools USB-flash
 - Factory provisioning script (NVS data, unique QR code).
 - Matter DAC/PAI certification — *research only*, no CSA fees for a demo.
 
-## Other silicon families — decided, not started
+## Other silicon families — decided, on hold
+
+> **On hold until NORA-W40 is fully working** — per KISS, don't start a
+> second platform while the first one's *Now*/*Next* items above aren't
+> done (EVK power measurement still open). Keep this section maintained
+> (design/feasibility notes) but don't touch code or spin up a second repo
+> until NORA-W40 is genuinely done and someone deliberately picks this up
+> as the next "one thing in flight."
+
 - **u-blox NORA-B2 (Nordic nRF54L15/10/05, Open CPU) — Matter/Thread/BLE.**
   Real single-SoC option (like NORA-W40) — Nordic's nRF Connect SDK (Zephyr),
   a second firmware project: different RTOS, build tool (`west`, not

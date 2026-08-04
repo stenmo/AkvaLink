@@ -220,6 +220,15 @@ for live verification of NORA-W40 specs, ESP32-C6 features, etc.
 - ❌ A cloud product
 - ❌ A general-purpose IoT framework — it does ONE thing well
 
+## Other silicon (NORA-B2) — parked, not now
+
+A NORA-B2 (Nordic nRF54L, Zephyr/nRF Connect SDK) port is a real, decided
+future direction — see the "Other silicon families" section in
+[TODO.md](../TODO.md) for the full feasibility notes and spike plan. **It is
+on hold until NORA-W40 is fully working** (current EVK power measurement
+still open). Don't start any NORA-B2 code, Kconfig, or a new `AkvaLink-nRF`
+repo unless explicitly asked — this is a parking-lot item, not work in flight.
+
 ## KISS — keep it simple, stupid
 
 The roadmap docs (TODO, CONNECTIVITY, ENCLOSURE_DESIGN, RF_AND_ANTENNA,
