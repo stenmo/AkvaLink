@@ -123,6 +123,8 @@
   .ota-card { margin-top: 18px; }
   .ota-title { margin: 0 0 4px; color: var(--deep); font-size: 1.1rem; }
   .ota-hint { color: var(--muted); font-size: .9rem; margin: 0 0 16px; }
+  .ota-option-label { margin: 18px 0 4px; color: var(--deep); font-weight: 700; font-size: .95rem; }
+  .ota-or { color: var(--muted); font-size: .78rem; margin: 16px 0 0; text-transform: uppercase; letter-spacing: .06em; }
   .file-btn { display: inline-block; padding: 9px 18px; border-radius: 999px; border: 1.5px solid var(--water); color: var(--water); font-weight: 600; cursor: pointer; font-size: .9rem; }
   .file-btn:hover { background: var(--water); color: #fff; }
   .file-name { display: block; color: var(--muted); font-size: .82rem; margin: 8px 0 12px; }
@@ -504,16 +506,19 @@
     <p class="ota-hint">Redan flashat varianten <strong>Endast BLE</strong>? Uppdatera igen utan någon kabel alls — sidan kan hämta och flasha ny firmware direkt via Bluetooth.</p>
     <div class="live-card ota-card" id="otaCard">
       <h3 class="ota-title">Firmware-uppdatering via Bluetooth</h3>
-      <p class="ota-hint">Ett klick — sidan hämtar senaste firmware och flashar den via BLE (Chrome/Edge).</p>
+      <p class="ota-hint">Fungerar bara om enheten just nu kör firmware-varianten <strong>Endast BLE</strong> — det är den enda varianten med denna uppdateringstjänst inbyggd. Flashar du en helt ny enhet för första gången? Använd <a href="#download">USB-flash eller esptool</a> istället.</p>
       <div id="otaFwLine" class="file-name"></div>
+      <p class="ota-option-label">Alternativ A — ett klick</p>
       <p class="cta"><a id="otaLatestBtn" class="primary" role="button">Flasha senaste firmware</a></p>
-      <p class="ble-note" style="margin:6px 0 10px">…eller välj en .bin manuellt:</p>
+      <p class="ota-or">— eller —</p>
+      <p class="ota-option-label">Alternativ B — välj en specifik fil</p>
+      <p class="ota-hint" style="margin:0 0 10px">Installera om en äldre version, eller korsflasha till en annan variant (kräver fabriksåterställning efteråt).</p>
       <label class="file-btn" for="otaFile">Välj .bin-fil</label>
       <input type="file" id="otaFile" accept=".bin" hidden />
       <span id="otaFileName" class="file-name">Ingen fil vald</span>
+      <p class="cta"><a id="otaBtn" class="primary" role="button">Uppdatera firmware</a></p>
       <div class="progress"><div id="otaBar" class="bar"></div></div>
       <div id="otaStatus" class="status"></div>
-      <p class="cta"><a id="otaBtn" class="primary" role="button">Uppdatera firmware</a></p>
     </div>
     <p class="ble-note">Föredrar du en egen app framför webbläsaren? <a href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">AkvaLink-appen</a> (Windows/Linux/macOS/Android/iOS) visar live-temperatur och flashar OTA-uppdateringar också — bygg den själv från källkoden.</p>
   </div>

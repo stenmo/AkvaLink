@@ -111,6 +111,8 @@
   .ota-card { margin-top: 18px; }
   .ota-title { margin: 0 0 4px; color: var(--deep); font-size: 1.1rem; }
   .ota-hint { color: var(--muted); font-size: .9rem; margin: 0 0 16px; }
+  .ota-option-label { margin: 18px 0 4px; color: var(--deep); font-weight: 700; font-size: .95rem; }
+  .ota-or { color: var(--muted); font-size: .78rem; margin: 16px 0 0; text-transform: uppercase; letter-spacing: .06em; }
   .file-btn { display: inline-block; padding: 9px 18px; border-radius: 999px; border: 1.5px solid var(--water); color: var(--water); font-weight: 600; cursor: pointer; font-size: .9rem; }
   .file-btn:hover { background: var(--water); color: #fff; }
   .file-name { display: block; color: var(--muted); font-size: .82rem; margin: 8px 0 12px; }
@@ -519,16 +521,19 @@
     <p class="ota-hint">Already flashed the <strong>BLE-only</strong> variant? Update it again with no cable at all — this page can fetch and flash new firmware straight over Bluetooth.</p>
     <div class="live-card ota-card" id="otaCard">
       <h3 class="ota-title">Firmware update over Bluetooth</h3>
-      <p class="ota-hint">One click — the page fetches the latest firmware and flashes it over BLE (Chrome/Edge).</p>
+      <p class="ota-hint">Only works if the device is <strong>currently running the BLE-only firmware</strong> — it's the only variant with this update service built in. Flashing a brand-new device for the first time? Use <a href="#download">USB flash or esptool</a> instead.</p>
       <div id="otaFwLine" class="file-name"></div>
+      <p class="ota-option-label">Option A — one click</p>
       <p class="cta"><a id="otaLatestBtn" class="primary" role="button">Flash latest firmware</a></p>
-      <p class="ble-note" style="margin:6px 0 10px">…or pick a .bin manually:</p>
+      <p class="ota-or">— or —</p>
+      <p class="ota-option-label">Option B — pick a specific file</p>
+      <p class="ota-hint" style="margin:0 0 10px">Reinstall an older version, or cross-flash to a different variant (needs a factory reset after).</p>
       <label class="file-btn" for="otaFile">Choose .bin file</label>
       <input type="file" id="otaFile" accept=".bin" hidden />
       <span id="otaFileName" class="file-name">No file chosen</span>
+      <p class="cta"><a id="otaBtn" class="primary" role="button">Update firmware</a></p>
       <div class="progress"><div id="otaBar" class="bar"></div></div>
       <div id="otaStatus" class="status"></div>
-      <p class="cta"><a id="otaBtn" class="primary" role="button">Update firmware</a></p>
     </div>
     <p class="ble-note">Prefer a native app over the browser? The <a href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">AkvaLink companion app</a> (Windows/Linux/macOS/Android/iOS) shows live temperature and flashes OTA updates too — build it from source.</p>
   </div>
