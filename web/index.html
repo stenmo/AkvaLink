@@ -14,6 +14,10 @@
 <meta name="apple-mobile-web-app-title" content="AkvaLink" />
 <title>AkvaLink — battery-powered Matter pool &amp; aquatic temperature sensor</title>
 <meta name="description" content="AkvaLink is a single-SoC, battery-powered Matter temperature sensor on u-blox NORA-W40 (ESP32-C6). Multi-year battery life. Local Matter over Thread or Wi-Fi. No cloud, ever." />
+<!-- ESP Web Tools: browser-based USB serial flashing (Web Serial API). One
+     deliberate external-CDN exception to this page's self-contained rule —
+     see .github/copilot-instructions.md "Project web page" for why. -->
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 <style>
   :root {
     --deep: #033f63;
@@ -467,34 +471,35 @@
     <div class="grid">
       <div class="dl-card">
         <span class="ico">🧵</span><h3>Thread</h3><p>Matter over Thread · best battery. Needs a hub — HomePod, Apple TV, Nest or Echo.</p>
-        <div class="dl-btns"><a id="dlThread" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlThreadApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+        <div class="dl-btns"><a id="dlThread" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlThreadApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/thread.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
       </div>
       <div class="dl-card">
         <span class="ico">📶</span><h3>Wi-Fi</h3><p>Matter over Wi-Fi · no Thread hub. Runs on battery too — just fewer years. Your router + any Matter app.</p>
-        <div class="dl-btns"><a id="dlWifi" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlWifiApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+        <div class="dl-btns"><a id="dlWifi" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlWifiApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/wifi.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
       </div>
       <div class="dl-card">
         <span class="ico">🔵</span><h3>BLE-only</h3><p>No hub, no cloud · straight to your phone over Bluetooth.</p>
-        <div class="dl-btns"><a id="dlBle" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlBleApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+        <div class="dl-btns"><a id="dlBle" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlBleApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/ble.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
       </div>
       <div class="dl-card">
         <span class="ico">📡</span><h3>Wi-Fi AP</h3><p>Open hotspot “AkvaLink” · join it, the page opens automatically. No router, no app, any phone. <em>Needs mains/USB power.</em></p>
-        <div class="dl-btns"><a id="dlAp" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+        <div class="dl-btns"><a id="dlAp" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/ap.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
       </div>
       <div class="dl-card">
         <span class="ico">🏠</span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink-&lt;last4mac&gt;.local</strong> in any browser on your LAN. Auto-discovered by <strong>Home Assistant</strong> via MQTT. Multiple devices get unique hostnames. <em>Needs mains/USB power.</em></p>
-        <div class="dl-btns"><a id="dlStation" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+        <div class="dl-btns"><a id="dlStation" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/station.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
       </div>
       <div class="dl-card">
         <span class="ico">📢</span><h3>ESP-NOW</h3><p>Deep-sleep broadcast — wakes, reads DS18B20, sends one packet to any ESP32 on the same Wi-Fi channel, sleeps. No hub, no provisioning, maximum battery life. <em>Receiver needs an ESP32 sketch.</em></p>
-        <div class="dl-btns"><a id="dlEspnow" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+        <div class="dl-btns"><a id="dlEspnow" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/espnow.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
       </div>
       <div class="dl-card">
         <span class="ico">🏡</span><h3>ESPHome</h3><p>Native <strong>Home Assistant</strong> API — no MQTT broker needed. Flash once, adopt in the ESPHome dashboard, OTA-update from Home Assistant. Provisioned with Improv over USB serial.</p>
-        <div class="dl-btns"><a id="dlEsphome" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEsphomeApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a></div>
+        <div class="dl-btns"><a id="dlEsphome" class="dl-btn" href="https://github.com/stenmo/AkvaLink/releases">esptool .bin</a> <a id="dlEsphomeApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases">OTA .bin</a> <esp-web-install-button manifest="manifests/esphome.json"><a slot="activate" class="dl-btn dl-ota" role="button">⚡ Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button></div>
       </div>
     </div>
-    <p class="ble-note"><strong>esptool&nbsp;.bin</strong> — full merged image, flash at 0x0. Use for first-time setup or switching variants: <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code><br>
+    <p class="ble-note"><strong>⚡&nbsp;Flash via USB</strong> — click it, pick the serial port, done. No install, no drivers: it flashes straight from the browser over the <strong>Web Serial API</strong>. Needs <strong>Chrome, Edge, or Opera</strong> (desktop, v89+) — Firefox and Safari don't support Web Serial, so the button hides itself there.</p>
+    <p class="ble-note"><strong>esptool&nbsp;.bin</strong> — the same full merged image, flashed from the command line instead: <code>pip install esptool</code> (a small standalone PyPI package — no full ESP-IDF needed), then <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code>. Rather not touch Python? Grab a prebuilt binary from the <a href="https://github.com/espressif/esptool/releases" target="_blank" rel="noopener">esptool releases page</a> instead. Note: esptool v5 renamed subcommands with hyphens (<code>write-flash</code>, <code>merge-bin</code>) — v4 used underscores (<code>write_flash</code>); if a copied command errors, that's usually why.<br>
     <strong>OTA&nbsp;.bin</strong> — app partition only. Use for updating <em>within the same variant</em> (BLE→BLE, Thread→Thread, etc.) without touching NVS or commissioning data. Cross-variant OTA is possible but requires a factory reset after. · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>
     <p class="ble-note">Prefer a native app over the browser? The <a href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">AkvaLink companion app</a> (Windows/Linux/macOS/Android/iOS) shows live temperature and flashes OTA updates too — build it from source.</p>
     <div class="live-card ota-card" id="otaCard">

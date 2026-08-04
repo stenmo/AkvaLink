@@ -1,0 +1,14 @@
+{
+  "name": "AkvaLink \u2014 BLE-only",
+  "version": "latest",
+  "funding_url": "https://buymeacoffee.com/stenmo",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C6",
+      "parts": [
+        { "path": "../firmware/akvalink-ble.bin", "offset": 0 }
+      ]
+    }
+  ]
+}

@@ -161,6 +161,12 @@ publishable as-is via GitHub Pages. A language toggle (EN | SV) links between th
   numbers, build variants/flags, roadmap status — update both pages and the README.
 - **Stay self-contained.** No frameworks, no external CSS/JS/build tooling. Each
   file opens by double-clicking. Bump the "Last updated" line on changes (both files).
+  - **One deliberate exception:** the "⚡ Flash via USB" buttons load
+    [ESP Web Tools](https://esphome.github.io/esp-web-tools/) from the `unpkg`
+    CDN (`<script type="module" src="https://unpkg.com/esp-web-tools@...">`).
+    Implementing Web Serial ESP32 flashing by hand would mean re-inventing
+    esptool's flashing protocol in JS — not worth it. Don't add a second CDN
+    dependency without a similarly strong reason; keep everything else vendor-free.
 - **On brand:** water/pool theme (cyan/teal), plain-spoken, honest — same voice
   as the README. No cloud claims, no vaporware presented as shipping.
 

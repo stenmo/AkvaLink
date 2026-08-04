@@ -78,6 +78,14 @@ After the EVK works, **one** small step. No new features yet.
   the thread variant is down to ~2% free app-partition space after this bump.
 - DS18B20 at full 12-bit (0.0625 °C); power managed via adaptive modes +
   report threshold, not resolution (measure vs Nordic PPK2 before tuning).
+- **ESP Web Tools "⚡ Flash via USB" button** on every download card (web page,
+  both EN/SV) — browser-based serial flashing (Web Serial API, Chrome/Edge/
+  Opera) of the same merged `esptool .bin` image, no install/drivers. Per-variant
+  manifests in `web/manifests/*.json`; `pages.yml` stages each variant's merged
+  image to `web/firmware/akvalink-<variant>.bin` same-origin (GitHub release
+  assets aren't CORS-fetchable). `ble-note` text also gained proper `pip install
+  esptool` / prebuilt-binary instructions and the v4→v5 hyphenated-subcommand
+  heads-up (`write_flash` → `write-flash`).
 
 ---
 
@@ -250,7 +258,7 @@ above has happened.
 `improv_serial`, DS18B20 on GPIO15, Home Assistant native API, OTA. Added to `VARIANTS`
 in `release.py` + `publish.py`; download card on the web page.
 
-Remaining (not yet done): CI via `esphome/build-action`, ESP Web Tools USB-flash button.
+Remaining (not yet done): CI via `esphome/build-action`.
 
 ## Productisation
 > See [docs/ENCLOSURE_DESIGN.md](docs/ENCLOSURE_DESIGN.md)

@@ -1,0 +1,14 @@
+{
+  "name": "AkvaLink \u2014 Thread",
+  "version": "latest",
+  "funding_url": "https://buymeacoffee.com/stenmo",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C6",
+      "parts": [
+        { "path": "../firmware/akvalink-thread.bin", "offset": 0 }
+      ]
+    }
+  ]
+}

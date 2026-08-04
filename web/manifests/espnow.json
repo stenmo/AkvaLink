@@ -1,0 +1,14 @@
+{
+  "name": "AkvaLink \u2014 ESP-NOW",
+  "version": "latest",
+  "funding_url": "https://buymeacoffee.com/stenmo",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C6",
+      "parts": [
+        { "path": "../firmware/akvalink-espnow.bin", "offset": 0 }
+      ]
+    }
+  ]
+}
