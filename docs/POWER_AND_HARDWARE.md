@@ -407,7 +407,7 @@ opencpu/nora-w40-thermometer/
 │   └── app_priv.h
 ├── build.cmd / build.sh        ← thin wrappers around idf.py
 ├── flash.cmd / flash.sh        ← idf.py flash (no esptool offset bookkeeping)
-├── images/                     ← prebuilt .bin drop (gitignored except README)
+├── firmware/                     ← prebuilt .bin drop (gitignored except README)
 └── README.md                   ← this file
 ```
 

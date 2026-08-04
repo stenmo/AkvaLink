@@ -168,13 +168,13 @@ case "$cmd" in
             -D SDKCONFIG_DEFAULTS="${SDKCFG}" $CMAKE_EXTRA reconfigure
         idf.py -B "${BUILD_DIR}" -D SDKCONFIG="${BUILD_DIR}/sdkconfig" build
 
-        mkdir -p "images/${VARIANT}"
-        cp -f "${BUILD_DIR}/bootloader/bootloader.bin"           "images/${VARIANT}/bootloader.bin"
-        cp -f "${BUILD_DIR}/partition_table/partition-table.bin" "images/${VARIANT}/partition-table.bin"
-        cp -f "${BUILD_DIR}/ota_data_initial.bin"                "images/${VARIANT}/ota_data_initial.bin"
-        cp -f "${BUILD_DIR}/akvalink.bin"                         "images/${VARIANT}/akvalink.bin"
+        mkdir -p "firmware/${VARIANT}"
+        cp -f "${BUILD_DIR}/bootloader/bootloader.bin"           "firmware/${VARIANT}/bootloader.bin"
+        cp -f "${BUILD_DIR}/partition_table/partition-table.bin" "firmware/${VARIANT}/partition-table.bin"
+        cp -f "${BUILD_DIR}/ota_data_initial.bin"                "firmware/${VARIANT}/ota_data_initial.bin"
+        cp -f "${BUILD_DIR}/akvalink.bin"                         "firmware/${VARIANT}/akvalink.bin"
         echo
-        echo "=== Build complete. Images in images/${VARIANT}/ ==="
+        echo "=== Build complete. Images in firmware/${VARIANT}/ ==="
         ;;
 
     menuconfig)

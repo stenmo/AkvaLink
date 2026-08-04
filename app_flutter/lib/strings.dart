@@ -205,7 +205,8 @@ class Strings {
     scanning: 'Söker…',
     connecting: 'Ansluter…',
     lookingNearby: 'Letar efter en AkvaLink i närheten…',
-    lookingWider: 'Ingen AkvaLink hittades — letar nu efter alla enheter i närheten…',
+    lookingWider:
+        'Ingen AkvaLink hittades — letar nu efter alla enheter i närheten…',
     notConnected: 'Inte ansluten',
     btOff: 'Bluetooth är avstängt',
     btUnsupported: 'Bluetooth stöds inte på den här enheten',

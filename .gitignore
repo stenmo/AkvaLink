@@ -20,8 +20,8 @@ web/firmware/
 logs/
 
 # Prebuilt drop folder — keep the README, ignore the binaries.
-images/*
-!images/README.md
+firmware/*
+!firmware/README.md
 
 # Editor / OS cruft
 .DS_Store

@@ -240,7 +240,9 @@ class _DevicePicker extends StatelessWidget {
               return ListTile(
                 dense: true,
                 leading: const Icon(Icons.bluetooth, color: AkvaColors.water),
-                title: Text(d.name?.isNotEmpty == true ? d.name! : s.unknownDevice),
+                title: Text(
+                  d.name?.isNotEmpty == true ? d.name! : s.unknownDevice,
+                ),
                 trailing: Text(
                   '${d.rssi ?? '?'} dBm',
                   style: Theme.of(context).textTheme.bodySmall,

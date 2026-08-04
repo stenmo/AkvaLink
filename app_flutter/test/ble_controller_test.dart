@@ -117,15 +117,18 @@ void main() {
       c.dispose();
     });
 
-    test('no exact name/service match → offers nearby devices to pick', () async {
-      fake.scanResults = [fakeDevice(id: 'other', name: 'SomeSpeaker')];
-      final c = newController();
-      await c.scanAndConnect();
-      await settle();
-      expect(c.state, AkvaConnState.selecting);
-      expect(c.discoveredDevices.map((d) => d.name), contains('SomeSpeaker'));
-      c.dispose();
-    });
+    test(
+      'no exact name/service match → offers nearby devices to pick',
+      () async {
+        fake.scanResults = [fakeDevice(id: 'other', name: 'SomeSpeaker')];
+        final c = newController();
+        await c.scanAndConnect();
+        await settle();
+        expect(c.state, AkvaConnState.selecting);
+        expect(c.discoveredDevices.map((d) => d.name), contains('SomeSpeaker'));
+        c.dispose();
+      },
+    );
 
     test('picking a discovered device connects to it', () async {
       fake.scanResults = [fakeDevice(id: 'other', name: 'SomeSpeaker')];
