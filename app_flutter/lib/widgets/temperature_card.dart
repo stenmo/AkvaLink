@@ -67,7 +67,12 @@ class TemperatureCard extends StatelessWidget {
             const SizedBox(height: 12),
 
             // --- Status line ---
-            _StatusLine(state: c.state, error: c.error, name: c.deviceName),
+            _StatusLine(
+              state: c.state,
+              error: c.error,
+              name: c.deviceName,
+              scanningAll: c.isScanningAll,
+            ),
             if (connected && c.lastUpdate != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -79,50 +84,54 @@ class TemperatureCard extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // --- Connect / disconnect button ---
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: connected
-                      ? AkvaColors.muted
-                      : AkvaColors.water,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                onPressed: busy
-                    ? null
-                    : () {
-                        if (connected) {
-                          c.disconnect();
-                        } else {
-                          c.scanAndConnect();
-                        }
-                      },
-                icon: busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+            // --- Connect / disconnect button, or the fallback device picker
+            // when the name/service scan found nothing exact. ---
+            if (c.state == AkvaConnState.selecting)
+              _DevicePicker(controller: c)
+            else
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: connected
+                        ? AkvaColors.muted
+                        : AkvaColors.water,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: busy
+                      ? null
+                      : () {
+                          if (connected) {
+                            c.disconnect();
+                          } else {
+                            c.scanAndConnect();
+                          }
+                        },
+                  icon: busy
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          connected
+                              ? Icons.bluetooth_disabled
+                              : Icons.bluetooth_searching,
                         ),
-                      )
-                    : Icon(
-                        connected
-                            ? Icons.bluetooth_disabled
-                            : Icons.bluetooth_searching,
-                      ),
-                label: Text(
-                  busy
-                      ? (c.state == AkvaConnState.scanning
-                            ? s.scanning
-                            : s.connecting)
-                      : connected
-                      ? s.disconnect
-                      : s.connect,
+                  label: Text(
+                    busy
+                        ? (c.state == AkvaConnState.scanning
+                              ? s.scanning
+                              : s.connecting)
+                        : connected
+                        ? s.disconnect
+                        : s.connect,
+                  ),
                 ),
               ),
-            ),
 
             // --- Device chips (battery / firmware) ---
             if (connected) ...[
@@ -159,10 +168,12 @@ class _StatusLine extends StatelessWidget {
     required this.state,
     required this.error,
     required this.name,
+    required this.scanningAll,
   });
   final AkvaConnState state;
   final String? error;
   final String name;
+  final bool scanningAll;
 
   @override
   Widget build(BuildContext context) {
@@ -175,11 +186,15 @@ class _StatusLine extends StatelessWidget {
         color = AkvaColors.ok;
         break;
       case AkvaConnState.scanning:
-        text = s.lookingNearby;
+        text = scanningAll ? s.lookingWider : s.lookingNearby;
         color = AkvaColors.muted;
         break;
       case AkvaConnState.connecting:
         text = s.connecting;
+        color = AkvaColors.muted;
+        break;
+      case AkvaConnState.selecting:
+        text = s.chooseDevice;
         color = AkvaColors.muted;
         break;
       case AkvaConnState.error:
@@ -198,6 +213,49 @@ class _StatusLine extends StatelessWidget {
         color: color,
         fontWeight: state == AkvaConnState.connected ? FontWeight.w600 : null,
       ),
+    );
+  }
+}
+
+/// Shown when the name/service scan found nothing exact but other BLE
+/// devices are nearby \u2014 lets the user pick one manually.
+class _DevicePicker extends StatelessWidget {
+  const _DevicePicker({required this.controller});
+  final AkvaLinkController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.watch<Strings>();
+    final devices = controller.discoveredDevices;
+    return Column(
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 220),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: devices.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, i) {
+              final d = devices[i];
+              return ListTile(
+                dense: true,
+                leading: const Icon(Icons.bluetooth, color: AkvaColors.water),
+                title: Text(d.name?.isNotEmpty == true ? d.name! : s.unknownDevice),
+                trailing: Text(
+                  '${d.rssi ?? '?'} dBm',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                onTap: () => controller.connectToDiscovered(d),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: controller.cancelSelecting,
+          child: Text(s.cancel),
+        ),
+      ],
     );
   }
 }

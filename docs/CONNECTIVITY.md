@@ -151,7 +151,7 @@ for the "provisions from both ecosystems" demo story; skip it otherwise.
 |-------------|-----------|------|------|----------------|
 | **Espressif Unified Provisioning** (`wifi_provisioning`, "Improv-style") | **ESP BLE Provisioning** (Espressif, iOS+Android) | Already in ESP-IDF — zero extra deps. App is published, free, works. Same component used by every recent ESP32 product. Supports BLE *and* SoftAP transports, security2, custom data hooks. | Espressif-branded app; not a household name. | **v1 default.** |
 | **Nordic Wi-Fi Provisioner** | **nRF Wi-Fi Provisioner** (Nordic, iOS+Android) | Polished UX. Documented BLE GATT service spec — implementable on any chip. nRF Connect ecosystem is recognisable to BLE engineers. | Spec is Nordic-flavoured; we re-implement the GATT service on ESP-IDF (it's not a drop-in component). Splits dev effort if we also do Espressif. | **v1.1 add-on**, behind a build flag. Useful "we play well with both ecosystems" story. |
-| Improv-Wi-Fi (Home Assistant) | Any browser via Web Bluetooth | App-less. Open spec. | Slightly more limited feature set. | Nice-to-have v1.1 — same GATT-shaped problem as Nordic. |
+| **Improv** (open spec, [improv-wifi.com](https://www.improv-wifi.com/)) — Serial *or* BLE | Any browser (Web Serial / Web Bluetooth), no app | App-less, open spec. **Serial transport already shipping**: the ESPHome variant ([esphome/akvalink.yaml](../esphome/akvalink.yaml)) enables `improv_serial:`, so ESP Web Tools can flash *and* provision Wi-Fi in the same browser tab over USB. | BLE transport not implemented here; Serial only works while the device is plugged into USB (fine for first-flash, not for later re-provisioning). | Serial: **done** (ESPHome variant only). BLE: nice-to-have v1.1 for the Matter/BLE firmware — same GATT-shaped problem as Nordic. |
 | **WPS Push-Button** (WPS-PBC) | Router button + AkvaLink button | App-less, well-known UX. Press WPS on router → long-press button on AkvaLink → paired. Works with most consumer routers. | WPS is officially deprecated in newer Wi-Fi specs and disabled by default on some enterprise APs / Eero / Unifi. WPA3-only networks don't support it. | **v1.1 add-on.** Cheap to add (`esp_wifi_wps_*` is in IDF) and a good fallback for non-technical users with a typical home router. |
 
 > **SoftAP** ("join AkvaLink-XXXX, open `192.168.4.1`") is supported by
@@ -323,6 +323,6 @@ gated behind a flash-size measurement). **Not** Option B unless we adopt the
    *See [Always-available BLE — investigation](#always-available-ble--investigation-july-2026)
    above (Option C — GPIO-at-boot BLE escape hatch). Gate on an `idf.py size`
    flash-budget measurement first.*
-7. Optional Improv-Wi-Fi for Home Assistant friendliness.
+7. Optional Improv **BLE** for Home Assistant friendliness (Improv **Serial** already ships on the ESPHome variant — see the provisioning table above).
 
 Tracked in [TODO.md](../TODO.md) under **Connectivity / Provisioning**.

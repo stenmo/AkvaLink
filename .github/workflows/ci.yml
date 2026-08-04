@@ -2,7 +2,9 @@ name: CI
 
 # Fast host-side checks on every push / PR: the Python helper unit tests plus
 # the web landing-page HTML validation (all pure stdlib + pytest — no ESP-IDF,
-# no hardware). Keeps release.py / publish.py and web/ from silently breaking.
+# no hardware), and the Flutter companion app's analyzer + unit tests. The
+# firmware itself isn't built here — that needs the full ESP-IDF/esp-matter
+# toolchain (see scripts/release.py) — but the app is pure Dart, so it can.
 
 on:
   push:
@@ -32,3 +34,28 @@ jobs:
 
       - name: Run tests (helpers + web validation)
         run: python -m pytest -q
+
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: app_flutter
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: app_flutter
+        run: flutter analyze
+
+      - name: Test
+        working-directory: app_flutter
+        run: flutter test

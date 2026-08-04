@@ -41,7 +41,7 @@ class AkvaLinkApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: buildLightTheme(),
         darkTheme: buildDarkTheme(),
-        themeMode: ThemeMode.system,
+        themeMode: ThemeMode.dark,
         home: const HomeScreen(),
       ),
     );

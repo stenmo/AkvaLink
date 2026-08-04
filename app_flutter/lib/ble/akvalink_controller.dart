@@ -12,7 +12,7 @@ import 'package:universal_ble/universal_ble.dart';
 import 'akvalink_uuids.dart';
 import '../strings.dart';
 
-enum AkvaConnState { idle, scanning, connecting, connected, error }
+enum AkvaConnState { idle, scanning, connecting, connected, error, selecting }
 
 class AkvaLinkController extends ChangeNotifier {
   AkvaLinkController({
@@ -69,6 +69,18 @@ class AkvaLinkController extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
+  /// Devices found by the broader, unfiltered fallback scan (see
+  /// [_scanAllFallback]) — populated only when no AkvaLink-shaped device was
+  /// found by name/service, so the user can pick one manually.
+  List<BleDevice> _discovered = [];
+  List<BleDevice> get discoveredDevices => List.unmodifiable(_discovered);
+
+  /// True once the name/service scan came up empty and the broader,
+  /// unfiltered fallback scan has taken over — lets the UI say what it's
+  /// actually looking for right now.
+  bool _scanningAll = false;
+  bool get isScanningAll => _scanningAll;
+
   StreamSubscription<BleDevice>? _scanSub;
   StreamSubscription<bool>? _connSub;
   StreamSubscription<Uint8List>? _tempSub;
@@ -105,11 +117,13 @@ class AkvaLinkController extends ChangeNotifier {
   /// connect straight to that (a previously-seen device).
   Future<void> scanAndConnect() async {
     if (_state == AkvaConnState.scanning ||
-        _state == AkvaConnState.connecting) {
+        _state == AkvaConnState.connecting ||
+        _state == AkvaConnState.selecting) {
       return;
     }
     // Claim the scanning state synchronously (before the first await) so a
     // rapid second call is reliably rejected by the guard above.
+    _scanningAll = false;
     _set(AkvaConnState.scanning);
 
     final err = await _preflight();
@@ -135,6 +149,13 @@ class AkvaLinkController extends ChangeNotifier {
     });
 
     try {
+      // Filters on BOTH the "AkvaLink-" name prefix and the Environmental
+      // Sensing Service UUID. Native scan filters can be stricter than the
+      // Dart-side OR check above (e.g. Android ANDs multiple ScanFilter
+      // fields together), so a real device that only advertises one of the
+      // two in a given packet can be missed here even though it would pass
+      // the app-level check. That's exactly what the unfiltered fallback
+      // scan below (triggered on zero matches) is for.
       await UniversalBle.startScan(
         scanFilter: ScanFilter(
           withServices: [AkvaUuids.essService],
@@ -158,11 +179,58 @@ class AkvaLinkController extends ChangeNotifier {
       await _stopScan();
       final target = best;
       if (target == null) {
-        _set(AkvaConnState.error, error: _s.noDeviceFound);
+        await _scanAllFallback();
         return;
       }
       await _connect(target.deviceId, target.name ?? AkvaUuids.namePrefix);
     });
+  }
+
+  /// Nothing matched the name/service filter above \u2014 broaden to an
+  /// unfiltered scan and let the user pick from every nearby BLE device.
+  Future<void> _scanAllFallback() async {
+    _discovered = [];
+    _scanningAll = true;
+    _set(AkvaConnState.scanning);
+    final seen = <String, BleDevice>{};
+
+    await _scanSub?.cancel();
+    _scanSub = UniversalBle.scanStream.listen((d) {
+      seen[d.deviceId] = d;
+      _discovered = seen.values.toList()
+        ..sort((a, b) => (b.rssi ?? -999).compareTo(a.rssi ?? -999));
+      notifyListeners();
+    });
+
+    try {
+      await UniversalBle.startScan();
+    } catch (e) {
+      await _stopScan();
+      _set(AkvaConnState.error, error: 'Scan failed: $e');
+      return;
+    }
+
+    _scanTimeout = Timer(_scanSettle, () async {
+      await _stopScan();
+      if (_discovered.isEmpty) {
+        _set(AkvaConnState.error, error: _s.noDeviceFound);
+      } else {
+        _set(AkvaConnState.selecting);
+      }
+    });
+  }
+
+  /// Connect to a device the user picked from [discoveredDevices].
+  Future<void> connectToDiscovered(BleDevice device) async {
+    await _stopScan();
+    await _connect(device.deviceId, device.name ?? AkvaUuids.namePrefix);
+  }
+
+  /// Abandon device selection and go back to idle.
+  Future<void> cancelSelecting() async {
+    await _stopScan();
+    _discovered = [];
+    _set(AkvaConnState.idle);
   }
 
   Future<void> _stopScan() async {

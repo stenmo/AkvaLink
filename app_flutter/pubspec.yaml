@@ -3,7 +3,7 @@ description: "AkvaLink — battery-powered Matter pool & aquatic temperature sen
 publish_to: 'none'
 
 # Kept in lock-step with the firmware version (../version.txt).
-version: 0.3.3+1
+version: 0.3.4+1
 
 environment:
   sdk: ^3.11.4
@@ -18,6 +18,10 @@ dependencies:
   provider: ^6.1.5
   shared_preferences: ^2.5.4
   http: ^1.3.0
+  # Opens the GitHub/website links in the system browser.
+  url_launcher: ^6.3.1
+  # Renders assets/logo.svg (exact copy of web/favicon.svg) in the hero header.
+  flutter_svg: ^2.0.17
 
 dev_dependencies:
   flutter_test:

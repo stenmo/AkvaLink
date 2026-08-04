@@ -17,6 +17,7 @@ class Strings {
     required this.scanning,
     required this.connecting,
     required this.lookingNearby,
+    required this.lookingWider,
     required this.notConnected,
     required this.btOff,
     required this.btUnsupported,
@@ -39,6 +40,11 @@ class Strings {
     required this.otaDone,
     required this.otaFailedPrefix,
     required this.otaDeviceErrorPrefix,
+    required this.linkWebsite,
+    required this.linkGithub,
+    required this.chooseDevice,
+    required this.cancel,
+    required this.unknownDevice,
   });
 
   final String tagline;
@@ -47,6 +53,7 @@ class Strings {
   final String scanning;
   final String connecting;
   final String lookingNearby;
+  final String lookingWider;
   final String notConnected;
   final String btOff;
   final String btUnsupported;
@@ -68,6 +75,11 @@ class Strings {
   final String otaDone;
   final String otaFailedPrefix;
   final String otaDeviceErrorPrefix;
+  final String linkWebsite;
+  final String linkGithub;
+  final String chooseDevice;
+  final String cancel;
+  final String unknownDevice;
 
   // ---- Parameterised helpers (kept out of the constructor) ----------------
 
@@ -110,6 +122,7 @@ class Strings {
     scanning,
     connecting,
     lookingNearby,
+    lookingWider,
     notConnected,
     btOff,
     btUnsupported,
@@ -130,6 +143,11 @@ class Strings {
     otaDone,
     otaFailedPrefix,
     otaDeviceErrorPrefix,
+    linkWebsite,
+    linkGithub,
+    chooseDevice,
+    cancel,
+    unknownDevice,
     connectedTo('Sensor'),
     updatedAgo(justNow),
     secondsAgo(5),
@@ -150,6 +168,7 @@ class Strings {
     scanning: 'Scanning…',
     connecting: 'Connecting…',
     lookingNearby: 'Looking for an AkvaLink nearby…',
+    lookingWider: 'No AkvaLink found — now looking for all nearby devices…',
     notConnected: 'Not connected',
     btOff: 'Bluetooth is turned off',
     btUnsupported: 'Bluetooth not supported on this device',
@@ -172,6 +191,11 @@ class Strings {
     otaDone: 'Update sent — device rebooting into new firmware ✓',
     otaFailedPrefix: 'Update failed',
     otaDeviceErrorPrefix: 'Device reported error',
+    linkWebsite: 'Website',
+    linkGithub: 'GitHub',
+    chooseDevice: 'No exact match — choose a nearby device:',
+    cancel: 'Cancel',
+    unknownDevice: 'Unknown device',
   );
 
   static const sv = Strings(
@@ -181,6 +205,7 @@ class Strings {
     scanning: 'Söker…',
     connecting: 'Ansluter…',
     lookingNearby: 'Letar efter en AkvaLink i närheten…',
+    lookingWider: 'Ingen AkvaLink hittades — letar nu efter alla enheter i närheten…',
     notConnected: 'Inte ansluten',
     btOff: 'Bluetooth är avstängt',
     btUnsupported: 'Bluetooth stöds inte på den här enheten',
@@ -203,6 +228,11 @@ class Strings {
     otaDone: 'Uppdatering skickad — enheten startar om med ny firmware ✓',
     otaFailedPrefix: 'Uppdateringen misslyckades',
     otaDeviceErrorPrefix: 'Enheten rapporterade ett fel',
+    linkWebsite: 'Webbplats',
+    linkGithub: 'GitHub',
+    chooseDevice: 'Ingen exakt träff — välj en enhet i närheten:',
+    cancel: 'Avbryt',
+    unknownDevice: 'Okänd enhet',
   );
 
   /// Pick a locale's strings from a [Locale] (falls back to English).

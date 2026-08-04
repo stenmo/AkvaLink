@@ -28,6 +28,7 @@ const _brand = {
   'ublox',
   'nora',
   'esp',
+  'github',
 };
 
 /// Correctly-spelled English words appearing in the UI.
@@ -87,6 +88,14 @@ const _englishDict = {
   'updated',
   'ago',
   'uploading',
+  'website',
+  'exact',
+  'match',
+  'choose',
+  'cancel',
+  'unknown',
+  'all',
+  'devices',
 };
 
 /// Correctly-spelled Swedish words appearing in the UI.
@@ -156,6 +165,15 @@ const _swedishDict = {
   'sedan',
   'laddar',
   'upp',
+  'webbplats',
+  'exakt',
+  'träff',
+  'välj',
+  'enhet',
+  'avbryt',
+  'okänd',
+  'alla',
+  'enheter',
 };
 
 /// Split a UI string into lowercase word tokens, dropping punctuation, digits,

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../app_version.dart';
 import '../strings.dart';
@@ -50,10 +51,10 @@ class HeroHeader extends StatelessWidget {
               ),
             ),
             Row(
-              children: const [
-                Text('💧', style: TextStyle(fontSize: 30)),
-                SizedBox(width: 8),
-                Text(
+              children: [
+                SvgPicture.asset('assets/logo.svg', width: 36, height: 36),
+                const SizedBox(width: 10),
+                const Text(
                   'AkvaLink',
                   style: TextStyle(
                     color: Colors.white,
@@ -62,8 +63,6 @@ class HeroHeader extends StatelessWidget {
                     letterSpacing: -0.5,
                   ),
                 ),
-                SizedBox(width: 8),
-                Text('😎', style: TextStyle(fontSize: 26)),
               ],
             ),
             const SizedBox(height: 6),
