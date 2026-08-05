@@ -656,6 +656,19 @@
       <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
     </div>
+    <p class="lead" style="margin-top:22px">What's actually on the wire — the full GATT service table exposed by the <strong>BLE-only</strong> firmware:</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Service</th><th>Characteristic</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>Environmental Sensing</td><td>Temperature</td><td>Live reading, notifies on change — the card above subscribes to this.</td></tr>
+          <tr><td>Device Information</td><td>Manufacturer, model, firmware version</td><td>Read once on connect; firmware version is what "Flash latest firmware" compares against.</td></tr>
+          <tr><td>Battery</td><td>Battery level</td><td>Always reports 100% today — no battery-voltage sensing circuit yet (see roadmap).</td></tr>
+          <tr><td>AkvaLink <em>(custom)</em></td><td>Uptime, device name, alert thresholds</td><td>Seconds since boot, an editable label, and high/low temperature alerts — stored on the device, but not yet editable from this page.</td></tr>
+          <tr><td>AkvaLink OTA <em>(custom)</em></td><td>Update control &amp; data</td><td>Used by "Update firmware over Bluetooth" above.</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
 

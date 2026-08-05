@@ -165,6 +165,9 @@ above has happened.
     (AkvaLink NORA-W40), **firmware revision** (`version.txt` / `PROJECT_VER`),
     hardware revision, serial (ROM ID).
   - **Environmental Sensing (0x181A):** Temperature (0x2A6E), notify on change.
+    Might add **Humidity (0x2A6F)** later for a non-pool variant (e.g. wine
+    cellar) — no humidity sensor is in the BOM today, so this stays parked
+    until one is.
   - **Battery Service (0x180F):** Battery Level (0x2A19).
   - **Custom AkvaLink service:** **uptime**, boot count, last-reset reason,
     sample interval, report threshold, sensor family, RSSI — read + notify.

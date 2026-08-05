@@ -91,28 +91,38 @@ static void print_banner(void)
 }
 
 // ---------------------------------------------------------------------------
-// Automatic light sleep (CPU + peripherals power down between events, DFS down
-// to 10 MHz). Shared by the Matter/Thread and BLE-only paths — both are
-// battery targets. For BLE this only actually engages once the controller is
-// allowed to sleep on a low-power clock that survives light sleep — see
-// CONFIG_BT_LE_SLEEP_ENABLE + CONFIG_BT_LE_LP_CLK_SRC_DEFAULT in
-// sdkconfig.defaults.ble (the IDF default is the main XTAL, which is powered
-// down in sleep, so without those the radio pins the CPU awake at ~8 mA).
+// Dynamic Frequency Scaling (10↔160 MHz), optionally with automatic light
+// sleep (CPU + peripherals power down between events) on top. Shared by every
+// variant that enables CONFIG_PM_ENABLE.
+//
+// DFS alone is safe everywhere: Wi-Fi/BT/Thread drivers take an internal
+// ESP_PM_APB_FREQ_MAX lock while they need precise radio timing (TX/RX,
+// SoftAP beacons) and release it the rest of the time, so the CPU only drops
+// below 160 MHz when nothing actually needs it.
+//
+// Full light_sleep_enable goes further (CPU + peripherals power off between
+// events) and is only requested for variants confirmed compatible with it:
+// Thread SED, Matter-over-Wi-Fi station, and the BLE-only build (gated behind
+// CONFIG_AKVALINK_BLE_PM until validated with PPK2 — see sdkconfig.defaults.ble).
+// The SoftAP variant deliberately asks for DFS-only (light_sleep_enable=false)
+// below — ESP-IDF's automatic light sleep isn't documented as beacon-timing
+// safe for SoftAP, so we don't risk the demo's captive portal on it.
 // ---------------------------------------------------------------------------
 #if CONFIG_PM_ENABLE
-static void __attribute__((unused)) configure_light_sleep(void)
+static void __attribute__((unused)) configure_light_sleep(bool light_sleep_enable = true)
 {
     esp_pm_config_t pm_config = {
         .max_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
         .min_freq_mhz = 10,
-        .light_sleep_enable = true,
+        .light_sleep_enable = light_sleep_enable,
     };
     esp_err_t err = esp_pm_configure(&pm_config);
     if (err == ESP_OK) {
-        ESP_LOGI(TAG, "\xE2\x9A\xA1 PM: light sleep enabled, DFS %d↔%d MHz",
+        ESP_LOGI(TAG, "\xE2\x9A\xA1 PM: %s, DFS %d↔%d MHz",
+                 light_sleep_enable ? "light sleep enabled" : "DFS only (no light sleep)",
                  10, CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ);
     } else {
-        ESP_LOGW(TAG, "esp_pm_configure failed: %s (continuing without light sleep)",
+        ESP_LOGW(TAG, "esp_pm_configure failed: %s (continuing without PM)",
                  esp_err_to_name(err));
     }
 }
@@ -253,6 +263,11 @@ extern "C" void app_main()
     // NimBLE GATT server + the sensor task feeding it. For homes with no hub.
     ESP_LOGI(TAG, "\xF0\x9F\x94\xB5 BLE-only variant — standalone GATT server (no Matter)");
 #if CONFIG_AKVALINK_BLE_PM
+    // Only actually engages once the controller is allowed to sleep on a
+    // low-power clock that survives light sleep — see CONFIG_BT_LE_SLEEP_ENABLE
+    // + CONFIG_BT_LE_LP_CLK_SRC_DEFAULT in sdkconfig.defaults.ble (the IDF
+    // default is the main XTAL, which is powered down in sleep, so without
+    // those the radio pins the CPU awake at ~8 mA).
     configure_light_sleep();   // CPU/peripheral light sleep between BLE events
 #else
     ESP_LOGI(TAG, "PM: light sleep disabled (set CONFIG_AKVALINK_BLE_PM=y to enable)");
@@ -285,6 +300,12 @@ extern "C" void app_main()
         }
     }
 #endif
+#if CONFIG_PM_ENABLE
+    // DFS only — SoftAP beaconing needs precise timing that full automatic
+    // light sleep isn't confirmed safe for; the Wi-Fi driver's own APB-freq
+    // lock still forces 160 MHz exactly when a beacon/packet needs it.
+    configure_light_sleep(false);
+#endif
     ESP_ERROR_CHECK(akvalink_ap_start());
     ds18b20_task_start();
     ESP_LOGI(TAG, "✨ AkvaLink AP up — join open Wi-Fi \"AkvaLink\", the page opens (or http://192.168.4.1)");
@@ -310,6 +331,9 @@ extern "C" void app_main()
         }
     }
     ESP_LOGI(TAG, "\xF0\x9F\x93\xB6 Wi-Fi station variant — BLE-provisioned client + akvalink.local");
+#if CONFIG_PM_ENABLE
+    configure_light_sleep();   // CPU/peripheral light sleep between Wi-Fi wakeups
+#endif
     ESP_ERROR_CHECK(akvalink_station_start());
     ds18b20_task_start();
     ESP_LOGI(TAG, "\u2728 AkvaLink station up — provision over BLE, then open http://akvalink-<last4mac>.local");
@@ -379,7 +403,14 @@ extern "C" void app_main()
 
     // --- Power management (explicit light sleep + DFS) -----------------------
 #if CONFIG_PM_ENABLE
-    configure_light_sleep();
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+    configure_light_sleep();          // full light sleep — Thread SED, confirmed safe
+#else
+    // DFS only on Matter-over-Wi-Fi: full light sleep overflowed the OTA
+    // partition here (full esp-matter + Wi-Fi + light-sleep code together),
+    // see config/sdkconfig.defaults.wifi.
+    configure_light_sleep(false);
+#endif
 #endif
 
     // --- Start Matter (BLE commissioning + Thread join) ---------------------

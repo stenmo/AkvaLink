@@ -640,6 +640,19 @@
       <p class="cta"><a id="bleBtn" class="primary" role="button">Anslut via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
     </div>
+    <p class="lead" style="margin-top:22px">Vad som faktiskt ligger på länken — hela GATT-tjänstetabellen som exponeras av <strong>Endast BLE</strong>-firmware:</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Tjänst</th><th>Karakteristik</th><th>Vad den gör</th></tr></thead>
+        <tbody>
+          <tr><td>Environmental Sensing</td><td>Temperatur</td><td>Live-avläsning, meddelar vid ändring — kortet ovan prenumererar på denna.</td></tr>
+          <tr><td>Device Information</td><td>Tillverkare, modell, firmwareversion</td><td>Läses en gång vid anslutning; firmwareversionen är det "Flasha senaste firmware" jämför mot.</td></tr>
+          <tr><td>Battery</td><td>Batterinivå</td><td>Visar alltid 100 % idag — ingen batterispänningskrets ännu (se färdplan).</td></tr>
+          <tr><td>AkvaLink <em>(egen)</em></td><td>Drifttid, enhetsnamn, larmtrösklar</td><td>Sekunder sedan start, en redigerbar etikett, och hög/låg temperaturlarm — sparade på enheten, men ännu inte redigerbara från denna sida.</td></tr>
+          <tr><td>AkvaLink OTA <em>(egen)</em></td><td>Uppdateringskontroll &amp; data</td><td>Används av "Uppdatera firmware via Bluetooth" ovan.</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
 

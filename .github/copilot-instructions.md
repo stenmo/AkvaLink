@@ -99,7 +99,9 @@ py -3 scripts/publish.py
 
 ## Power optimisation rules
 
-This is a **battery-powered product**. Every line of code should respect that.
+This is a **battery-powered product**. Every line of code should respect that
+— but even the mains-powered demo variants (AP, station) should still save
+power when it's free to do so.
 
 - ✅ Adaptive sampling: fast only when temperature is changing
 - ✅ Thread SED with 120 s poll period (default) OR Wi-Fi 6 TWT @ 60 s
@@ -109,6 +111,37 @@ This is a **battery-powered product**. Every line of code should respect that.
 - ❌ NEVER leave UART/SPI/I2C powered when not in use
 - ❌ NEVER add periodic Matter sends — only on actual temperature change
 - ❌ NEVER add cloud connectivity — local Matter or local BLE only
+
+**Dynamic Frequency Scaling (DFS) + light sleep — enabled per variant:**
+CPU DFS (10↔160 MHz) is safe on every variant: Wi-Fi/BT/Thread drivers hold
+their own `ESP_PM_APB_FREQ_MAX` lock exactly while they need precise radio
+timing (TX/RX, SoftAP beacons) and release it otherwise, so the CPU only
+runs at 160 MHz when something actually needs it. Full automatic light sleep
+(CPU + peripherals fully power off between events) is enabled wherever it's
+confirmed compatible:
+- **Thread SED (default)** — full light sleep. Officially supported, this is
+  the primary battery target.
+- **`--station`** — full light sleep. ESP-IDF officially supports automatic
+  light sleep with an associated Wi-Fi station; modem sleep handles the radio
+  side independently.
+- **`--wifi` (Matter-over-Wi-Fi)** — **DFS only, no full light sleep.** Not a
+  compatibility issue like SoftAP — it's flash budget: this variant carries
+  the full esp-matter/CHIP stack *and* Wi-Fi, and building with full light
+  sleep enabled measurably overflowed the OTA app partition by 0x810 bytes.
+  Revisit if/when flash headroom allows (see `config/sdkconfig.defaults.wifi`).
+- **`--ap` (SoftAP)** — **DFS only, no full light sleep.** SoftAP beacon
+  timing isn't confirmed safe with automatic light sleep, and the AP is a
+  mains-powered demo target anyway — not worth risking the captive portal
+  for. Still gets the free DFS win.
+- **`--ble` (standalone GATT)** — full light sleep, but gated behind
+  `CONFIG_AKVALINK_BLE_PM` (off by default) pending a PPK2 measurement — see
+  `sdkconfig.defaults.ble`. Don't flip this on without measuring first.
+- **`--espnow`** — deep sleep between cycles instead (lower floor than light
+  sleep); light-sleep PM is deliberately OFF to avoid conflicting with
+  `esp_deep_sleep()`.
+- New variant? Enable `CONFIG_PM_ENABLE=y` and call `configure_light_sleep()`
+  (see `main/app_main.cpp`) unless there's a specific, documented reason not
+  to — pass `false` for DFS-only if full light sleep isn't confirmed safe yet.
 
 **Target battery life on 2× AA in pool monitoring (28-29 °C, 0.25 °C threshold):**
 - Thread SED: ~12 years
@@ -200,6 +233,36 @@ web page in a user-visible way.
 - **EN + SV both.** The app is localized EN/SV just like the web page; when you
   add or change a string in one, update the other (see `app_flutter/lib/strings.dart`
   and the `spellcheck_test.dart` that guards it).
+
+## BLE GATT contract — `main/ble_gatt.cpp` is the source of truth
+
+The standalone `--ble` variant's GATT table (services, characteristics,
+UUIDs) is consumed by four independent places: the firmware itself, the
+web page's Web Bluetooth code, the Flutter app's `akvalink_uuids.dart`, and
+`scripts/ble_gatt_client.py` (the debug tool). They **will** drift if edited
+by hand in isolation — there is no shared codegen, just four files that
+happen to agree today.
+
+- **`main/ble_gatt.cpp` defines the contract; everything else follows it.**
+  If you add, remove, or renumber a characteristic there, update all three
+  consumers in the same change: `web/index.html` + `index.sv.html`,
+  `app_flutter/lib/ble/akvalink_uuids.dart`, and `scripts/ble_gatt_client.py`.
+- **[tests/test_ble_uuids.py](../tests/test_ble_uuids.py) enforces this.**
+  It extracts the UUIDs straight out of `main/ble_gatt.cpp` and asserts the
+  web page, the app, and the debug script all use the same values. Run the
+  full suite (`pytest`) before committing a GATT change — a mismatch there
+  means a phone will silently fail to find a characteristic in the field.
+- **Current service shape** (services, UUIDs, NVS-backed vs. stubbed
+  values) is documented in [docs/CONNECTIVITY.md](../docs/CONNECTIVITY.md)
+  under "Mode 3 — Standalone BLE GATT". Update that table whenever the
+  contract changes — it's meant to reflect the real firmware, not a
+  proposal.
+- **Known gap:** the custom AkvaLink service (uptime, writable device name,
+  alert thresholds) is implemented in firmware and visible to the debug
+  script, but neither the web page nor the app read/write it yet. Don't
+  silently "complete" this without being asked — it's a deliberate
+  KISS-scoped gap, not a bug — but keep it in mind as the natural next
+  BLE feature to wire up end-to-end.
 
 ## Future direct-to-app path (planned)
 

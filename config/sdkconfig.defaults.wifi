@@ -18,10 +18,18 @@ CONFIG_OPENTHREAD_SRP_CLIENT=n
 CONFIG_OPENTHREAD_DNS_CLIENT=n
 CONFIG_OPENTHREAD_JOINER=n
 
-# Disable SED / aggressive power management
+# POWER: DFS only here, not full light sleep — measured, not theoretical.
+# This variant carries the full esp-matter/CHIP stack (unlike --station,
+# which fits full light sleep fine), and building with full automatic light
+# sleep enabled overflowed the OTA app partition by 0x810 bytes. CPU DFS
+# (10<->160 MHz) is still free: the Wi-Fi driver's own APB-freq lock forces
+# 160 MHz exactly when a packet needs it and releases it the rest of the
+# time. Revisit full light sleep if/when flash headroom allows.
 CONFIG_OPENTHREAD_DEVICE_TYPE_SLEEPY_END_DEVICE=n
-CONFIG_PM_ENABLE=n
 CONFIG_FREERTOS_USE_TICKLESS_IDLE=n
+CONFIG_ESP_SLEEP_POWER_DOWN_FLASH=n
+CONFIG_PM_POWER_DOWN_CPU_IN_LIGHT_SLEEP=n
+CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP=n
 
 # Enable Wi-Fi station with WPA2 / WPA3 (set during Matter commissioning)
 CONFIG_ENABLE_WIFI_STATION=y

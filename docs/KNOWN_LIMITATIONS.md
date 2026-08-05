@@ -11,8 +11,12 @@
   They are based on datasheet currents + duty cycle math. A real Joulescope
   / Otii / PPK2 capture is on [TODO.md](../TODO.md) (P0). Treat current numbers
   as upper bounds.
-- **No deep sleep yet.** Only light sleep + DFS are enabled. Average
-  current is therefore higher than the steady-state target.
+- **No deep sleep yet** on the Matter/BLE variants. Thread SED and `--station`
+  get full light sleep + DFS; `--ap` and `--wifi` get DFS only (SoftAP beacon
+  timing for `--ap`; OTA app-partition budget for `--wifi` — full light sleep
+  measurably overflowed it by 0x810 bytes); `--espnow` uses real deep sleep
+  between cycles instead. Average current on the light-sleep variants is
+  therefore higher than the steady-state target.
 - **DS18B20 is permanently powered** from the EVK 3V3 rail. It should be
   powered from a GPIO so it can be cut between samples.
 - **Wi-Fi build does not disconnect after commissioning.** It stays

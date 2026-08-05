@@ -68,19 +68,40 @@ read a pool temperature.
 
 The "I just want to use it on a holiday rental" mode. Zero infrastructure.
 
-### Service shape (proposed)
+### Service shape (implemented — `main/ble_gatt.cpp`, NimBLE)
 
-Vendor-specific 128-bit UUID under a u-blox base, with these
-characteristics:
+`main/ble_gatt.cpp` is the **source of truth** for this contract. Every
+consumer (web page, Flutter app, `scripts/ble_gatt_client.py`) must use the
+exact same UUIDs — [tests/test_ble_uuids.py](../tests/test_ble_uuids.py)
+extracts the UUIDs from all four places and fails CI if any of them drift.
 
-| Characteristic | Properties | Payload |
-|----------------|-----------|---------|
-| Temperature | Read, Notify | int16 `°C × 100`, little-endian |
-| Battery level | Read, Notify | uint8 `%` (0–100) |
-| Mode / status | Read | bit field: in-water, low-battery, storage-mode, etc. |
-| Identify | Write | Triggers a display flash (UX confirmation) |
-| Set threshold | Write | int16 `°C × 100`, persisted to NVS |
-| History (optional) | Read | last N hourly samples for the in-app graph |
+| Service | Characteristic | UUID | Properties | Payload |
+|---------|-----------------|------|-----------|---------|
+| Device Information `0x180A` | Manufacturer | `0x2A29` | Read | `"u-blox"` |
+| | Model | `0x2A24` | Read | `"AkvaLink NORA-W40"` |
+| | Firmware Revision | `0x2A26` | Read | `"{version}-{variant}"` (drives app auto-OTA-asset-select) |
+| Environmental Sensing `0x181A` | Temperature | `0x2A6E` | Read, Notify | sint16, 0.01 °C, little-endian |
+| Battery `0x180F` | Battery Level | `0x2A19` | Read | uint8 0–100 % (stub `100` until ADC circuit is populated) |
+| AkvaLink custom (`f0a00001-…-0001`, 128-bit) | Uptime | `…-0002` | Read | uint32 seconds since boot |
+| | Device name | `…-0003` | Read, Write | UTF-8 string, NVS-backed, takes effect next reboot |
+| | Alert high | `…-0004` | Read, Write | sint16, 0.01 °C, NVS-backed, `0` = disabled |
+| | Alert low | `…-0005` | Read, Write | sint16, 0.01 °C, NVS-backed, `0` = disabled |
+| AkvaLink OTA (`f0a00001-…-0010`, 128-bit) | Control | `…-0011` | Write, Notify | `0x01` BEGIN / `0x02` END / `0x03` ABORT; notifies `[opcode, result]` |
+| | Data | `…-0012` | Write / Write-no-rsp | Raw firmware chunks, in order |
+
+**Not yet surfaced anywhere but the debug script:** the custom AkvaLink
+service (uptime, writable device name, alert thresholds) is fully
+implemented in firmware and known to `scripts/ble_gatt_client.py`, but
+neither the web page nor the Flutter app read or write it yet. Candidates
+for a future pass: expose the alert thresholds and device name as editable
+fields in the app, and show uptime as a diagnostic. Battery level is also
+still a hard-coded `100 %` stub everywhere until the ADC voltage-divider
+circuit is populated (see the roadmap item in [TODO.md](../TODO.md)).
+
+The advertising strategy below (idle beacon / connected notify / event
+burst) is still aspirational — see [TODO.md](../TODO.md) for status; only
+the always-on legacy + Coded PHY advertising described in
+`main/ble_gatt.cpp` is implemented today.
 
 ### Advertising strategy (battery-critical)
 
