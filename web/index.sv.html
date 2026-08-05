@@ -726,10 +726,12 @@
   var OTA_CTRL    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0011';   // write + notify status
   var OTA_DATA    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0012';   // write firmware chunks
 
-  // Spegla footer-versionen till märket uppe till vänster så det syns direkt
-  // vilken build som laddats. (Deploy stämplar #siteVer från version.txt.)
-  // Körs först, ovillkorligt — allt nedan kan avbryta tidigt på webbläsare
-  // utan stöd (t.ex. hela iOS saknar Web Bluetooth) och får inte blockera detta.
+  // Deploy (pages.yml) sed-stämplar nu #verBadge direkt, precis som #siteVer,
+  // så icke-JS-klienter (crawlers, länkförhandsvisningar, curl) ser den riktiga
+  // versionen också. Det här åter-synkar bara märket om det och footern någonsin
+  // driver isär på en lokal/dev-kopia. Körs först, ovillkorligt — allt nedan kan
+  // avbryta tidigt på webbläsare utan stöd (t.ex. hela iOS saknar Web Bluetooth)
+  // och får inte blockera detta.
   (function () {
     var v = document.getElementById('siteVer');
     var badge = document.getElementById('verBadge');

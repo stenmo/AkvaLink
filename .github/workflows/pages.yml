@@ -84,7 +84,10 @@ jobs:
         run: |
           ver=$(tr -d ' \t\r\n' < version.txt)
           echo "Stamping deployed site version: $ver"
-          sed -i -E "s#(<span id=\"siteVer\">)[^<]*#\1${ver}#g" web/index.html web/index.sv.html
+          # Both the footer <span> and the upper-left badge are stamped here so
+          # non-JS clients (crawlers, link previews, curl) see the real version
+          # too — the JS mirror below is just a same-page copy for local dev.
+          sed -i -E "s#(<span id=\"siteVer\">)[^<]*#\1${ver}#g; s#(<div class=\"ver-badge\" id=\"verBadge\">)v[^<]*#\1v${ver}#g" web/index.html web/index.sv.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
