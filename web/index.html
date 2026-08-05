@@ -147,7 +147,7 @@
 
   /* Variants */
   code { background: #e5f2f6; color: var(--deep); padding: 1px 7px; border-radius: 6px; font-size: .9em; }
-  code.uuid-suffix { white-space: nowrap; }
+  td code { white-space: nowrap; }
 
   /* Command block — looks like a little terminal, same on light or dark page theme */
   .cmd {
@@ -667,12 +667,12 @@
           <tr><td>Model</td><td><code>0x2A24</code></td><td>Read</td><td>"AkvaLink NORA-W40"</td></tr>
           <tr><td>Firmware Revision</td><td><code>0x2A26</code></td><td>Read</td><td>"{version}-{variant}" — what "Flash latest firmware" compares against</td></tr>
           <tr><td>Battery<br><code>0x180F</code></td><td>Battery Level</td><td><code>0x2A19</code></td><td>Read</td><td>uint8, 0–100 % (stubbed at 100 — no battery-voltage circuit yet)</td></tr>
-          <tr><td rowspan="4">AkvaLink <em>(custom)</em><br><code class="uuid-suffix">…6c0001</code></td><td>Uptime</td><td><code class="uuid-suffix">…6c0002</code></td><td>Read</td><td>uint32, seconds since boot</td></tr>
-          <tr><td>Device name</td><td><code class="uuid-suffix">…6c0003</code></td><td>Read, Write</td><td>UTF-8 string, saved to NVS, takes effect next reboot</td></tr>
-          <tr><td>Alert high</td><td><code class="uuid-suffix">…6c0004</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
-          <tr><td>Alert low</td><td><code class="uuid-suffix">…6c0005</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
-          <tr><td rowspan="2">AkvaLink OTA <em>(custom)</em><br><code class="uuid-suffix">…6c0010</code></td><td>Control</td><td><code class="uuid-suffix">…6c0011</code></td><td>Write, Notify</td><td><code>0x01</code> BEGIN / <code>0x02</code> END / <code>0x03</code> ABORT; notifies <code>[opcode, result]</code></td></tr>
-          <tr><td>Data</td><td><code class="uuid-suffix">…6c0012</code></td><td>Write, Write-no-rsp</td><td>Raw firmware chunks, in order — used by "Update firmware over Bluetooth" above</td></tr>
+          <tr><td rowspan="4">AkvaLink <em>(custom)</em><br><code>…6c0001</code></td><td>Uptime</td><td><code>…6c0002</code></td><td>Read</td><td>uint32, seconds since boot</td></tr>
+          <tr><td>Device name</td><td><code>…6c0003</code></td><td>Read, Write</td><td>UTF-8 string, saved to NVS, takes effect next reboot</td></tr>
+          <tr><td>Alert high</td><td><code>…6c0004</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
+          <tr><td>Alert low</td><td><code>…6c0005</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
+          <tr><td rowspan="2">AkvaLink OTA <em>(custom)</em><br><code>…6c0010</code></td><td>Control</td><td><code>…6c0011</code></td><td>Write, Notify</td><td><code>0x01</code> BEGIN / <code>0x02</code> END / <code>0x03</code> ABORT; notifies <code>[opcode, result]</code></td></tr>
+          <tr><td>Data</td><td><code>…6c0012</code></td><td>Write, Write-no-rsp</td><td>Raw firmware chunks, in order — used by "Update firmware over Bluetooth" above</td></tr>
         </tbody>
       </table>
     </div>

@@ -159,7 +159,7 @@
 
   /* Variants */
   code { background: #e5f2f6; color: var(--deep); padding: 1px 7px; border-radius: 6px; font-size: .9em; }
-  code.uuid-suffix { white-space: nowrap; }
+  td code { white-space: nowrap; }
 
   /* Kommandoblock — ser ut som en liten terminal, samma på ljust eller mörkt sidtema */
   .cmd {
@@ -651,12 +651,12 @@
           <tr><td>Modell</td><td><code>0x2A24</code></td><td>Läs</td><td>"AkvaLink NORA-W40"</td></tr>
           <tr><td>Firmwareversion</td><td><code>0x2A26</code></td><td>Läs</td><td>"{version}-{variant}" — det "Flasha senaste firmware" jämför mot</td></tr>
           <tr><td>Battery<br><code>0x180F</code></td><td>Batterinivå</td><td><code>0x2A19</code></td><td>Läs</td><td>uint8, 0–100 % (fast 100 idag — ingen batterispänningskrets ännu)</td></tr>
-          <tr><td rowspan="4">AkvaLink <em>(egen)</em><br><code class="uuid-suffix">…6c0001</code></td><td>Drifttid</td><td><code class="uuid-suffix">…6c0002</code></td><td>Läs</td><td>uint32, sekunder sedan start</td></tr>
-          <tr><td>Enhetsnamn</td><td><code class="uuid-suffix">…6c0003</code></td><td>Läs, skriv</td><td>UTF-8-sträng, sparas i NVS, gäller från nästa omstart</td></tr>
-          <tr><td>Larm hög</td><td><code class="uuid-suffix">…6c0004</code></td><td>Läs, skriv</td><td>sint16, 0,01 °C, sparas i NVS, 0 = avstängt</td></tr>
-          <tr><td>Larm låg</td><td><code class="uuid-suffix">…6c0005</code></td><td>Läs, skriv</td><td>sint16, 0,01 °C, sparas i NVS, 0 = avstängt</td></tr>
-          <tr><td rowspan="2">AkvaLink OTA <em>(egen)</em><br><code class="uuid-suffix">…6c0010</code></td><td>Kontroll</td><td><code class="uuid-suffix">…6c0011</code></td><td>Skriv, meddela</td><td><code>0x01</code> BEGIN / <code>0x02</code> END / <code>0x03</code> ABORT; meddelar <code>[opcode, resultat]</code></td></tr>
-          <tr><td>Data</td><td><code class="uuid-suffix">…6c0012</code></td><td>Skriv, skriv-utan-svar</td><td>Rå firmware i bitar, i ordning — används av "Uppdatera firmware via Bluetooth" ovan</td></tr>
+          <tr><td rowspan="4">AkvaLink <em>(egen)</em><br><code>…6c0001</code></td><td>Drifttid</td><td><code>…6c0002</code></td><td>Läs</td><td>uint32, sekunder sedan start</td></tr>
+          <tr><td>Enhetsnamn</td><td><code>…6c0003</code></td><td>Läs, skriv</td><td>UTF-8-sträng, sparas i NVS, gäller från nästa omstart</td></tr>
+          <tr><td>Larm hög</td><td><code>…6c0004</code></td><td>Läs, skriv</td><td>sint16, 0,01 °C, sparas i NVS, 0 = avstängt</td></tr>
+          <tr><td>Larm låg</td><td><code>…6c0005</code></td><td>Läs, skriv</td><td>sint16, 0,01 °C, sparas i NVS, 0 = avstängt</td></tr>
+          <tr><td rowspan="2">AkvaLink OTA <em>(egen)</em><br><code>…6c0010</code></td><td>Kontroll</td><td><code>…6c0011</code></td><td>Skriv, meddela</td><td><code>0x01</code> BEGIN / <code>0x02</code> END / <code>0x03</code> ABORT; meddelar <code>[opcode, resultat]</code></td></tr>
+          <tr><td>Data</td><td><code>…6c0012</code></td><td>Skriv, skriv-utan-svar</td><td>Rå firmware i bitar, i ordning — används av "Uppdatera firmware via Bluetooth" ovan</td></tr>
         </tbody>
       </table>
     </div>
