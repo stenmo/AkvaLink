@@ -212,12 +212,20 @@ Slow drift ~0.5°C/day → ~2–3 reports/day
 | Battery | Capacity | Pool life (Wi-Fi disconnect) | Pool life (Thread SED) |
 |---------|----------|------------------------------|------------------------|
 | CR2477 | 1000 mAh | ~3.3 years | ~5 years |
-| 2× AAA | 1200 mAh | ~4 years | ~6 years |
-| **2× AA** | **2800 mAh** | **~9 years** | **~12+ years** |
-| 18650 Li-ion | 3400 mAh | ~11 years | ~15+ years |
+| 2× AAA* | 1200 mAh | ~4 years | ~6 years |
+| **2× AA*** | **2800 mAh** | **~9 years** | **~12+ years** |
+| 18650 Li-ion* | 3400 mAh | ~11 years | ~15+ years |
 
-At **~35 µA average**, pool monitoring on 2× AA gives **~9 years Wi-Fi** or
-**~12 years Thread** — the sensor outlives the batteries' shelf life.
+<sup>*</sup> Draw-limited power-model figures. Alkaline cells (AAA/AA)
+self-discharge over time regardless of load, capping real-world life at
+roughly 5–7 years. Li-ion (18650) calendar-ages and self-discharges faster
+than alkaline too — treat its real-world life as years, not the 11–15+ the
+draw model alone suggests. CR2477 (lithium primary) has the best shelf life
+of the four and lands closest to its modeled figure. Real measurement
+(PPK2/Joulescope) is on the roadmap — see [docs/KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).
+
+At ~35 µA average draw, pool monitoring on 2× AA gives ~9 years Wi-Fi or
+~12 years Thread by the power model — but see the shelf-life caveat above.
 
 > **Waterproofing note:** Use a DS18B20 in stainless steel probe housing
 > (widely available on Amazon/AliExpress). Run the 3-wire cable to a dry

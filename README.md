@@ -31,7 +31,7 @@ environments where the temperature barely changes, but you want to know
 | Module | NORA-W401 / NORA-W406 | Wi-Fi 6 + Thread + BLE in one tiny module |
 | MCU | ESP32-C6 (RISC-V @ 160 MHz) | Inside NORA-W40 |
 | Sensor | DS18B20 (stainless probe) | ±0.5 °C, 12-bit (0.0625 °C steps), 1-Wire, ~$3 |
-| Power | 2× AA alkaline (or 18650 Li) | ~12 years on 2× AA in pool conditions |
+| Power | 2× AA alkaline (or 18650 Li) | ~5–7 years realistic on 2× AA (Thread SED, pool conditions)* |
 
 **Schematic (direct GPIO, default build):**
 
@@ -113,14 +113,23 @@ contract as the web page, no browser needed:
 
 ## Battery life examples
 
-For a heated pool at 28–29 °C with 0.25 °C report threshold:
+For a heated pool at 28–29 °C with 0.25 °C report threshold. **Realistic
+expectation: 5–7 years** on alkaline AA/AAA — shelf life and self-discharge
+cap them well below the draw-limited numbers below. CR2477 (lithium primary)
+has the best shelf life and lands closest to its modeled figure; 18650
+(Li-ion) calendar-ages a few percent capacity per year regardless of load, so
+treat it like the alkaline rows, not as decades:
 
 | Battery | Thread SED | Wi-Fi (TWT) | Wi-Fi (disconnect) |
 |---------|-----------|-------------|--------------------|
 | CR2477 (1000 mAh) | ~5 years | ~6 months | ~3.3 years |
-| 2× AAA (1200 mAh) | ~6 years | ~8 months | ~4 years |
-| **2× AA (2800 mAh)** | **~12 years** | **~1.8 years** | **~9 years** |
-| 18650 (3400 mAh) | ~15+ years | ~2.2 years | ~11 years |
+| 2× AAA (1200 mAh)* | ~6 years | ~8 months | ~4 years |
+| **2× AA (2800 mAh)*** | **~12 years** | **~1.8 years** | **~9 years** |
+| 18650 (3400 mAh)* | ~15+ years | ~2.2 years | ~11 years |
+
+<sup>*</sup> Draw-limited power-model estimate — self-discharge/calendar aging
+caps real-world life well below this for alkaline and Li-ion cells. Real
+measurement (PPK2/Joulescope) is on the roadmap.
 
 See [docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md) for the full
 analysis (DTIM strategies, TWT setup, sensor variants, schematic).
