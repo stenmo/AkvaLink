@@ -45,6 +45,34 @@ class Strings {
     required this.chooseDevice,
     required this.cancel,
     required this.unknownDevice,
+    // Wi-Fi provisioning + station discovery (see ble/prov_controller.dart
+    // and net/station_discovery.dart).
+    required this.wifiSetupTitle,
+    required this.wifiSetupIntro,
+    required this.findSetupDevice,
+    required this.provSessionEstablishing,
+    required this.provReady,
+    required this.provScanNetworks,
+    required this.provScanningNetworks,
+    required this.provNoNetworks,
+    required this.provSelectNetwork,
+    required this.provPasswordLabel,
+    required this.provJoin,
+    required this.provSettingConfig,
+    required this.provWaitingResult,
+    required this.provJoined,
+    required this.provFindingOnLan,
+    required this.provNotFoundOnLan,
+    required this.setupFailedPrefix,
+    required this.tryAgain,
+    required this.done,
+    required this.openInBrowser,
+    // Manual "find on Wi-Fi network" (net/station_discovery.dart), separate
+    // from the BLE provisioning flow above.
+    required this.findOnNetwork,
+    required this.lanDiscoverIntro,
+    required this.lanSearching,
+    required this.lanNotFoundHint,
   });
 
   final String tagline;
@@ -80,6 +108,30 @@ class Strings {
   final String chooseDevice;
   final String cancel;
   final String unknownDevice;
+  final String wifiSetupTitle;
+  final String wifiSetupIntro;
+  final String findSetupDevice;
+  final String provSessionEstablishing;
+  final String provReady;
+  final String provScanNetworks;
+  final String provScanningNetworks;
+  final String provNoNetworks;
+  final String provSelectNetwork;
+  final String provPasswordLabel;
+  final String provJoin;
+  final String provSettingConfig;
+  final String provWaitingResult;
+  final String provJoined;
+  final String provFindingOnLan;
+  final String provNotFoundOnLan;
+  final String setupFailedPrefix;
+  final String tryAgain;
+  final String done;
+  final String openInBrowser;
+  final String findOnNetwork;
+  final String lanDiscoverIntro;
+  final String lanSearching;
+  final String lanNotFoundHint;
 
   // ---- Parameterised helpers (kept out of the constructor) ----------------
 
@@ -109,6 +161,26 @@ class Strings {
 
   String otaUploading(int percent) =>
       isSwedish ? 'Laddar upp $percent %' : 'Uploading $percent%';
+
+  String foundOnLan(String host) =>
+      isSwedish ? 'Hittades på $host' : 'Found at $host';
+
+  String connectedViaWifi(String host) => isSwedish
+      ? 'Ansluten via Wi-Fi · $host'
+      : 'Connected via Wi-Fi · $host';
+
+  String waitingForReading(String host) => isSwedish
+      ? 'Hittades vid $host – väntar på en avläsning…'
+      : 'Found $host — waiting for a reading…';
+
+  String reachableAt(String url) =>
+      isSwedish ? 'Nås på $url' : 'Reachable at $url';
+
+  String liveTemperature(String celsius) =>
+      isSwedish ? 'Live-avläsning: $celsius °C' : 'Live reading: $celsius °C';
+
+  String passwordPromptFor(String ssid) =>
+      isSwedish ? 'Ange lösenord för $ssid' : 'Enter password for $ssid';
 
   bool get isSwedish => this == sv;
 
@@ -148,6 +220,26 @@ class Strings {
     chooseDevice,
     cancel,
     unknownDevice,
+    wifiSetupTitle,
+    wifiSetupIntro,
+    findSetupDevice,
+    provSessionEstablishing,
+    provReady,
+    provScanNetworks,
+    provScanningNetworks,
+    provNoNetworks,
+    provSelectNetwork,
+    provPasswordLabel,
+    provJoin,
+    provSettingConfig,
+    provWaitingResult,
+    provJoined,
+    provFindingOnLan,
+    provNotFoundOnLan,
+    setupFailedPrefix,
+    tryAgain,
+    done,
+    openInBrowser,
     connectedTo('Sensor'),
     updatedAgo(justNow),
     secondsAgo(5),
@@ -157,6 +249,16 @@ class Strings {
     latestLabel('v0.3.2'),
     otaFetchingFor('thread'),
     otaUploading(50),
+    foundOnLan('akvalink-pool.local'),
+    connectedViaWifi('akvalink-pool.local'),
+    waitingForReading('akvalink-pool.local'),
+    reachableAt('http://station.local'),
+    liveTemperature('26.6'),
+    passwordPromptFor('Sensor'),
+    findOnNetwork,
+    lanDiscoverIntro,
+    lanSearching,
+    lanNotFoundHint,
   ];
 
   // ---- The two locales ----------------------------------------------------
@@ -196,6 +298,32 @@ class Strings {
     chooseDevice: 'No exact match — choose a nearby device:',
     cancel: 'Cancel',
     unknownDevice: 'Unknown device',
+    wifiSetupTitle: 'Wi-Fi setup',
+    wifiSetupIntro: 'Set up a fresh AkvaLink station over Bluetooth.',
+    findSetupDevice: 'Find AkvaLink in setup mode',
+    provSessionEstablishing: 'Opening secure session…',
+    provReady: 'Connected',
+    provScanNetworks: 'Scan Wi-Fi networks',
+    provScanningNetworks: 'Scanning Wi-Fi networks…',
+    provNoNetworks: 'No Wi-Fi networks found',
+    provSelectNetwork: 'Select a Wi-Fi network',
+    provPasswordLabel: 'Password',
+    provJoin: 'Join',
+    provSettingConfig: 'Sending Wi-Fi credentials…',
+    provWaitingResult: 'Waiting for it to join Wi-Fi…',
+    provJoined: 'Joined Wi-Fi',
+    provFindingOnLan: 'Finding it via mDNS…',
+    provNotFoundOnLan:
+        'Could not find it via mDNS yet — you can still use the address above.',
+    setupFailedPrefix: 'Setup failed',
+    tryAgain: 'Try again',
+    done: 'Done',
+    openInBrowser: 'Open in browser',
+    findOnNetwork: 'Find on Wi-Fi network',
+    lanDiscoverIntro: 'Locate an already set-up AkvaLink station via mDNS.',
+    lanSearching: 'Searching the network…',
+    lanNotFoundHint:
+        'No AkvaLink found via mDNS. It may be blocked by a firewall or router client isolation.',
   );
 
   static const sv = Strings(
@@ -234,6 +362,32 @@ class Strings {
     chooseDevice: 'Ingen exakt träff — välj en enhet i närheten:',
     cancel: 'Avbryt',
     unknownDevice: 'Okänd enhet',
+    wifiSetupTitle: 'Wi-Fi-inställning',
+    wifiSetupIntro: 'Konfigurera en ny AkvaLink-station via Bluetooth.',
+    findSetupDevice: 'Hitta AkvaLink i inställningsläge',
+    provSessionEstablishing: 'Öppnar säker session…',
+    provReady: 'Ansluten',
+    provScanNetworks: 'Sök Wi-Fi-nätverk',
+    provScanningNetworks: 'Söker Wi-Fi-nätverk…',
+    provNoNetworks: 'Inga Wi-Fi-nätverk hittades',
+    provSelectNetwork: 'Välj ett Wi-Fi-nätverk',
+    provPasswordLabel: 'Lösenord',
+    provJoin: 'Anslut',
+    provSettingConfig: 'Skickar Wi-Fi-uppgifter…',
+    provWaitingResult: 'Väntar på att den ska ansluta till Wi-Fi…',
+    provJoined: 'Ansluten till Wi-Fi',
+    provFindingOnLan: 'Hittar den via mDNS…',
+    provNotFoundOnLan:
+        'Kunde inte hitta den via mDNS än — du kan ändå använda adressen ovan.',
+    setupFailedPrefix: 'Konfigurationen misslyckades',
+    tryAgain: 'Försök igen',
+    done: 'Klar',
+    openInBrowser: 'Öppna i webbläsaren',
+    findOnNetwork: 'Hitta på Wi-Fi-nätverket',
+    lanDiscoverIntro: 'Hitta en redan konfigurerad AkvaLink-station via mDNS.',
+    lanSearching: 'Söker på nätverket…',
+    lanNotFoundHint:
+        'Ingen AkvaLink hittades via mDNS. Den kan vara blockerad av en brandvägg eller klientisolering i routern.',
   );
 
   /// Pick a locale's strings from a [Locale] (falls back to English).

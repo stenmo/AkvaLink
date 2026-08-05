@@ -38,7 +38,6 @@ httpd_handle_t akvalink_web_get_server(void);
 static const char *TAG = "station";
 
 #define PROV_SERVICE_NAME "AkvaLink"   // BLE name shown in the provisioning app
-#define PROV_POP          "akvalink"   // proof-of-possession the app must enter
 
 // mDNS hostname is akvalink-<last4ofmac>.local so multiple devices on the
 // same LAN get unique names without any configuration.
@@ -60,6 +59,15 @@ static bool s_mqtt_connected = false;
 static char s_mac[13];          // "aabbccddeeff"
 static char s_state_topic[48];  // "akvalink/<mac>/temperature"
 static char s_avail_topic[44];  // "akvalink/<mac>/status"
+
+// True once WE own (re)connecting to Wi-Fi — either already provisioned at
+// boot, or BLE provisioning just finished. False while wifi_prov_mgr owns the
+// radio for its own scan/connect during setup: a stray esp_wifi_connect() call
+// from us right as it starts Wi-Fi for scanning is exactly the "first Wi-Fi
+// scan from the app comes back empty, retry always works" bug seen on
+// hardware — the manager's scan gets interrupted by our unconfigured connect
+// attempt, and by the time you retry that attempt has already failed out.
+static bool s_own_wifi_connect = false;
 
 // Publish the HA MQTT discovery config (retain=1) and an "online" availability
 // message. Called once when the MQTT connection is established.
@@ -98,6 +106,52 @@ static void mqtt_publish_discovery(void)
     ESP_LOGI(TAG, "MQTT HA discovery published — entity: akvalink_%s_temp", s_mac);
 }
 
+// ESP-IDF's getaddrinfo() never resolves "<name>.local" hostnames (confirmed
+// on hardware: connecting to "homeassistant.local" fails with "esp-tls:
+// couldn't get hostname") — that needs an explicit mDNS query. If the broker
+// URI's host ends in ".local", resolve it ourselves and rewrite the URI to
+// use the resolved IPv4 literal instead. Returns false (uri untouched) for
+// plain IPs/DNS names or if the mDNS query fails.
+static bool resolve_local_broker_uri(const char *uri, char *out, size_t out_len)
+{
+    const char *host = strstr(uri, "://");
+    if (!host) {
+        return false;
+    }
+    host += 3;
+    const char *host_end = strpbrk(host, ":/");
+    size_t host_len = host_end ? (size_t)(host_end - host) : strlen(host);
+
+    static const char kSuffix[] = ".local";
+    size_t suffix_len = sizeof(kSuffix) - 1;
+    if (host_len <= suffix_len || strncmp(host + host_len - suffix_len, kSuffix, suffix_len) != 0) {
+        return false;   // not a .local host — nothing for us to resolve
+    }
+
+    char bare[MDNS_NAME_BUF_LEN];
+    size_t bare_len = host_len - suffix_len;
+    if (bare_len == 0 || bare_len >= sizeof(bare)) {
+        return false;
+    }
+    memcpy(bare, host, bare_len);
+    bare[bare_len] = '\0';
+
+    esp_ip4_addr_t addr;
+    esp_err_t err = mdns_query_a(bare, 2000, &addr);
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "mDNS resolve of \"%.*s\" failed (%s)", (int)host_len, host, esp_err_to_name(err));
+        return false;
+    }
+
+    int n = snprintf(out, out_len, "%.*s" IPSTR "%s",
+                      (int)(host - uri), uri, IP2STR(&addr), host_end ? host_end : "");
+    if (n < 0 || (size_t)n >= out_len) {
+        return false;
+    }
+    ESP_LOGI(TAG, "Resolved \"%.*s\" -> " IPSTR " via mDNS", (int)host_len, host, IP2STR(&addr));
+    return true;
+}
+
 static void mqtt_event_handler(void *arg, esp_event_base_t base, int32_t id, void *data)
 {
     (void)arg; (void)base; (void)data;
@@ -106,10 +160,16 @@ static void mqtt_event_handler(void *arg, esp_event_base_t base, int32_t id, voi
         s_mqtt_connected = true;
         mqtt_publish_discovery();
         break;
-    case MQTT_EVENT_DISCONNECTED:
+    case MQTT_EVENT_DISCONNECTED: {
         s_mqtt_connected = false;
         ESP_LOGW(TAG, "MQTT disconnected — will retry");
+        // Re-resolve in case the broker wasn't up yet on our first attempt.
+        char resolved_uri[96];
+        if (resolve_local_broker_uri(MQTT_BROKER_URL, resolved_uri, sizeof(resolved_uri))) {
+            esp_mqtt_client_set_uri(s_mqtt, resolved_uri);
+        }
         break;
+    }
     case MQTT_EVENT_ERROR:
         ESP_LOGW(TAG, "MQTT error — check broker URL: %s", MQTT_BROKER_URL);
         break;
@@ -132,8 +192,14 @@ static void start_mqtt(void)
     snprintf(s_state_topic, sizeof(s_state_topic), "akvalink/%s/temperature", s_mac);
     snprintf(s_avail_topic, sizeof(s_avail_topic), "akvalink/%s/status", s_mac);
 
+    char resolved_uri[96];
+    const char *broker_uri = MQTT_BROKER_URL;
+    if (resolve_local_broker_uri(MQTT_BROKER_URL, resolved_uri, sizeof(resolved_uri))) {
+        broker_uri = resolved_uri;
+    }
+
     esp_mqtt_client_config_t cfg = {};
-    cfg.broker.address.uri            = MQTT_BROKER_URL;
+    cfg.broker.address.uri            = broker_uri;
     // LWT: broker publishes "offline" on unclean disconnect — HA marks the
     // entity unavailable so dashboards don’t show a stale value.
     cfg.session.last_will.topic       = s_avail_topic;
@@ -145,7 +211,7 @@ static void start_mqtt(void)
     s_mqtt = esp_mqtt_client_init(&cfg);
     esp_mqtt_client_register_event(s_mqtt, MQTT_EVENT_ANY, mqtt_event_handler, NULL);
     esp_mqtt_client_start(s_mqtt);
-    ESP_LOGI(TAG, "MQTT client started — broker %s", MQTT_BROKER_URL);
+    ESP_LOGI(TAG, "MQTT client started — broker %s", broker_uri);
 }
 
 // Push the latest temperature for the web page AND publish to MQTT.
@@ -206,6 +272,7 @@ static void start_mdns_and_web(void)
         ms.uri = "/mqtt-status"; ms.method = HTTP_GET; ms.handler = mqtt_status_get;
         httpd_register_uri_handler(httpd, &ms);
     }
+    akvalink_web_finish_server();   // register "/*" last — see web_page.h
 
     start_mqtt();
 }
@@ -216,8 +283,8 @@ static void event_handler(void *arg, esp_event_base_t base, int32_t id, void *da
         switch (id) {
         case WIFI_PROV_START:
             ESP_LOGI(TAG, "BLE provisioning started — open the ESP BLE "
-                          "Provisioning app, pick \"%s\", POP \"%s\"",
-                     PROV_SERVICE_NAME, PROV_POP);
+                          "Provisioning app and pick \"%s\" (no PIN/POP needed)",
+                     PROV_SERVICE_NAME);
             break;
         case WIFI_PROV_CRED_RECV: {
             wifi_sta_config_t *c = (wifi_sta_config_t *)data;
@@ -231,16 +298,21 @@ static void event_handler(void *arg, esp_event_base_t base, int32_t id, void *da
             ESP_LOGI(TAG, "Provisioning succeeded");
             break;
         case WIFI_PROV_END:
+            s_own_wifi_connect = true;          // provisioning done — we own (re)connects now
             wifi_prov_mgr_deinit();             // release the provisioning manager
             break;
         default:
             break;
         }
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
+        if (s_own_wifi_connect) {
+            esp_wifi_connect();
+        }
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGW(TAG, "Disconnected — reconnecting");
-        esp_wifi_connect();
+        if (s_own_wifi_connect) {
+            ESP_LOGW(TAG, "Disconnected — reconnecting");
+            esp_wifi_connect();
+        }
     } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *ev = (ip_event_got_ip_t *)data;
         ESP_LOGI(TAG, "Online — IP " IPSTR, IP2STR(&ev->ip_info.ip));
@@ -310,12 +382,17 @@ esp_err_t akvalink_station_start(void)
 
     if (!provisioned) {
         ESP_LOGI(TAG, "No Wi-Fi credentials stored — starting BLE provisioning");
-        wifi_prov_security_t security = WIFI_PROV_SECURITY_1;
+        // Security0: no POP, no encrypted session. Simplest possible setup (one
+        // tap in the app, no PIN to type) at the cost of the Wi-Fi password
+        // going over the air in the clear during the brief provisioning window --
+        // same trade-off already made for the open --ap SoftAP. Acceptable for
+        // a home network credential, not for anything higher-stakes.
         ESP_ERROR_CHECK(wifi_prov_mgr_start_provisioning(
-            security, PROV_POP, PROV_SERVICE_NAME, NULL));
+            WIFI_PROV_SECURITY_0, NULL, PROV_SERVICE_NAME, NULL));
     } else {
         ESP_LOGI(TAG, "Wi-Fi credentials found — connecting");
         wifi_prov_mgr_deinit();                 // not needed for a normal connect
+        s_own_wifi_connect = true;
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         ESP_ERROR_CHECK(esp_wifi_start());
     }

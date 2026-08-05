@@ -57,12 +57,6 @@ if not defined PYEXE ( where python >nul 2>&1 && set "PYEXE=python" )
 if defined PYEXE ( %PYEXE% -c "import serial.tools.list_ports" >nul 2>&1 || set "PYEXE=" )
 
 call "%SCRIPT_DIR%\scripts\common\header.cmd" 2>nul
-echo   Platform: u-blox NORA-W40 (Espressif ESP32-C6) -- WSL2 build
-echo   Role:     Single-SoC Matter end-node -- Thermometer (DS18B20)
-echo   Network:  Matter-over-Thread (SED)  ^|  --wifi for Wi-Fi variant
-echo   Sensor:   1-Wire DS18B20 on GPIO15 (EVK J15.4), 4.7 kOhm to +3V3
-echo ========================================
-echo.
 
 REM --- Parse firmware args --------------------------------------------------
 set "DO_BUILD=0"
@@ -143,6 +137,40 @@ if "%ANY_FLAG%"=="0" goto :show_help
 
 REM A bare variant flag with no explicit action defaults to --build.
 if not "%DO_BUILD%"=="1" if not "%DO_CLEAN%"=="1" if not "%DO_FLASH%"=="1" if not "%DO_ERASE%"=="1" if not "%DO_LOG%"=="1" if not "%DO_SETUP%"=="1" if not "%DO_MENUCONFIG%"=="1" set "DO_BUILD=1"
+
+REM Banner text reflects the actual variant selected -- printed only now that
+REM the variant flags are known, so e.g. --station doesn't falsely claim Matter.
+set "ROLE_TXT=Single-SoC Matter end-node -- Thermometer (DS18B20)"
+set "NET_TXT=Matter-over-Thread (SED)"
+set "SENSOR_TXT=1-Wire DS18B20 on GPIO15 (EVK J15.4), 4.7 kOhm to +3V3"
+if "%DO_WIFI%"=="1"    set "NET_TXT=Matter-over-Wi-Fi"
+if "%DO_BLE%"=="1" (
+    set "ROLE_TXT=Standalone BLE GATT -- Thermometer (DS18B20), no hub or cloud"
+    set "NET_TXT=BLE only, NimBLE GATT server"
+)
+if "%DO_AP%"=="1" (
+    set "ROLE_TXT=Standalone Wi-Fi AP -- live web page, no hub or app"
+    set "NET_TXT=SoftAP AkvaLink, open hotspot"
+)
+if "%DO_STATION%"=="1" (
+    set "ROLE_TXT=Standalone Wi-Fi station -- live web page + MQTT"
+    set "NET_TXT=Wi-Fi STA, BLE-provisioned, mDNS akvalink-xxxx.local"
+)
+if "%DO_ESPNOW%"=="1" (
+    set "ROLE_TXT=ESP-NOW broadcast sender -- deep-sleep between samples"
+    set "NET_TXT=ESP-NOW, no Wi-Fi association, no hub"
+)
+if "%DO_SENSOR%"=="1" (
+    set "ROLE_TXT=DS18B20 bench read test -- no Matter or BLE"
+    set "NET_TXT=none, serial console only"
+)
+if "%DO_CLICKBOARD%"=="1" set "SENSOR_TXT=I2C 1-Wire via DS2482-800 Click board (MikroBUS 1)"
+echo   Platform: u-blox NORA-W40 (Espressif ESP32-C6) -- WSL2 build
+echo   Role:     !ROLE_TXT!
+echo   Network:  !NET_TXT!
+echo   Sensor:   !SENSOR_TXT!
+echo ========================================
+echo.
 
 REM --- Setup / menuconfig ---------------------------------------------------
 if "%DO_SETUP%"=="1" (

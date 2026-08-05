@@ -1,15 +1,62 @@
 // SPDX-License-Identifier: Apache-2.0
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../ble/akvalink_controller.dart';
+import '../net/station_discovery.dart';
 import '../strings.dart';
 import '../theme.dart';
 
-/// The big live-temperature readout + connection controls. Mirrors the
-/// `.live-card` on the web page: giant number, status line, connect button.
-class TemperatureCard extends StatelessWidget {
-  const TemperatureCard({super.key});
+/// The big live-temperature readout — mirrors the `.live-card` on the web
+/// page. Shared regardless of how AkvaLink was reached: prefers an active
+/// BLE reading, falls back to polling a discovered Wi-Fi station's `/temp`.
+class TemperatureReadoutCard extends StatefulWidget {
+  const TemperatureReadoutCard({super.key});
+
+  @override
+  State<TemperatureReadoutCard> createState() =>
+      _TemperatureReadoutCardState();
+}
+
+class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
+  Timer? _pollTimer;
+  StationDiscoveryController? _pollDiscovery;
+  double? _lanCelsius;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final discovery = context.read<StationDiscoveryController>();
+    if (discovery.phase == DiscoveryPhase.found) {
+      _startLanPolling(discovery);
+    } else {
+      _stopLanPolling();
+    }
+  }
+
+  void _startLanPolling(StationDiscoveryController discovery) {
+    if (_pollTimer != null) return;
+    _pollDiscovery = discovery;
+    _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      final v = await _pollDiscovery!.fetchTemperature();
+      if (mounted) setState(() => _lanCelsius = v);
+    });
+  }
+
+  void _stopLanPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+    _pollDiscovery = null;
+    _lanCelsius = null;
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
 
   String _ageString(BuildContext context, DateTime? t) {
     final s = context.read<Strings>();
@@ -22,23 +69,45 @@ class TemperatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.watch<AkvaLinkController>();
+    final ble = context.watch<AkvaLinkController>();
+    final discovery = context.watch<StationDiscoveryController>();
     final s = context.watch<Strings>();
-    final connected = c.isConnected;
-    final busy =
-        c.state == AkvaConnState.scanning ||
-        c.state == AkvaConnState.connecting;
 
-    final tempText = c.temperatureC == null
-        ? '––.–'
-        : c.temperatureC!.toStringAsFixed(2);
+    final bleConnected = ble.isConnected;
+    final lanFound = discovery.phase == DiscoveryPhase.found;
+
+    final double? celsius;
+    final String subtitle;
+    final Color subtitleColor;
+    if (bleConnected) {
+      celsius = ble.temperatureC;
+      subtitle = s.connectedTo(ble.deviceName);
+      subtitleColor = AkvaColors.ok;
+    } else if (lanFound) {
+      celsius = _lanCelsius;
+      final host = discovery.hostname ?? discovery.ip ?? '';
+      // "Found" just means mDNS located it — only call it "connected" once
+      // an actual /temp reading has come back over HTTP.
+      if (celsius != null) {
+        subtitle = s.connectedViaWifi(host);
+        subtitleColor = AkvaColors.ok;
+      } else {
+        subtitle = s.waitingForReading(host);
+        subtitleColor = AkvaColors.muted;
+      }
+    } else {
+      celsius = null;
+      subtitle = s.notConnected;
+      subtitleColor = AkvaColors.muted;
+    }
+
+    final tempText = celsius == null ? '––.–' : celsius.toStringAsFixed(2);
 
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
         child: Column(
           children: [
-            // --- Temperature readout ---
             RichText(
               text: TextSpan(
                 children: [
@@ -48,9 +117,9 @@ class TemperatureCard extends StatelessWidget {
                       fontSize: 60,
                       fontWeight: FontWeight.w800,
                       height: 1,
-                      color: connected
-                          ? AkvaColors.water
-                          : Theme.of(context).disabledColor,
+                      color: celsius == null
+                          ? Theme.of(context).disabledColor
+                          : AkvaColors.water,
                     ),
                   ),
                   TextSpan(
@@ -65,27 +134,70 @@ class TemperatureCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: subtitleColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (bleConnected && ble.lastUpdate != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  s.updatedAgo(_ageString(context, ble.lastUpdate)),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-            // --- Status line ---
+/// Connect/disconnect over BLE, with the fallback device picker when the
+/// name/service scan found nothing exact.
+class BleConnectCard extends StatelessWidget {
+  const BleConnectCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.watch<AkvaLinkController>();
+    final s = context.watch<Strings>();
+    final connected = c.isConnected;
+    final busy =
+        c.state == AkvaConnState.scanning ||
+        c.state == AkvaConnState.connecting;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.bluetooth, color: AkvaColors.deep),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    s.connect,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
             _StatusLine(
               state: c.state,
               error: c.error,
               name: c.deviceName,
               scanningAll: c.isScanningAll,
             ),
-            if (connected && c.lastUpdate != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  s.updatedAgo(_ageString(context, c.lastUpdate)),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
+            const SizedBox(height: 12),
 
-            const SizedBox(height: 20),
-
-            // --- Connect / disconnect button, or the fallback device picker
-            // when the name/service scan found nothing exact. ---
             if (c.state == AkvaConnState.selecting)
               _DevicePicker(controller: c)
             else
@@ -208,7 +320,6 @@ class _StatusLine extends StatelessWidget {
     }
     return Text(
       text,
-      textAlign: TextAlign.center,
       style: TextStyle(
         color: color,
         fontWeight: state == AkvaConnState.connected ? FontWeight.w600 : null,
@@ -294,3 +405,4 @@ class _InfoChip extends StatelessWidget {
     );
   }
 }
+

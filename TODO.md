@@ -16,6 +16,26 @@ gets started.
       all verified on hardware. Temperature confirmed in browser.
 - [x] **Wi-Fi station: unique mDNS hostname** ✓ — `akvalink-<last4mac>.local`
       so multiple devices on the same LAN don't collide.
+- [x] **BUG (P0, hardware-confirmed 2026-08-05, fixed same day): `--station`
+      BLE provisioning never actually advertised.** ✓ — Root cause: this
+      ESP-IDF's vendored NimBLE hard-disables the legacy
+      `ble_gap_adv_set_fields()`/`set_data()`/`start()` API (always
+      `BLE_HS_ENOTSUP`, rc=8) whenever `CONFIG_BT_NIMBLE_EXT_ADV=y` — no
+      legacy-over-ext-adv compat shim like upstream mynewt-nimble has.
+      `protocomm_nimble.c` (`wifi_prov_mgr`'s BLE transport) only uses the
+      legacy API, so EXT_ADV=y broke provisioning outright. Bumping
+      `MAX_EXT_ADV_INSTANCES` to 2 (the first hypothesis) did **not** fix
+      it — confirmed by rebuild+reflash+relog, still `rc=8` identically.
+      Real fix: `config/sdkconfig.defaults.station` now sets
+      `CONFIG_BT_NIMBLE_EXT_ADV=n`, and `main/ble_gatt.cpp` (the GPIO9
+      escape hatch) gained a `#if CONFIG_BT_NIMBLE_EXT_ADV` branch that
+      uses the plain legacy adv API when EXT_ADV is off (matching
+      `ble_escape.cpp`'s existing pattern for `--ap`). Verified on real
+      hardware (EVK, COM63): `wifi_prov_mgr: Provisioning started` now
+      logs with no advertisement error. See
+      [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) (entry
+      removed) and `/memories/repo/akvalink-station-ble-adv-not-supported-bug.md`
+      for the full trace.
 
 ## Station variant — feature queue (one at a time)
 
@@ -249,18 +269,26 @@ above has happened.
 - **Universal Flutter companion app** (iOS + Android + desktop): one codebase
   talking BLE GATT and/or local HTTP/JSON — provisioning, live temp, history,
   battery, alerts. Local-only, no account.
-  - **In-app Wi-Fi provisioning (remove the need for the separate Espressif
-    "ESP BLE Provisioning" app)** — today the `--station` build already runs
-    ESP-IDF's `wifi_provisioning` over BLE (`scheme_ble`, Security1, POP
-    `"akvalink"`, service name `"AkvaLink"` — see `main/station_web.cpp`), and
-    that official app already works against it. To provision from *our* app
-    instead, the app needs a Dart client for Espressif's `protocomm` BLE
-    protocol: discover the prov-session/prov-config/prov-scan characteristics,
-    do the Security1 handshake (X25519 key exchange + POP check, then an
-    AES-CTR encrypted session), and send the `WiFiConfigPayload` protobuf
-    messages. That's real crypto/protocol work — needs a Dart X25519+AES lib
-    and protobuf codegen matching `protocomm`'s `.proto` schemas — and should
-    be prototyped against a real device before shipping, not written blind.
+  - **In-app Wi-Fi provisioning** ✓ **implemented** — the app no longer
+    needs the separate Espressif "ESP BLE Provisioning" app for the common
+    case. `app_flutter/lib/ble/prov_uuids.dart` + `prov_proto.dart` +
+    `prov_controller.dart` are a from-scratch Dart client for Espressif's
+    `protocomm` BLE protocol (Security0, no POP/crypto — see
+    `main/station_web.cpp`): UUID derivation, a hand-rolled protobuf wire
+    codec (no protoc/codegen dependency), and the scan→connect→session→
+    wifi-scan→provision state machine. UI: `screens/wifi_setup_screen.dart`,
+    reachable from a "Wi-Fi setup" entry on the home screen. Full write-up
+    in [docs/CONNECTIVITY.md](docs/CONNECTIVITY.md#in-app-provisioning-flutter-companion-app).
+    **Not yet verified against a live device** (WSL toolchain broken this
+    cycle, see known limitations) — the UUID derivation and NimBLE-vs-Bluedroid
+    transport assumption should be confirmed with a real `--station` build
+    before relying on this in the field.
+  - **Post-provisioning discovery** ✓ **implemented** — after provisioning,
+    the app uses the BLE-reported IP for the first connection, then
+    `app_flutter/lib/net/station_discovery.dart` browses mDNS
+    (`multicast_dns` package) for the station's stable
+    `akvalink-<mac>.local` hostname so later reconnects survive a DHCP IP
+    change. Fetches `/temp` JSON directly (no HTML parsing).
     Cheaper first step: finish wiring the app to the **custom AkvaLink BLE
     service** that's already implemented in firmware (uptime, device name,
     alert thresholds — see the BLE GATT contract section above) before

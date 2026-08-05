@@ -784,6 +784,17 @@
 
 <script>
 (function () {
+  // esp-web-install-button hides its own "activate" slot when Web Serial
+  // isn't supported (Safari/Firefox/iOS) — but the sibling "or flash
+  // directly" divider text sits outside the component, so it doesn't hide
+  // itself. Match the component's own support check here.
+  if (typeof navigator === 'undefined' || !('serial' in navigator)) {
+    document.querySelectorAll('.dl-or').forEach(function (el) { el.style.display = 'none'; });
+  }
+})();
+</script>
+<script>
+(function () {
   var btn = document.getElementById('bleBtn');
   var statusEl = document.getElementById('bleStatus');
   var tempEl = document.getElementById('tempVal');

@@ -491,10 +491,18 @@ esp_err_t akvalink_web_start_server(void)
     h.uri = "/history";       h.method = HTTP_GET;  h.handler = history_get;         httpd_register_uri_handler(s_httpd, &h);
     h.uri = "/history/reset"; h.method = HTTP_POST; h.handler = history_reset_post;  httpd_register_uri_handler(s_httpd, &h);
     h.uri = "/ota";           h.method = HTTP_POST; h.handler = ota_post;            httpd_register_uri_handler(s_httpd, &h);
-    h.uri = "/*";             h.method = HTTP_GET;  h.handler = any_get;             httpd_register_uri_handler(s_httpd, &h);
 
     ESP_LOGI(TAG, "HTTP server up — /, /temp, /battery, /trend, /stats, /history, /ota");
     return ESP_OK;
+}
+
+void akvalink_web_finish_server(void)
+{
+    if (!s_httpd) {
+        return;
+    }
+    httpd_uri_t h = {};
+    h.uri = "/*"; h.method = HTTP_GET; h.handler = any_get; httpd_register_uri_handler(s_httpd, &h);
 }
 
 httpd_handle_t akvalink_web_get_server(void)

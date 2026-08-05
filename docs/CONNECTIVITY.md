@@ -168,6 +168,14 @@ Matter is that this just works.
 stays a Kconfig-gated *optional* extra (`CONFIG_AKVALINK_PROVISIONER`) only
 for the "provisions from both ecosystems" demo story; skip it otherwise.
 
+**Security level: `WIFI_PROV_SECURITY_0`** (plain text, no POP, no crypto
+handshake) — chosen over `SECURITY_1` for the simplest possible setup: one tap
+in the app, no PIN to type or match. Trade-off: the Wi-Fi password crosses the
+air unencrypted during the brief provisioning window. Same trust model already
+accepted for the open `--ap` SoftAP — fine for a home network credential on a
+hobby/demo device, not a fit for anything higher-stakes. Revisit if a future
+custom provisioning UI in the Flutter app wants `SECURITY_1` back.
+
 | Provisioner | Phone apps | Pros | Cons | Recommendation |
 |-------------|-----------|------|------|----------------|
 | **Espressif Unified Provisioning** (`wifi_provisioning`, "Improv-style") | **ESP BLE Provisioning** (Espressif, iOS+Android) | Already in ESP-IDF — zero extra deps. App is published, free, works. Same component used by every recent ESP32 product. Supports BLE *and* SoftAP transports, security2, custom data hooks. | Espressif-branded app; not a household name. | **v1 default.** |
@@ -187,13 +195,96 @@ for the "provisions from both ecosystems" demo story; skip it otherwise.
 > captive-portal mini-browser, Android may drop the AP when it sees no
 > internet — both acceptable for a fallback.
 
-**Why both Espressif *and* Nordic eventually:** AkvaLink is a u-blox
-showcase. Demonstrating that the device is provisionable from *both*
-ecosystems' standard apps is a credible "we sit above the silicon
-politics" story — and it costs us nothing once the BLE GATT
-infrastructure for mode 3 is in place.
+> **Why both Espressif *and* Nordic eventually:** AkvaLink is a u-blox
+> showcase. Demonstrating that the device is provisionable from *both*
+> ecosystems' standard apps is a credible "we sit above the silicon
+> politics" story — and it costs us nothing once the BLE GATT
+> infrastructure for mode 3 is in place.
 
-### Provisioning flow (modes 3 & 4)
+### In-app provisioning (Flutter companion app)
+
+The companion app (`app_flutter/`) implements the Espressif Unified
+Provisioning BLE client **directly** — no separate "ESP BLE Provisioning"
+app install needed for the common case. There's no official Dart/Flutter
+client for `wifi_provisioning`/`protocomm`, so this was built from the
+ESP-IDF source (`components/wifi_provisioning`, `components/protocomm`):
+
+- **`lib/ble/prov_uuids.dart`** — the provisioning service + 5 characteristic
+  UUIDs, derived from `protocomm`'s BLE transport (base 128-bit UUID with the
+  fixed 16-bit endpoint ID spliced into bytes 12-13). Documented in the file's
+  comments, including the residual risk: derived from the *Bluedroid*
+  transport source (`protocomm_ble.c`) since AkvaLink builds on NimBLE
+  (`protocomm_nimble.c`, assumed equivalent but not read directly), and not
+  yet confirmed against a live device BLE scan.
+- **`lib/ble/prov_proto.dart`** — a minimal hand-written protobuf wire codec
+  for the six provisioning message types (`session`, `sec0`, `wifi_scan`,
+  `wifi_config` + constants), rather than pulling in the `protobuf` package
+  and a protoc codegen step for a small, frozen message set.
+- **`lib/ble/prov_controller.dart`** — the BLE state machine: scan → connect
+  → open a Security0 session → scan Wi-Fi → send SSID/password → poll for
+  the join result. Every exchange is write-request-then-read-same-characteristic
+  (no GATT notify — `station_web.cpp` doesn't enable it).
+- **`lib/screens/wifi_setup_screen.dart`** — the UI, reachable from a "Wi-Fi
+  setup" entry on the home screen.
+
+### Finding the device afterwards (mDNS)
+
+BLE provisioning and the HTTP temperature page are **separate subsystems** —
+the provisioning GATT service is torn down (`wifi_prov_mgr_deinit()`) the
+moment Wi-Fi connects, and the HTTP/mDNS stack only starts afterward
+(`start_mdns_and_web()` in `station_web.cpp`). Two tiers get the app from
+"just provisioned" to "showing live temperature":
+
+1. **Tier 1 — the BLE-reported IP.** The last provisioning response
+   (`RespGetStatus.connected.ip4_addr`) arrives over the still-open BLE link
+   right as provisioning succeeds; `ProvController.connectedIp` captures it.
+   Good for the very first connection, zero extra dependencies.
+2. **Tier 2 — mDNS (`lib/net/station_discovery.dart`).** The station's IP can
+   change on a later DHCP renewal, but its mDNS hostname
+   (`akvalink-<last4ofmac>.local`, instance name "AkvaLink temperature",
+   `_http._tcp`) doesn't. `StationDiscoveryController` resolves a remembered
+   hostname directly (fast path), or browses `_http._tcp` on the LAN and
+   remembers whichever AkvaLink responds for next time (`multicast_dns`
+   package; hostname persisted via `shared_preferences`). Fetches
+   `main/web_page.cpp`'s `/temp` JSON directly — no HTML parsing needed.
+   Known limitation: the firmware's mDNS instance name isn't per-device, so
+   with more than one station on the same LAN the browse picks whichever
+   responds first.
+
+### Windows Firewall for mDNS discovery (Windows build only)
+
+The app's `multicast_dns` package opens its own UDP socket on port 5353 —
+it does **not** use Windows' built-in mDNS responder (that responder's
+`mDNS (UDP-In)` / `mDNS (UDP-Out)` firewall rules are scoped only to
+`%SystemRoot%\system32\svchost.exe`, confirmed with
+`Get-NetFirewallRule -DisplayName "mDNS (UDP-In)" | Get-NetFirewallApplicationFilter`).
+Windows Firewall blocks unsolicited inbound UDP by default, so the first
+time `station_discovery.dart` tries to receive mDNS replies, Windows may
+show a "Defender Firewall has blocked some features of this app" prompt —
+if it's dismissed (or never shown, e.g. running headless), discovery times
+out and the UI falls back to manual IP entry (`strings.dart`'s
+`provFindingOnLan` message). For reference, Edge, Chrome and Copilot each
+ship their **own** dedicated `*(mDNS-In)` rule scoped to their own `.exe` —
+the generic system rule never covers third-party apps, so AkvaLink needs
+the same treatment.
+
+To add the missing inbound rule by hand (adjust the path — Flutter puts
+the Windows build at `app_flutter\build\windows\x64\runner\Release\akvalink.exe`):
+
+```cmd
+REM cmd.exe, run as Administrator
+netsh advfirewall firewall add rule name="AkvaLink mDNS (UDP-In)" dir=in action=allow protocol=UDP localport=5353 program="C:\path\to\akvalink.exe" profile=private,domain,public
+```
+
+```powershell
+# PowerShell, run as Administrator
+New-NetFirewallRule -DisplayName "AkvaLink mDNS (UDP-In)" -Direction Inbound -Action Allow -Protocol UDP -LocalPort 5353 -Program "C:\path\to\akvalink.exe" -Profile Domain,Private,Public
+```
+
+Remove it again with `netsh advfirewall firewall delete rule name="AkvaLink mDNS (UDP-In)"`
+or `Remove-NetFirewallRule -DisplayName "AkvaLink mDNS (UDP-In)"`. Not yet
+shipped automatically (no installer/MSIX packaging exists to add this rule
+for the user) — a Windows-release-path TODO, not a firmware bug.
 
 1. Fresh device (or factory reset): boots into **provisioning advertise**
    mode. E-ink shows: `Pair me — open the app`.

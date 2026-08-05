@@ -765,6 +765,17 @@
 
 <script>
 (function () {
+  // esp-web-install-button döljer sin egen "activate"-slot när Web Serial
+  // saknas (Safari/Firefox/iOS) — men den intilliggande "eller flasha
+  // direkt"-texten ligger utanför komponenten och döljer sig inte själv.
+  // Matchar komponentens egen stödkontroll här.
+  if (typeof navigator === 'undefined' || !('serial' in navigator)) {
+    document.querySelectorAll('.dl-or').forEach(function (el) { el.style.display = 'none'; });
+  }
+})();
+</script>
+<script>
+(function () {
   var btn = document.getElementById('bleBtn');
   var statusEl = document.getElementById('bleStatus');
   var tempEl = document.getElementById('tempVal');

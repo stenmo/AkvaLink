@@ -25,13 +25,21 @@ CONFIG_OPENTHREAD_JOINER=n
 
 # BLE is needed for provisioning (hand over Wi-Fi credentials once). Use NimBLE
 # (lighter than Bluedroid); CHIPoBLE stays off since there is no Matter here.
-# EXT_ADV + two instances: required by ble_gatt.cpp when GPIO9 held at boot
-# triggers the BLE escape hatch (legacy 1M + Coded PHY S=8 advertising).
+#
+# EXT_ADV stays OFF here (unlike --ble). This IDF's vendored NimBLE hard-
+# disables the legacy ble_gap_adv_set_fields()/set_data()/start() API (always
+# returns BLE_HS_ENOTSUP, rc=8) whenever BLE_EXT_ADV=y — there's no legacy-
+# over-ext-adv compat shim like upstream mynewt-nimble has. protocomm_nimble.c
+# (wifi_prov_mgr's BLE transport) only ever calls the legacy API, so EXT_ADV=y
+# here permanently breaks BLE provisioning. main/ble_gatt.cpp's escape hatch
+# (GPIO9 at boot) uses the plain legacy adv API too when EXT_ADV=n (see the
+# #if CONFIG_BT_NIMBLE_EXT_ADV branch in ble_gatt.cpp) — same as ble_escape.cpp
+# does for --ap. Coded PHY rotation isn't available in this mode (that needs
+# EXT_ADV — see --ble), but --station's escape hatch doesn't need long range.
 CONFIG_BT_ENABLED=y
 CONFIG_BT_NIMBLE_ENABLED=y
 CONFIG_ENABLE_CHIPOBLE=n
-CONFIG_BT_NIMBLE_EXT_ADV=y
-CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES=1
+CONFIG_BT_NIMBLE_EXT_ADV=n
 CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=517
 
 # GATT client must be compiled in: ble_gatt.cpp (the escape-hatch GATT server)

@@ -564,30 +564,50 @@ static int gap_event(struct ble_gap_event *event, void * /*arg*/)
 }
 
 // --- Advertising (legacy 1M, single instance, continuous) ------------------
-static int build_adv_data(struct os_mbuf **out)
+//
+// Two APIs, selected at compile time by CONFIG_BT_NIMBLE_EXT_ADV:
+//   - Extended advertising API (ble_gap_ext_adv_*): used when EXT_ADV=y
+//     (--ble variant), needed for tx_power control and Coded PHY rotation.
+//   - Legacy advertising API (ble_gap_adv_*): used when EXT_ADV=n
+//     (--station variant's escape hatch). This IDF's vendored NimBLE hard-
+//     disables ble_gap_adv_set_fields()/set_data()/start() (return
+//     BLE_HS_ENOTSUP) whenever BLE_EXT_ADV=y — there's no legacy-over-ext
+//     compat shim like upstream mynewt-nimble has. protocomm_nimble.c (used
+//     by wifi_prov_mgr for normal Wi-Fi provisioning) only ever uses the
+//     legacy API, so --station cannot have EXT_ADV=y without permanently
+//     breaking BLE provisioning (rc=8 on every advertise attempt). Keep
+//     EXT_ADV off for --station and use the legacy path here to match.
+static void fill_adv_fields(struct ble_hs_adv_fields *fields)
 {
-    struct ble_hs_adv_fields fields;
-    memset(&fields, 0, sizeof(fields));
-    fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
-    fields.name = (uint8_t *)DEVICE_NAME;
-    fields.name_len = strlen(DEVICE_NAME);
-    fields.name_is_complete = 1;
+    memset(fields, 0, sizeof(*fields));
+    fields->flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
+    fields->name = (uint8_t *)DEVICE_NAME;
+    fields->name_len = strlen(DEVICE_NAME);
+    fields->name_is_complete = 1;
     // Advertise the Environmental Sensing service so temperature apps find us.
     static ble_uuid16_t adv_uuid = BLE_UUID16_INIT(0x181A);
-    fields.uuids16 = &adv_uuid;
-    fields.num_uuids16 = 1;
-    fields.uuids16_is_complete = 1;
+    fields->uuids16 = &adv_uuid;
+    fields->num_uuids16 = 1;
+    fields->uuids16_is_complete = 1;
 
     // Beacon the latest temperature as ESS (0x181A) service data:
     // [UUID_lo, UUID_hi, temp_lo, temp_hi] — sint16, 0.01 °C, little-endian.
     // Lets an app glance at the value without connecting; refreshed on each
-    // adv_start() call.
-    uint8_t svc_data[4] = {
-        0x1A, 0x18,
-        (uint8_t)(s_temp_centi & 0xFF), (uint8_t)((s_temp_centi >> 8) & 0xFF),
-    };
-    fields.svc_data_uuid16     = svc_data;
-    fields.svc_data_uuid16_len = sizeof(svc_data);
+    // adv_start() call (and, on the ext-adv path, live while advertising).
+    static uint8_t svc_data[4];
+    svc_data[0] = 0x1A;
+    svc_data[1] = 0x18;
+    svc_data[2] = (uint8_t)(s_temp_centi & 0xFF);
+    svc_data[3] = (uint8_t)((s_temp_centi >> 8) & 0xFF);
+    fields->svc_data_uuid16     = svc_data;
+    fields->svc_data_uuid16_len = sizeof(svc_data);
+}
+
+#if CONFIG_BT_NIMBLE_EXT_ADV
+static int build_adv_data(struct os_mbuf **out)
+{
+    struct ble_hs_adv_fields fields;
+    fill_adv_fields(&fields);
 
     uint8_t buf[BLE_HS_ADV_MAX_SZ];
     uint8_t buf_len = 0;
@@ -643,6 +663,33 @@ static void adv_start(void)
     }
     ESP_LOGI(TAG, "advertising (1M legacy, 200 ms interval)");
 }
+#else  // !CONFIG_BT_NIMBLE_EXT_ADV — plain legacy adv API
+static void adv_start(void)
+{
+    if (ble_gap_adv_active()) {
+        return;  // already advertising
+    }
+    struct ble_hs_adv_fields fields;
+    fill_adv_fields(&fields);
+    int rc = ble_gap_adv_set_fields(&fields);
+    if (rc != 0) {
+        ESP_LOGE(TAG, "adv_set_fields rc=%d", rc);
+        return;
+    }
+    struct ble_gap_adv_params params;
+    memset(&params, 0, sizeof(params));
+    params.conn_mode = BLE_GAP_CONN_MODE_UND;
+    params.disc_mode = BLE_GAP_DISC_MODE_GEN;
+    params.itvl_min  = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
+    params.itvl_max  = BLE_GAP_ADV_ITVL_MS(ADV_ITVL_MS);
+    rc = ble_gap_adv_start(s_own_addr_type, NULL, BLE_HS_FOREVER, &params, gap_event, NULL);
+    if (rc != 0) {
+        ESP_LOGE(TAG, "adv_start rc=%d", rc);
+        return;
+    }
+    ESP_LOGI(TAG, "advertising (1M legacy, 200 ms interval)");
+}
+#endif
 
 // --- Host sync / task -------------------------------------------------------
 static void on_sync(void)
@@ -657,7 +704,9 @@ static void on_sync(void)
         ESP_LOGE(TAG, "infer_auto rc=%d", rc);
         return;
     }
+#if CONFIG_BT_NIMBLE_EXT_ADV
     adv_configure();
+#endif
 #if CONFIG_AKVALINK_BLE_CODED_PHY
     adv_rotate_start(ADV_INST_LEGACY);
 #else
@@ -714,12 +763,17 @@ void akvalink_ble_gatt_set_temperature(float celsius)
     // Refresh the advertised beacon so a scanning app sees a live value with
     // zero connection — otherwise it'd be frozen at whatever it was when
     // advertising last (re)started. No extra radio wakeups: same adv interval.
+    // Legacy adv (EXT_ADV=n) can't update fields while advertising is active
+    // (ble_gap_adv_set_fields returns EBUSY) — the beacon there just carries
+    // the temperature as of the last adv_start() instead of live updates.
+#if CONFIG_BT_NIMBLE_EXT_ADV
     if (s_conn_handle == BLE_HS_CONN_HANDLE_NONE && ble_gap_ext_adv_active(ADV_INST)) {
         struct os_mbuf *adv_om;
         if (build_adv_data(&adv_om) == 0) {
             ble_gap_ext_adv_set_data(ADV_INST, adv_om);
         }
     }
+#endif
 
     if (s_conn_handle == BLE_HS_CONN_HANDLE_NONE || !s_temp_subscribed) {
         return;

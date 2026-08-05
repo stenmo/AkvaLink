@@ -99,6 +99,7 @@ esp_err_t akvalink_ap_start(void)
     ESP_ERROR_CHECK(esp_wifi_start());
 
     akvalink_web_start_server();
+    akvalink_web_finish_server();
     xTaskCreate(dns_hijack_task, "dns_hijack", 3072, NULL, 5, NULL);
 
     ESP_LOGI(TAG, "SoftAP \"%s\" (open) up — page at http://%s", AP_SSID, AP_IP_STR);

@@ -77,6 +77,12 @@
   thresholds, history) is still planned.
 - **No Thread commissioning UX assist.** If commissioning fails you get
   raw esp-matter logs and have to dig.
+- **Windows app mDNS discovery needs a firewall rule.** The Flutter
+  Windows build's mDNS client isn't covered by Windows' built-in mDNS
+  firewall rule (scoped to `svchost.exe` only) and no installer exists yet
+  to add its own rule automatically — see
+  [docs/CONNECTIVITY.md](CONNECTIVITY.md#windows-firewall-for-mdns-discovery-windows-build-only)
+  for the manual `netsh`/PowerShell commands.
 
 ## Environmental / mechanical (not yet validated)
 

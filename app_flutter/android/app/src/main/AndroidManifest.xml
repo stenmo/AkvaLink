@@ -12,6 +12,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
         android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- mDNS discovery (net/station_discovery.dart) needs a multicast lock —
+         Android's Wi-Fi radio drops incoming multicast packets by default. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-feature android:name="android.hardware.bluetooth_le"
         android:required="true" />
 
