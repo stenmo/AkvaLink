@@ -249,6 +249,22 @@ above has happened.
 - **Universal Flutter companion app** (iOS + Android + desktop): one codebase
   talking BLE GATT and/or local HTTP/JSON — provisioning, live temp, history,
   battery, alerts. Local-only, no account.
+  - **In-app Wi-Fi provisioning (remove the need for the separate Espressif
+    "ESP BLE Provisioning" app)** — today the `--station` build already runs
+    ESP-IDF's `wifi_provisioning` over BLE (`scheme_ble`, Security1, POP
+    `"akvalink"`, service name `"AkvaLink"` — see `main/station_web.cpp`), and
+    that official app already works against it. To provision from *our* app
+    instead, the app needs a Dart client for Espressif's `protocomm` BLE
+    protocol: discover the prov-session/prov-config/prov-scan characteristics,
+    do the Security1 handshake (X25519 key exchange + POP check, then an
+    AES-CTR encrypted session), and send the `WiFiConfigPayload` protobuf
+    messages. That's real crypto/protocol work — needs a Dart X25519+AES lib
+    and protobuf codegen matching `protocomm`'s `.proto` schemas — and should
+    be prototyped against a real device before shipping, not written blind.
+    Cheaper first step: finish wiring the app to the **custom AkvaLink BLE
+    service** that's already implemented in firmware (uptime, device name,
+    alert thresholds — see the BLE GATT contract section above) before
+    tackling provisioning.
 - **Home Assistant integration** — works today over Matter; also evaluate a
   native path (local HTTP/JSON REST or MQTT-over-LAN) for users who want
   richer history/automation without a Matter controller.
