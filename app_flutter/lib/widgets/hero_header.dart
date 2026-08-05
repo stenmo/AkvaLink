@@ -52,8 +52,6 @@ class HeroHeader extends StatelessWidget {
             ),
             Row(
               children: [
-                SvgPicture.asset('assets/logo.svg', width: 36, height: 36),
-                const SizedBox(width: 10),
                 const Text(
                   'AkvaLink',
                   style: TextStyle(
@@ -63,6 +61,8 @@ class HeroHeader extends StatelessWidget {
                     letterSpacing: -0.5,
                   ),
                 ),
+                const SizedBox(width: 10),
+                SvgPicture.asset('assets/logo.svg', width: 36, height: 36),
               ],
             ),
             const SizedBox(height: 6),

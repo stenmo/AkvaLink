@@ -66,30 +66,35 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const HeroHeader(),
           Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 460),
-                  child: ChangeNotifierProvider.value(
-                    value: _discovery,
-                    child: Column(
-                      children: [
-                        const TemperatureReadoutCard(),
-                        const SizedBox(height: 16),
-                        const BleConnectCard(),
-                        const SizedBox(height: 16),
-                        const _LanDiscoveryCard(),
-                        const SizedBox(height: 16),
-                        const OtaCard(),
-                        const SizedBox(height: 16),
-                        _WifiSetupEntry(onTap: _openWifiSetup),
-                        const SizedBox(height: 20),
-                        const _FooterNote(),
-                        const SizedBox(height: 10),
-                        const _FooterLinks(),
-                      ],
+            // HeroHeader already handles the top inset; this covers the
+            // bottom nav bar / gesture inset so the footer isn't hidden under it.
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: ChangeNotifierProvider.value(
+                      value: _discovery,
+                      child: Column(
+                        children: [
+                          const TemperatureReadoutCard(),
+                          const SizedBox(height: 16),
+                          const BleConnectCard(),
+                          const SizedBox(height: 16),
+                          const _LanDiscoveryCard(),
+                          const SizedBox(height: 16),
+                          const OtaCard(),
+                          const SizedBox(height: 16),
+                          _WifiSetupEntry(onTap: _openWifiSetup),
+                          const SizedBox(height: 20),
+                          const _FooterNote(),
+                          const SizedBox(height: 10),
+                          const _FooterLinks(),
+                        ],
+                      ),
                     ),
                   ),
                 ),

@@ -16,8 +16,7 @@ class TemperatureReadoutCard extends StatefulWidget {
   const TemperatureReadoutCard({super.key});
 
   @override
-  State<TemperatureReadoutCard> createState() =>
-      _TemperatureReadoutCardState();
+  State<TemperatureReadoutCard> createState() => _TemperatureReadoutCardState();
 }
 
 class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
@@ -405,4 +404,3 @@ class _InfoChip extends StatelessWidget {
     );
   }
 }
-
