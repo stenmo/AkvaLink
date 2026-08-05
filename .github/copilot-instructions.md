@@ -264,6 +264,44 @@ happen to agree today.
   KISS-scoped gap, not a bug — but keep it in mind as the natural next
   BLE feature to wire up end-to-end.
 
+## Software bill of materials (SBOM) — keep it synced with the real toolchain
+
+`web/index.html` + `index.sv.html` have a "Software bill of materials" /
+"Programvarukomponenter" section (id="bom", right after Security) listing
+the exact versions of ESP-IDF, esp-matter/connectedhomeip, OpenThread,
+lwIP, mbedTLS, and NimBLE baked into a release. It exists so a user can
+cross-check CVEs themselves — a stale or wrong version number there is
+worse than not having the table at all.
+
+- **Whenever the toolchain is bumped** (ESP-IDF, esp-matter, or a
+  `idf_component.yml` pin), re-verify every row — don't assume a single
+  version bump only touches one line, since lwIP/mbedTLS/OpenThread/NimBLE
+  are all pinned by the ESP-IDF release itself. Re-derive them straight
+  from the actual WSL toolchain checkout, don't guess from changelogs:
+  ```bash
+  # ESP-IDF version
+  cd ~/esp/esp-idf && git describe --tags
+  # esp-matter version/branch
+  cd ~/esp/esp-matter && git branch --show-current
+  # mbedTLS
+  grep -m1 MBEDTLS_VERSION_STRING ~/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/build_info.h
+  # lwIP
+  grep -E 'LWIP_VERSION_(MAJOR|MINOR|REVISION) ' ~/esp/esp-idf/components/lwip/lwip/src/include/lwip/init.h
+  # OpenThread / NimBLE (no clean semver upstream — report as
+  # "bundled with ESP-IDF v<x>", don't publish a raw commit hash)
+  ```
+- **Update both `web/index.html` and `index.sv.html` in the same change** —
+  same rule as everywhere else on this page (see "Native app ↔ web page"
+  above). The table rows must stay word-for-word numerically identical
+  between languages; only the surrounding prose is translated.
+- **[tests/test_web.py](../tests/test_web.py)** (`test_sbom_versions_match_toolchain_docs`)
+  cross-checks the ESP-IDF and esp-matter version strings shown in the BOM
+  table against the canonical strings in this file (the "Build / flash
+  workflow" section above) — a mismatch there fails CI. lwIP/mbedTLS/
+  OpenThread/NimBLE aren't tracked as strings anywhere else in the repo, so
+  they have no automated check — re-verify those by hand per the commands
+  above whenever the toolchain changes.
+
 ## Future direct-to-app path (planned)
 
 A non-Matter path is planned for direct app integration without a hub:

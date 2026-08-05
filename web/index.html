@@ -707,6 +707,28 @@
 </section>
 
 
+<section id="bom">
+  <div class="wrap">
+    <h2>Software bill of materials</h2>
+    <p class="lead">Exact versions baked into this release — check them against public CVE databases yourself, we don't sit on advisories.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Component</th><th>Version</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>ESP-IDF</td><td>v5.5.5</td><td>Espressif's SDK — build system, drivers, power management</td></tr>
+          <tr><td>esp-matter / connectedhomeip</td><td>release/v1.5</td><td>Matter (CHIP) application stack</td></tr>
+          <tr><td>OpenThread</td><td>bundled with ESP-IDF v5.5.5</td><td>Thread mesh networking</td></tr>
+          <tr><td>lwIP</td><td>2.2.0</td><td>TCP/IP stack (Wi-Fi variants)</td></tr>
+          <tr><td>mbedTLS</td><td>3.6.6</td><td>TLS/crypto — Matter PASE/CASE, Wi-Fi security</td></tr>
+          <tr><td>NimBLE</td><td>bundled with ESP-IDF v5.5.5</td><td>Bluetooth Low Energy host stack</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lead" style="margin-top:14px">Versions are pinned per firmware release. See the exact release tag on <a href="https://github.com/stenmo/AkvaLink/releases">GitHub</a>, or read the Firmware Revision characteristic (Device Information service, see the GATT table above) off a running device.</p>
+  </div>
+</section>
+
+
 <section class="band" id="status">
   <div class="wrap">
     <h2>Status &amp; roadmap</h2>

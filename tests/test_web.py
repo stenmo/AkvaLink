@@ -129,3 +129,20 @@ def test_ios_bluefy_fallback(path):
     text = path.read_text(encoding="utf-8")
     assert "apps.apple.com/app/bluefy-web-ble-browser/id1492822055" in text
     assert "Apple Home" in text
+
+
+@pytest.mark.parametrize("path", [EN, SV], ids=["en", "sv"])
+def test_sbom_versions_match_toolchain_docs(path):
+    # The SW BOM table (id="bom") must not silently drift from the toolchain
+    # versions this project actually builds with, documented in
+    # copilot-instructions.md's "Build / flash workflow" section.
+    instructions = (
+        Path(__file__).resolve().parents[1] / ".github" / "copilot-instructions.md"
+    ).read_text(encoding="utf-8")
+    idf_version = re.search(r"ESP-IDF (v[\d.]+) from", instructions).group(1)
+    matter_version = re.search(r"esp-matter (release/v[\d.]+) from", instructions).group(1)
+
+    text = path.read_text(encoding="utf-8")
+    assert 'id="bom"' in text, f"{path.name} missing the SW BOM section"
+    assert idf_version in text, f"{path.name} BOM table doesn't mention {idf_version}"
+    assert matter_version in text, f"{path.name} BOM table doesn't mention {matter_version}"

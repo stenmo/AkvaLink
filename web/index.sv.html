@@ -689,6 +689,27 @@
   </div>
 </section>
 
+<section id="bom">
+  <div class="wrap">
+    <h2>Programvarukomponenter</h2>
+    <p class="lead">Exakta versioner i det här bygget — jämför dem mot publika CVE-databaser själv, vi sitter inte på information om sårbarheter.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Komponent</th><th>Version</th><th>Roll</th></tr></thead>
+        <tbody>
+          <tr><td>ESP-IDF</td><td>v5.5.5</td><td>Espressifs SDK — byggsystem, drivrutiner, strömhantering</td></tr>
+          <tr><td>esp-matter / connectedhomeip</td><td>release/v1.5</td><td>Matter (CHIP) applikationsstack</td></tr>
+          <tr><td>OpenThread</td><td>medföljer ESP-IDF v5.5.5</td><td>Thread-nätverk (mesh)</td></tr>
+          <tr><td>lwIP</td><td>2.2.0</td><td>TCP/IP-stack (Wi-Fi-varianter)</td></tr>
+          <tr><td>mbedTLS</td><td>3.6.6</td><td>TLS/kryptering — Matter PASE/CASE, Wi-Fi-säkerhet</td></tr>
+          <tr><td>NimBLE</td><td>medföljer ESP-IDF v5.5.5</td><td>Bluetooth Low Energy-värdstack</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lead" style="margin-top:14px">Versioner är låsta per firmware-utgåva. Se den exakta utgåvetaggen på <a href="https://github.com/stenmo/AkvaLink/releases">GitHub</a>, eller läs karakteristiken Firmware Revision (Device Information-tjänsten, se GATT-tabellen ovan) från en körande enhet.</p>
+  </div>
+</section>
+
 <section class="band" id="status">
   <div class="wrap">
     <h2>Status &amp; färdplan</h2>
