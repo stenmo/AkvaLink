@@ -711,6 +711,16 @@ void akvalink_ble_gatt_set_temperature(float celsius)
 {
     s_temp_centi = (int16_t)lroundf(celsius * 100.0f);
 
+    // Refresh the advertised beacon so a scanning app sees a live value with
+    // zero connection — otherwise it'd be frozen at whatever it was when
+    // advertising last (re)started. No extra radio wakeups: same adv interval.
+    if (s_conn_handle == BLE_HS_CONN_HANDLE_NONE && ble_gap_ext_adv_active(ADV_INST)) {
+        struct os_mbuf *adv_om;
+        if (build_adv_data(&adv_om) == 0) {
+            ble_gap_ext_adv_set_data(ADV_INST, adv_om);
+        }
+    }
+
     if (s_conn_handle == BLE_HS_CONN_HANDLE_NONE || !s_temp_subscribed) {
         return;
     }
