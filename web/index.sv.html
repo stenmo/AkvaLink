@@ -640,19 +640,26 @@
       <p class="cta"><a id="bleBtn" class="primary" role="button">Anslut via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
     </div>
-    <p class="lead" style="margin-top:22px">Vad som faktiskt ligger på länken — hela GATT-tjänstetabellen som exponeras av <strong>Endast BLE</strong>-firmware:</p>
+    <p class="lead" style="margin-top:22px">Vad som faktiskt ligger på länken — hela GATT-tjänstetabellen som exponeras av <strong>Endast BLE</strong>-firmware, med UUID:er och allt, om du vill bygga din egen klient:</p>
     <div class="tbl-scroll">
       <table>
-        <thead><tr><th>Tjänst</th><th>Karakteristik</th><th>Vad den gör</th></tr></thead>
+        <thead><tr><th>Tjänst</th><th>Karakteristik</th><th>UUID</th><th>Egenskaper</th><th>Nyttolast</th></tr></thead>
         <tbody>
-          <tr><td>Environmental Sensing</td><td>Temperatur</td><td>Live-avläsning, meddelar vid ändring — kortet ovan prenumererar på denna.</td></tr>
-          <tr><td>Device Information</td><td>Tillverkare, modell, firmwareversion</td><td>Läses en gång vid anslutning; firmwareversionen är det "Flasha senaste firmware" jämför mot.</td></tr>
-          <tr><td>Battery</td><td>Batterinivå</td><td>Visar alltid 100 % idag — ingen batterispänningskrets ännu (se färdplan).</td></tr>
-          <tr><td>AkvaLink <em>(egen)</em></td><td>Drifttid, enhetsnamn, larmtrösklar</td><td>Sekunder sedan start, en redigerbar etikett, och hög/låg temperaturlarm — sparade på enheten, men ännu inte redigerbara från denna sida.</td></tr>
-          <tr><td>AkvaLink OTA <em>(egen)</em></td><td>Uppdateringskontroll &amp; data</td><td>Används av "Uppdatera firmware via Bluetooth" ovan.</td></tr>
+          <tr><td>Environmental Sensing<br><code>0x181A</code></td><td>Temperatur</td><td><code>0x2A6E</code></td><td>Läs, meddela</td><td>sint16, 0,01 °C, little-endian — kortet ovan prenumererar på denna</td></tr>
+          <tr><td rowspan="3">Device Information<br><code>0x180A</code></td><td>Tillverkare</td><td><code>0x2A29</code></td><td>Läs</td><td>"u-blox"</td></tr>
+          <tr><td>Modell</td><td><code>0x2A24</code></td><td>Läs</td><td>"AkvaLink NORA-W40"</td></tr>
+          <tr><td>Firmwareversion</td><td><code>0x2A26</code></td><td>Läs</td><td>"{version}-{variant}" — det "Flasha senaste firmware" jämför mot</td></tr>
+          <tr><td>Battery<br><code>0x180F</code></td><td>Batterinivå</td><td><code>0x2A19</code></td><td>Läs</td><td>uint8, 0–100 % (fast 100 idag — ingen batterispänningskrets ännu)</td></tr>
+          <tr><td rowspan="4">AkvaLink <em>(egen)</em><br><code>…6c0001</code></td><td>Drifttid</td><td><code>…6c0002</code></td><td>Läs</td><td>uint32, sekunder sedan start</td></tr>
+          <tr><td>Enhetsnamn</td><td><code>…6c0003</code></td><td>Läs, skriv</td><td>UTF-8-sträng, sparas i NVS, gäller från nästa omstart</td></tr>
+          <tr><td>Larm hög</td><td><code>…6c0004</code></td><td>Läs, skriv</td><td>sint16, 0,01 °C, sparas i NVS, 0 = avstängt</td></tr>
+          <tr><td>Larm låg</td><td><code>…6c0005</code></td><td>Läs, skriv</td><td>sint16, 0,01 °C, sparas i NVS, 0 = avstängt</td></tr>
+          <tr><td rowspan="2">AkvaLink OTA <em>(egen)</em><br><code>…6c0010</code></td><td>Kontroll</td><td><code>…6c0011</code></td><td>Skriv, meddela</td><td><code>0x01</code> BEGIN / <code>0x02</code> END / <code>0x03</code> ABORT; meddelar <code>[opcode, resultat]</code></td></tr>
+          <tr><td>Data</td><td><code>…6c0012</code></td><td>Skriv, skriv-utan-svar</td><td>Rå firmware i bitar, i ordning — används av "Uppdatera firmware via Bluetooth" ovan</td></tr>
         </tbody>
       </table>
     </div>
+    <p class="ble-note">De egna tjänsterna AkvaLink och AkvaLink OTA delar en 128-bitars bas-UUID, <code>f0a00001-6e40-4a71-9b2c-6b6e696c00XX</code> — bara sista byten (visas ovan som <code>…6cXX</code>) ändras per tjänst/karakteristik. Fullständigt kontrakt i <a href="https://github.com/stenmo/AkvaLink/blob/main/docs/CONNECTIVITY.md">docs/CONNECTIVITY.md</a>.</p>
   </div>
 </section>
 

@@ -145,3 +145,19 @@ def test_debug_script_uuids_match_firmware():
     assert v["OTA_SVC"][-2:] == FW_CUSTOM["OTA_SVC"]
     assert v["OTA_CTRL"][-2:] == FW_CUSTOM["OTA_CTRL"]
     assert v["OTA_DATA"][-2:] == FW_CUSTOM["OTA_DATA"]
+
+
+@pytest.mark.parametrize("path", [WEB_EN, WEB_SV], ids=["en", "sv"])
+def test_web_gatt_reference_table_matches_firmware(path):
+    # The human-readable GATT table (id="live", 4-5 col reference table) must
+    # quote the same UUIDs as main/ble_gatt.cpp — this is what a developer
+    # implementing their own BLE client would copy-paste.
+    text = path.read_text(encoding="utf-8")
+    for name in ("ESS", "DIS", "BAS", "TEMPERATURE", "MANUFACTURER", "MODEL", "FW_REVISION", "BATTERY_LVL"):
+        expected = f"0x{FW_16[name]:04X}"
+        assert expected in text, f"{path.name}: UUID {expected} ({name}) not found in GATT reference table"
+    for name in ("UPTIME", "DEV_NAME", "ALERT_HIGH", "ALERT_LOW", "OTA_CTRL", "OTA_DATA"):
+        assert f"6c00{FW_CUSTOM[name]}" in text, (
+            f"{path.name}: custom UUID suffix for {name} not found in GATT reference table"
+        )
+

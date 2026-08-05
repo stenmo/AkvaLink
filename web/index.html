@@ -656,19 +656,26 @@
       <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
     </div>
-    <p class="lead" style="margin-top:22px">What's actually on the wire — the full GATT service table exposed by the <strong>BLE-only</strong> firmware:</p>
+    <p class="lead" style="margin-top:22px">What's actually on the wire — the full GATT service table exposed by the <strong>BLE-only</strong> firmware, UUIDs and all, if you want to build your own client:</p>
     <div class="tbl-scroll">
       <table>
-        <thead><tr><th>Service</th><th>Characteristic</th><th>What it does</th></tr></thead>
+        <thead><tr><th>Service</th><th>Characteristic</th><th>UUID</th><th>Properties</th><th>Payload</th></tr></thead>
         <tbody>
-          <tr><td>Environmental Sensing</td><td>Temperature</td><td>Live reading, notifies on change — the card above subscribes to this.</td></tr>
-          <tr><td>Device Information</td><td>Manufacturer, model, firmware version</td><td>Read once on connect; firmware version is what "Flash latest firmware" compares against.</td></tr>
-          <tr><td>Battery</td><td>Battery level</td><td>Always reports 100% today — no battery-voltage sensing circuit yet (see roadmap).</td></tr>
-          <tr><td>AkvaLink <em>(custom)</em></td><td>Uptime, device name, alert thresholds</td><td>Seconds since boot, an editable label, and high/low temperature alerts — stored on the device, but not yet editable from this page.</td></tr>
-          <tr><td>AkvaLink OTA <em>(custom)</em></td><td>Update control &amp; data</td><td>Used by "Update firmware over Bluetooth" above.</td></tr>
+          <tr><td>Environmental Sensing<br><code>0x181A</code></td><td>Temperature</td><td><code>0x2A6E</code></td><td>Read, Notify</td><td>sint16, 0.01 °C, little-endian — the card above subscribes to this</td></tr>
+          <tr><td rowspan="3">Device Information<br><code>0x180A</code></td><td>Manufacturer</td><td><code>0x2A29</code></td><td>Read</td><td>"u-blox"</td></tr>
+          <tr><td>Model</td><td><code>0x2A24</code></td><td>Read</td><td>"AkvaLink NORA-W40"</td></tr>
+          <tr><td>Firmware Revision</td><td><code>0x2A26</code></td><td>Read</td><td>"{version}-{variant}" — what "Flash latest firmware" compares against</td></tr>
+          <tr><td>Battery<br><code>0x180F</code></td><td>Battery Level</td><td><code>0x2A19</code></td><td>Read</td><td>uint8, 0–100 % (stubbed at 100 — no battery-voltage circuit yet)</td></tr>
+          <tr><td rowspan="4">AkvaLink <em>(custom)</em><br><code>…6c0001</code></td><td>Uptime</td><td><code>…6c0002</code></td><td>Read</td><td>uint32, seconds since boot</td></tr>
+          <tr><td>Device name</td><td><code>…6c0003</code></td><td>Read, Write</td><td>UTF-8 string, saved to NVS, takes effect next reboot</td></tr>
+          <tr><td>Alert high</td><td><code>…6c0004</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
+          <tr><td>Alert low</td><td><code>…6c0005</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
+          <tr><td rowspan="2">AkvaLink OTA <em>(custom)</em><br><code>…6c0010</code></td><td>Control</td><td><code>…6c0011</code></td><td>Write, Notify</td><td><code>0x01</code> BEGIN / <code>0x02</code> END / <code>0x03</code> ABORT; notifies <code>[opcode, result]</code></td></tr>
+          <tr><td>Data</td><td><code>…6c0012</code></td><td>Write, Write-no-rsp</td><td>Raw firmware chunks, in order — used by "Update firmware over Bluetooth" above</td></tr>
         </tbody>
       </table>
     </div>
+    <p class="ble-note">The custom AkvaLink and AkvaLink OTA services share one 128-bit base UUID, <code>f0a00001-6e40-4a71-9b2c-6b6e696c00XX</code> — only the last byte (shown above as <code>…6cXX</code>) changes per service/characteristic. Full contract in <a href="https://github.com/stenmo/AkvaLink/blob/main/docs/CONNECTIVITY.md">docs/CONNECTIVITY.md</a>.</p>
   </div>
 </section>
 
