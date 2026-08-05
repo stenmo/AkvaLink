@@ -110,7 +110,7 @@
     box-shadow: 0 8px 28px rgba(3,63,99,.07);
   }
   .temp-readout { font-size: 3.6rem; font-weight: 800; color: var(--deep); line-height: 1; }
-  .temp-readout .unit { font-size: 1.6rem; color: var(--water); margin-left: 4px; }
+  .temp-readout .unit { font-size: 1.6rem; color: var(--water); margin-left: 4px; cursor: pointer; border-bottom: 1px dotted currentColor; }
   #tempVal.idle { color: #c6d9e0; }
   .status { color: var(--muted); margin: 12px 0 18px; font-size: .95rem; min-height: 1.2em; }
   .status.on { color: var(--ok); font-weight: 600; }
@@ -264,22 +264,6 @@
   </svg>
 </header>
 
-<section id="live">
-  <div class="wrap">
-    <h2>Se det live</h2>
-    <p class="lead">Anslut direkt till en AkvaLink i närheten via Bluetooth — ingen app, direkt i din webbläsare.</p>
-    <p class="lead">Kräver en enhet som redan flashats med varianten <strong>Endast BLE</strong> (se <a href="#download">nedladdningar</a> nedan) — de andra varianterna exponerar inte detta.</p>
-    <div class="live-card">
-      <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit">°C</span></div>
-      <div id="bleAge" class="age"></div>
-      <div id="bleStatus" class="status">Inte ansluten</div>
-      <div id="bleFw" class="age"></div>
-      <p class="cta"><a id="bleBtn" class="primary" role="button">Anslut via Bluetooth</a></p>
-      <p id="bleNote" class="ble-note"></p>
-    </div>
-  </div>
-</section>
-
 <section id="why">
   <div class="wrap">
     <h2>Varför AkvaLink?</h2>
@@ -299,6 +283,7 @@
       <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Ärlig ingenjörskonst</h3>
         <p>Batteriräkneexempel, RF-regler och kända begränsningar är dokumenterade, inte bortförklarade.</p></div>
     </div>
+    <p class="lead" style="margin-top:18px">Varför inte bara köpa en Inkbird- eller Govee-pooltermometer (~250 kr)? De fungerar bra — men de skickar din vattentemperatur genom leverantörens moln, app och konto. AkvaLink gör samma jobb utan konto, utan appkrav och utan beroende av att ett företag stannar kvar i drift.</p>
   </div>
 </section>
 
@@ -311,7 +296,7 @@
       <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></div><h3>NORA-W40 <span class="chip-status available">Tillgänglig nu</span></h3>
         <p>Espressif ESP32-C6 — Wi-Fi 6, Thread, BLE 5.3. Flaggskeppsbygget som dokumenteras nedan.</p></div>
       <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15 9l-2 6-6 2 2-6z" fill="currentColor" stroke="none"/></svg></div><h3>NORA-B2 <span class="chip-status dev">Under utveckling</span></h3>
-        <p>Nordic nRF54L — BLE, Thread, Matter. Ett alternativ utan Espressif-kisel, för kunder som vill ha kisel tillverkat utanför Kina.</p></div>
+        <p>Nordic nRF54L — BLE, Thread, Matter. Ett alternativ utan Espressif-kisel, för team som behöver en andra kiselkälla eller har särskilda krav på leverantörskedjan.</p></div>
     </div>
   </div>
 </section>
@@ -443,25 +428,39 @@
       </svg>
       <p class="cap"><strong>GPIO15 → DS18B20.</strong> Ett 4,7 kΩ pull-up. GPIO9 (BOOT) dubblar som ominställningsknapp. Streckad ruta = framtida batteri-ADC-krets (R1/R2 spänningsdelare, 390 kΩ / 100 kΩ).</p>
     </div>
+    <div class="schematic">
+      <div class="grid">
+        <div>
+          <img src="assets/overview.jpg" alt="EVK-NORA-W40-utvecklingskortet kopplat till en DS18B20-sond på verkbänken" style="width:100%;height:auto;border-radius:10px;display:block" loading="lazy">
+          <p class="cap">Skarpt läge: EVK-NORA-W40 med DS18B20-sonden kopplad till GPIO15.</p>
+        </div>
+        <div>
+          <img src="assets/hardware-wiring.jpg" alt="Närbild på 4,7 kΩ pull-up-motståndet inlött i DS18B20-kablaget, krympslangat vid skarven" style="width:100%;height:auto;border-radius:10px;display:block" loading="lazy">
+          <p class="cap">4,7 kΩ pull-up, inlött och krympslangat rakt vid sensorkabelns skarv.</p>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:14px">Var man får tag i det: utvecklingskortet <a href="https://www.u-blox.com/en/product/evk-nora-w40" target="_blank" rel="noopener">EVK-NORA-W40</a> exponerar alla pinnar på en kopplingsdäcksvänlig header — ingen egen PCB-design behövs för att komma igång. DS18B20-sonder i rostfritt stål är en vanlig ~30 kr-del, som säljs brett på Amazon, AliExpress och elektronikdistributörer — för saltklorerade pooler, välj specifikt <strong>316 rostfritt</strong>; 304 gropfräter i klorerat saltvatten över tid. Ingen produktionskapsling eller "köp en färdig sensor"-lösning ännu — se färdplanen nedan.</p>
+    <p class="lead" style="margin-top:10px">Noggrannhetsnotis: DS18B20:s upplösning på 0,0625 °C är inte samma sak som en noggrannhet på 0,0625 °C — databladets specifikation är ±0,5 °C. Placeringen betyder mer än upplösningen: en sond på en solvärmd kabel, nära ytan, eller grunt i vattnet reagerar snabbare och driver högre än bulkvattnets temperatur; sänk ner den på ett representativt djup, borta från direkt sol och munstycken/retur, för en mätning du kan lita på.</p>
   </div>
 </section>
 
 <section id="battery">
   <div class="wrap">
     <h2>Batteritid</h2>
-    <p class="lead">Uppvärmd pool vid 28–29 °C med 0,25 °C rapporteringströskel.</p>
+    <p class="lead">Uppvärmd pool vid 28–29 °C med 0,25 °C rapporteringströskel. <strong>Realistisk förväntan: 5–7 år</strong> på alkaliska AA/AAA — hållbarhet och självurladdning begränsar dem långt under de förbrukningsberoende siffrorna nedan för de två raderna. Litium (CR2477) och litiumjon (18650) åldras annorlunda och hamnar närmare modellens siffror.</p>
     <div class="tbl-scroll">
       <table>
         <thead><tr><th>Batteri</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (frånkopplad)</th></tr></thead>
         <tbody>
           <tr><td>CR2477 (1000 mAh)</td><td>~5 år</td><td>~6 månader</td><td>~3,3 år</td></tr>
-          <tr><td>2× AAA (1200 mAh)</td><td>~6 år</td><td>~8 månader</td><td>~4 år</td></tr>
-          <tr><td class="hi">2× AA (2800 mAh)</td><td class="hi">~12 år</td><td class="hi">~1,8 år</td><td class="hi">~9 år</td></tr>
+          <tr><td>2× AAA (1200 mAh)<sup>*</sup></td><td>~6 år</td><td>~8 månader</td><td>~4 år</td></tr>
+          <tr><td class="hi">2× AA (2800 mAh)<sup>*</sup></td><td class="hi">~12 år</td><td class="hi">~1,8 år</td><td class="hi">~9 år</td></tr>
           <tr><td>18650 (3400 mAh)</td><td>~15+ år</td><td>~2,2 år</td><td>~11 år</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="lead" style="margin-top:14px">Uppskattningar från effektmodellen — riktig mätning (PPK2/Joulescope) finns på färdplanen. I praktiken begränsar alkaliska AA-batteriernas självurladdning och hållbarhet den verkliga livslängden till ungefär <strong>5–7 år</strong> oavsett förbrukning; <strong>litium AA (t.ex. Energizer L91)</strong> håller längre och klarar kyla mycket bättre.</p>
+    <p class="lead" style="margin-top:14px"><sup>*</sup> Förbrukningsberoende uppskattning från effektmodellen — alkaliska celler självurladdas över tid oavsett belastning, vilket begränsar den verkliga livslängden till ungefär 5–7 år. Riktig mätning (PPK2/Joulescope) finns på färdplanen.</p>
   </div>
 </section>
 
@@ -615,6 +614,47 @@
   </div>
 </section>
 
+<section id="live">
+  <div class="wrap">
+    <h2>Se det live</h2>
+    <p class="lead">Anslut direkt till en AkvaLink i närheten via Bluetooth — ingen app, direkt i din webbläsare.</p>
+    <p class="lead">Kräver en enhet som redan flashats med varianten <strong>Endast BLE</strong> (se nedladdningarna ovan) — de andra varianterna exponerar inte detta.</p>
+    <div class="live-card">
+      <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit" id="tempUnit" role="button" title="Klicka för att växla °C/°F">°C</span></div>
+      <div id="bleAge" class="age"></div>
+      <div id="bleStatus" class="status">Inte ansluten</div>
+      <div id="bleFw" class="age"></div>
+      <p class="cta"><a id="bleBtn" class="primary" role="button">Anslut via Bluetooth</a></p>
+      <p id="bleNote" class="ble-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="security">
+  <div class="wrap">
+    <h2>Säkerhet</h2>
+    <p class="lead">Vad AkvaLink skyddar — och vad den inte gör. Ingen molntjänst betyder mindre att försvara, men inte noll.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Ingen molntjänst, inga konton</h3>
+        <p>Inget lämnar ditt nätverk. Det finns ingen server att bryta sig in i och inget konto att läcka.</p>
+      </div>
+      <div class="card">
+        <h3>BLE-OTA är osignerad</h3>
+        <p>Den egna BLE-uppdateringstjänsten accepterar vilken avbild som helst som skickas till den — det finns ingen kryptografisk signaturkontroll idag. Vem som helst inom Bluetooth-räckvidd kan skicka firmware. Fungerar för en hobbyenhet på din egen bänk; lita inte på det som enda skydd för något känsligt.</p>
+      </div>
+      <div class="card">
+        <h3>Wi-Fi AP-varianten är öppen</h3>
+        <p><code>--ap</code>-bygget har medvetet ingen lösenordsskyddad SoftAP (valfri telefon, ingen konfiguration). Exponeringen är begränsad till den som är inom Wi-Fi-räckvidd och den lokala sidan — samma förtroendemodell som många reserouters och IoT-konfigureringshotspots.</p>
+      </div>
+      <div class="card">
+        <h3>Matter/Thread-driftsättning</h3>
+        <p>Vanlig Matter PASE/CASE-driftsättning via den tryckta konfigureringskoden — samma säkerhetsmodell som alla andra Matter-enheter, inget AkvaLink lägger till eller försvagar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="band" id="status">
   <div class="wrap">
     <h2>Status &amp; färdplan</h2>
@@ -650,8 +690,9 @@
       <a href="https://github.com/espressif/esp-idf">ESP-IDF</a>,
       <a href="https://github.com/project-chip/connectedhomeip">connectedhomeip</a> och
       <a href="https://www.u-blox.com/en/product/nora-w40-series">u-blox NORA-W40</a>.</p>
+    <p class="muted">Personligt hobbyprojekt, byggt på min egen fritid. Jag jobbar på u-blox, men AkvaLink är inofficiellt — inte godkänt av, eller representativt för, min arbetsgivare.</p>
     <p class="muted">Inspirerad av <a href="https://poolmicke.se/">poolmicke.se</a> — tack Micke! 🇸🇪 ·
-      Apache-2.0 · Senast uppdaterad augusti 2026.</p>
+      Apache-2.0 · <a href="https://validator.w3.org/nu/?doc=https://akvalink.com/index.sv.html" target="_blank" rel="noopener">W3C-validerad HTML</a> · Senast uppdaterad augusti 2026.</p>
     <p class="muted">☕ Gillar du AkvaLink? <a href="https://buymeacoffee.com/stenmo" target="_blank" rel="noopener">Bjud på en kaffe</a> eller <a href="https://github.com/sponsors/stenmo" target="_blank" rel="noopener">sponsra på GitHub</a> — helt frivilligt, alltid uppskattat.</p>
     <p class="muted" id="siteVerLine">Sida v<span id="siteVer">0.0.0</span></p>
   </div>
@@ -662,6 +703,7 @@
   var btn = document.getElementById('bleBtn');
   var statusEl = document.getElementById('bleStatus');
   var tempEl = document.getElementById('tempVal');
+  var unitEl = document.getElementById('tempUnit');
   var ageEl = document.getElementById('bleAge');
   var noteEl = document.getElementById('bleNote');
   var fwEl = document.getElementById('bleFw');
@@ -693,6 +735,15 @@
     var badge = document.getElementById('verBadge');
     if (v && badge) badge.textContent = 'v' + v.textContent.trim().replace(/^v/, '');
   })();
+
+  // °C/°F-växling — även ovillkorlig (som märket ovan) så den inte är död på
+  // webbläsare som avbryter tidigt nedan (iOS/Firefox).
+  var useFahrenheit = false;
+  unitEl.addEventListener('click', function () {
+    useFahrenheit = !useFahrenheit;
+    unitEl.textContent = useFahrenheit ? '°F' : '°C';
+    if (typeof renderTemp === 'function') renderTemp();
+  });
 
   // Web Bluetooth är bara tillgängligt i Chromium (Chrome/Edge desktop, Chrome Android).
   var supported = typeof navigator !== 'undefined' && !!navigator.bluetooth;
@@ -735,9 +786,19 @@
     ageEl.textContent = s <= 0 ? 'uppdaterad just nu' : ('uppdaterad för ' + s + ' s sedan');
   }
 
+  // Minns senaste råa värdet så att °C/°F-växlingen kan rita om utan en ny BLE-avisering.
+  var lastCelsius = null;
+
+  function renderTemp() {
+    if (lastCelsius == null) return;
+    var v = useFahrenheit ? (lastCelsius * 9 / 5 + 32) : lastCelsius;
+    tempEl.textContent = v.toFixed(1);
+  }
+
   function setTemp(celsius) {
-    tempEl.textContent = celsius.toFixed(1);
+    lastCelsius = celsius;
     tempEl.classList.remove('idle');
+    renderTemp();
     lastUpdate = Date.now();
     renderAge();
   }

@@ -98,7 +98,7 @@
     box-shadow: 0 8px 28px rgba(3,63,99,.07);
   }
   .temp-readout { font-size: 3.6rem; font-weight: 800; color: var(--deep); line-height: 1; }
-  .temp-readout .unit { font-size: 1.6rem; color: var(--water); margin-left: 4px; }
+  .temp-readout .unit { font-size: 1.6rem; color: var(--water); margin-left: 4px; cursor: pointer; border-bottom: 1px dotted currentColor; }
   #tempVal.idle { color: #c6d9e0; }
   .status { color: var(--muted); margin: 12px 0 18px; font-size: .95rem; min-height: 1.2em; }
   .status.on { color: var(--ok); font-weight: 600; }
@@ -264,22 +264,6 @@
   </svg>
 </header>
 
-<section id="live">
-  <div class="wrap">
-    <h2>See it live</h2>
-    <p class="lead">Connect straight to a nearby AkvaLink over Bluetooth — no app, right in your browser.</p>
-    <p class="lead">Needs a device already flashed with the <strong>BLE-only</strong> variant (see <a href="#download">downloads</a> below) — the other variants don't expose this.</p>
-    <div class="live-card">
-      <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit">°C</span></div>
-      <div id="bleAge" class="age"></div>
-      <div id="bleStatus" class="status">Not connected</div>
-      <div id="bleFw" class="age"></div>
-      <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
-      <p id="bleNote" class="ble-note"></p>
-    </div>
-  </div>
-</section>
-
 <section id="why">
   <div class="wrap">
     <h2>Why AkvaLink?</h2>
@@ -299,6 +283,7 @@
       <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Honest engineering</h3>
         <p>Battery math, RF rules and known limitations are documented, not hand-waved.</p></div>
     </div>
+    <p class="lead" style="margin-top:18px">Why not just buy an Inkbird or Govee pool thermometer (~€25)? Those work fine — but they route your water temperature through the vendor's cloud, app and account. AkvaLink is the same job with no account, no app requirement, and no dependency on a company staying in business.</p>
   </div>
 </section>
 
@@ -311,7 +296,7 @@
       <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></div><h3>NORA-W40 <span class="chip-status available">Available now</span></h3>
         <p>Espressif ESP32-C6 — Wi-Fi 6, Thread, BLE 5.3. The flagship build documented below.</p></div>
       <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15 9l-2 6-6 2 2-6z" fill="currentColor" stroke="none"/></svg></div><h3>NORA-B2 <span class="chip-status dev">In development</span></h3>
-        <p>Nordic nRF54L — BLE, Thread, Matter. A non-Espressif option, for customers who want silicon made outside China.</p></div>
+        <p>Nordic nRF54L — BLE, Thread, Matter. A non-Espressif option, for teams that need a second silicon source or specific supply-chain sourcing requirements.</p></div>
     </div>
   </div>
 </section>
@@ -458,25 +443,39 @@
       </svg>
       <p class="cap"><strong>GPIO15 → DS18B20.</strong> One 4.7 kΩ pull-up. GPIO9 (BOOT) doubles as a re-provisioning button. Dashed box = future battery ADC circuit (R1/R2 voltage divider, 390 kΩ / 100 kΩ).</p>
     </div>
+    <div class="schematic">
+      <div class="grid">
+        <div>
+          <img src="assets/overview.jpg" alt="The EVK-NORA-W40 dev board wired up to a DS18B20 probe on the bench" style="width:100%;height:auto;border-radius:10px;display:block" loading="lazy">
+          <p class="cap">Real build: EVK-NORA-W40 with the DS18B20 probe wired to GPIO15.</p>
+        </div>
+        <div>
+          <img src="assets/hardware-wiring.jpg" alt="Close-up photo of the 4.7 kΩ pull-up resistor soldered in-line on the DS18B20 wiring, heat-shrunk at the splice" style="width:100%;height:auto;border-radius:10px;display:block" loading="lazy">
+          <p class="cap">The 4.7 kΩ pull-up, soldered in-line and heat-shrunk right at the sensor cable splice.</p>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:14px">Where to get it: the <a href="https://www.u-blox.com/en/product/evk-nora-w40" target="_blank" rel="noopener">EVK-NORA-W40</a> dev kit exposes every pin on a breadboard-friendly header — no PCB design needed to get started. DS18B20 stainless probes are a common ~$3 part, widely sold on Amazon, AliExpress and electronics distributors — for salt-chlorinated pools, look for <strong>316 stainless</strong> specifically; 304 pits in chlorinated salt water over time. No production enclosure or one-click "buy a finished sensor" option yet — see the roadmap below.</p>
+    <p class="lead" style="margin-top:10px">Accuracy note: the DS18B20's 0.0625 °C resolution is not the same as 0.0625 °C accuracy — the datasheet spec is ±0.5 °C. Placement matters more than resolution: a probe on a sun-heated cable, near the surface, or shallow in the water reads faster and drifts higher than the bulk water temperature; submerge it at a representative depth away from direct sun and returns/jets for a reading you can trust.</p>
   </div>
 </section>
 
 <section id="battery">
   <div class="wrap">
     <h2>Battery life</h2>
-    <p class="lead">Heated pool at 28–29 °C with a 0.25 °C report threshold.</p>
+    <p class="lead">Heated pool at 28–29 °C with a 0.25 °C report threshold. <strong>Realistic expectation: 5–7 years</strong> on alkaline AA/AAA — shelf-life and self-discharge cap them well below the draw-limited numbers below for those two rows. Lithium primary (CR2477) and Li-ion (18650) age differently and land closer to the modeled figures.</p>
     <div class="tbl-scroll">
       <table>
         <thead><tr><th>Battery</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (disconnect)</th></tr></thead>
         <tbody>
           <tr><td>CR2477 (1000 mAh)</td><td>~5 years</td><td>~6 months</td><td>~3.3 years</td></tr>
-          <tr><td>2× AAA (1200 mAh)</td><td>~6 years</td><td>~8 months</td><td>~4 years</td></tr>
-          <tr><td class="hi">2× AA (2800 mAh)</td><td class="hi">~12 years</td><td class="hi">~1.8 years</td><td class="hi">~9 years</td></tr>
+          <tr><td>2× AAA (1200 mAh)<sup>*</sup></td><td>~6 years</td><td>~8 months</td><td>~4 years</td></tr>
+          <tr><td class="hi">2× AA (2800 mAh)<sup>*</sup></td><td class="hi">~12 years</td><td class="hi">~1.8 years</td><td class="hi">~9 years</td></tr>
           <tr><td>18650 (3400 mAh)</td><td>~15+ years</td><td>~2.2 years</td><td>~11 years</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="lead" style="margin-top:14px">Estimates from the power model — real measurement (PPK2/Joulescope) is on the roadmap. In practice, alkaline AA self-discharge and shelf-life cap real-world life at roughly <strong>5–7 years</strong> regardless of draw; <strong>lithium AA (e.g. Energizer L91)</strong> last longer and cope far better with outdoor cold.</p>
+    <p class="lead" style="margin-top:14px"><sup>*</sup> Draw-limited power-model estimate — alkaline cells self-discharge over time regardless of load, capping real-world life at roughly 5–7 years. Real measurement (PPK2/Joulescope) is on the roadmap.</p>
   </div>
 </section>
 
@@ -631,6 +630,49 @@
 </section>
 
 
+<section id="live">
+  <div class="wrap">
+    <h2>See it live</h2>
+    <p class="lead">Connect straight to a nearby AkvaLink over Bluetooth — no app, right in your browser.</p>
+    <p class="lead">Needs a device already flashed with the <strong>BLE-only</strong> variant (see downloads above) — the other variants don't expose this.</p>
+    <div class="live-card">
+      <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit" id="tempUnit" role="button" title="Click to switch °C/°F">°C</span></div>
+      <div id="bleAge" class="age"></div>
+      <div id="bleStatus" class="status">Not connected</div>
+      <div id="bleFw" class="age"></div>
+      <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
+      <p id="bleNote" class="ble-note"></p>
+    </div>
+  </div>
+</section>
+
+
+<section id="security">
+  <div class="wrap">
+    <h2>Security</h2>
+    <p class="lead">What AkvaLink protects — and what it doesn't. No cloud means less to defend, but it's not nothing.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>No cloud, no accounts</h3>
+        <p>Nothing leaves your network. There's no server to breach and no account to leak.</p>
+      </div>
+      <div class="card">
+        <h3>BLE OTA is unsigned</h3>
+        <p>The custom BLE update service accepts any image sent to it — there's no cryptographic signature check today. Anyone within Bluetooth range can push firmware. Fine for a hobby device on your own bench; don't treat it as the only barrier for anything sensitive.</p>
+      </div>
+      <div class="card">
+        <h3>The Wi-Fi AP variant is open</h3>
+        <p>The <code>--ap</code> build's SoftAP has no password by design (any phone, zero setup). Its exposure is limited to whoever is in Wi-Fi range and the local captive page — the same trust model as many travel routers and IoT setup hotspots.</p>
+      </div>
+      <div class="card">
+        <h3>Matter/Thread commissioning</h3>
+        <p>Standard Matter PASE/CASE commissioning via the printed setup code — the same security model as any other Matter device, not something AkvaLink adds or weakens.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 <section class="band" id="status">
   <div class="wrap">
     <h2>Status &amp; roadmap</h2>
@@ -666,8 +708,9 @@
       <a href="https://github.com/espressif/esp-idf">ESP-IDF</a>,
       <a href="https://github.com/project-chip/connectedhomeip">connectedhomeip</a>, and the
       <a href="https://www.u-blox.com/en/product/nora-w40-series">u-blox NORA-W40</a>.</p>
+    <p class="muted">Personal hobby project, built in my own time. I work at u-blox, but AkvaLink is unofficial — not endorsed by, or representative of, my employer.</p>
     <p class="muted">Inspired by <a href="https://poolmicke.se/">poolmicke.se</a> — tack Micke! 🇸🇪 ·
-      Apache-2.0 · Last updated August 2026.</p>
+      Apache-2.0 · <a href="https://validator.w3.org/nu/?doc=https://akvalink.com/" target="_blank" rel="noopener">W3C-valid HTML</a> · Last updated August 2026.</p>
     <p class="muted">☕ Enjoying AkvaLink? <a href="https://buymeacoffee.com/stenmo" target="_blank" rel="noopener">Buy me a coffee</a> or <a href="https://github.com/sponsors/stenmo" target="_blank" rel="noopener">sponsor on GitHub</a> — totally optional, always appreciated.</p>
     <p class="muted" id="siteVerLine">Site v<span id="siteVer">0.0.0</span></p>
   </div>
@@ -678,6 +721,7 @@
   var btn = document.getElementById('bleBtn');
   var statusEl = document.getElementById('bleStatus');
   var tempEl = document.getElementById('tempVal');
+  var unitEl = document.getElementById('tempUnit');
   var ageEl = document.getElementById('bleAge');
   var noteEl = document.getElementById('bleNote');
   var fwEl = document.getElementById('bleFw');
@@ -710,6 +754,15 @@
     var badge = document.getElementById('verBadge');
     if (v && badge) badge.textContent = 'v' + v.textContent.trim().replace(/^v/, '');
   })();
+
+  // °C/°F unit toggle — also unconditional (like the badge mirror above) so
+  // it isn't silently dead on browsers that return early below (iOS/Firefox).
+  var useFahrenheit = false;
+  unitEl.addEventListener('click', function () {
+    useFahrenheit = !useFahrenheit;
+    unitEl.textContent = useFahrenheit ? '°F' : '°C';
+    if (typeof renderTemp === 'function') renderTemp();
+  });
 
   // Web Bluetooth is Chromium-only (Chrome/Edge desktop, Chrome Android).
   var supported = typeof navigator !== 'undefined' && !!navigator.bluetooth;
@@ -752,9 +805,19 @@
     ageEl.textContent = 'updated ' + (s <= 0 ? 'just now' : s + 's ago');
   }
 
+  // Remembers the last raw reading so the °C/°F toggle can re-render without a new BLE notification.
+  var lastCelsius = null;
+
+  function renderTemp() {
+    if (lastCelsius == null) return;
+    var v = useFahrenheit ? (lastCelsius * 9 / 5 + 32) : lastCelsius;
+    tempEl.textContent = v.toFixed(1);
+  }
+
   function setTemp(celsius) {
-    tempEl.textContent = celsius.toFixed(1);
+    lastCelsius = celsius;
     tempEl.classList.remove('idle');
+    renderTemp();
     lastUpdate = Date.now();
     renderAge();
   }
