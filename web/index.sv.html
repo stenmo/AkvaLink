@@ -14,6 +14,18 @@
 <meta name="apple-mobile-web-app-title" content="AkvaLink" />
 <title>AkvaLink — batteridriven Matter-sensor för pool och vatten</title>
 <meta name="description" content="AkvaLink är en batteridriven Matter-temperatursensor på u-blox NORA-W40 (ESP32-C6). Flera års batteritid. Lokal Matter via Thread eller Wi-Fi. Ingen molntjänst, aldrig." />
+<link rel="alternate" hreflang="en" href="https://akvalink.com/" />
+<link rel="alternate" hreflang="sv" href="https://akvalink.com/index.sv.html" />
+<link rel="alternate" hreflang="x-default" href="https://akvalink.com/" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="AkvaLink — batteridriven Matter-sensor för pool och vatten" />
+<meta property="og:description" content="AkvaLink är en batteridriven Matter-temperatursensor på u-blox NORA-W40 (ESP32-C6). Flera års batteritid. Lokal Matter via Thread eller Wi-Fi. Ingen molntjänst, aldrig." />
+<meta property="og:url" content="https://akvalink.com/index.sv.html" />
+<meta property="og:image" content="https://akvalink.com/assets/overview.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="AkvaLink — batteridriven Matter-sensor för pool och vatten" />
+<meta name="twitter:description" content="AkvaLink är en batteridriven Matter-temperatursensor på u-blox NORA-W40 (ESP32-C6). Flera års batteritid. Lokal Matter via Thread eller Wi-Fi. Ingen molntjänst, aldrig." />
+<meta name="twitter:image" content="https://akvalink.com/assets/overview.jpg" />
 <!-- ESP Web Tools: webbläsarbaserad USB-seriell flashning (Web Serial API).
      Ett medvetet undantag från denna sidas "inga externa beroenden"-regel —
      se .github/copilot-instructions.md "Project web page" för varför. -->
@@ -448,7 +460,7 @@
 <section id="battery">
   <div class="wrap">
     <h2>Batteritid</h2>
-    <p class="lead">Uppvärmd pool vid 28–29 °C med 0,25 °C rapporteringströskel. <strong>Realistisk förväntan: 5–7 år</strong> på alkaliska AA/AAA — hållbarhet och självurladdning begränsar dem långt under de förbrukningsberoende siffrorna nedan för de två raderna. Litium (CR2477) och litiumjon (18650) åldras annorlunda och hamnar närmare modellens siffror.</p>
+    <p class="lead">Uppvärmd pool vid 28–29 °C med 0,25 °C rapporteringströskel. <strong>Realistisk förväntan: 5–7 år</strong> på alkaliska AA/AAA — hållbarhet och självurladdning begränsar dem långt under de förbrukningsberoende siffrorna nedan för de två raderna. CR2477 (litium primärcell) har bäst hållbarhet av de fyra och hamnar närmast sin modellsiffra. Litiumjon (18650) åldras med några procents kapacitetsförlust per år oavsett belastning — behandla dess siffror likadant som de alkaliska raderna, inte som decennier.</p>
     <div class="tbl-scroll">
       <table>
         <thead><tr><th>Batteri</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (frånkopplad)</th></tr></thead>
@@ -456,11 +468,12 @@
           <tr><td>CR2477 (1000 mAh)</td><td>~5 år</td><td>~6 månader</td><td>~3,3 år</td></tr>
           <tr><td>2× AAA (1200 mAh)<sup>*</sup></td><td>~6 år</td><td>~8 månader</td><td>~4 år</td></tr>
           <tr><td class="hi">2× AA (2800 mAh)<sup>*</sup></td><td class="hi">~12 år</td><td class="hi">~1,8 år</td><td class="hi">~9 år</td></tr>
-          <tr><td>18650 (3400 mAh)</td><td>~15+ år</td><td>~2,2 år</td><td>~11 år</td></tr>
+          <tr><td>18650 (3400 mAh)<sup>*</sup></td><td>~15+ år</td><td>~2,2 år</td><td>~11 år</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="lead" style="margin-top:14px"><sup>*</sup> Förbrukningsberoende uppskattning från effektmodellen — alkaliska celler självurladdas över tid oavsett belastning, vilket begränsar den verkliga livslängden till ungefär 5–7 år. Riktig mätning (PPK2/Joulescope) finns på färdplanen.</p>
+    <p class="lead" style="margin-top:14px"><sup>*</sup> Förbrukningsberoende uppskattning från effektmodellen. Alkaliska celler (AAA/AA) självurladdas över tid oavsett belastning, vilket begränsar den verkliga livslängden till ungefär 5–7 år. Litiumjon (18650) åldras kalendariskt och självurladdas snabbare än alkaliskt också — dess verkliga livslängd räknas i år, inte de 11–15+ som modellen ensam antyder. Riktig mätning (PPK2/Joulescope) finns på färdplanen.</p>
+    <p class="lead" style="margin-top:10px">Myntcellsbygge (CR2477): myntceller går sönder på toppström, inte kapacitet. En Wi-Fi- eller Thread-sändningsburst kan dra några hundra mA, mer än en CR2477:s inre impedans gillar — lägg till en bulkkondensator (några hundra µF) över modulens matningsskena, annars faller regulatorn ur vid sändningsbursterna.</p>
   </div>
 </section>
 
@@ -651,6 +664,14 @@
         <h3>Matter/Thread-driftsättning</h3>
         <p>Vanlig Matter PASE/CASE-driftsättning via den tryckta konfigureringskoden — samma säkerhetsmodell som alla andra Matter-enheter, inget AkvaLink lägger till eller försvagar.</p>
       </div>
+      <div class="card">
+        <h3>ESP-NOW är okrypterat</h3>
+        <p>ESP-NOW-varianten sänder temperaturvärden i klartext utan kryptering eller autentisering. Vem som helst inom räckvidd kan läsa dem — eller förfalska en avläsning. Fungerar för en hobbysensor; inte lämpligt mot en motiverad angripare.</p>
+      </div>
+      <div class="card">
+        <h3>Station-Wi-Fi + MQTT</h3>
+        <p>Stationsbyggets lokala webbsida (akvalink.local) har ingen inloggning. Om din MQTT-mäklare kräver användarnamn/lösenord ligger det inbäddat i mäklar-URL:en och kompileras rakt in i firmware-avbilden — vem som helst som extraherar binären kan läsa det. Använd en mäklare på ett betrott lokalt nätverk, eller ett dedikerat MQTT-konto med begränsad behörighet.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -674,6 +695,7 @@
       <li class="done"><span class="mark">✓</span>ESP-NOW-utsändning — deep-sleep-givare, ingen hub, ingen driftsättning</li>
       <li class="done"><span class="mark">✓</span>ESPHome / Home Assistant inbyggt API-variant (anpassa YAML, OTA från dashboarden)</li>
       <li class="done"><span class="mark">✓</span>Egen app (Windows/Linux/macOS/Android/iOS) — live-temperatur + ett-klicks OTA</li>
+      <li class="todo"><span class="mark">▹</span>Signerade OTA-avbilder (ESP-IDF secure app verification)</li>
       <li class="todo"><span class="mark">▹</span>Riktig effektmätning + djupt viloläge</li>
       <li class="todo"><span class="mark">▹</span>E-ink-display (stora siffror, batteri, trend)</li>
       <li class="todo"><span class="mark">▹</span>Batterispänning + låg-batteri Matter-händelse</li>

@@ -14,6 +14,18 @@
 <meta name="apple-mobile-web-app-title" content="AkvaLink" />
 <title>AkvaLink — battery-powered Matter pool &amp; aquatic temperature sensor</title>
 <meta name="description" content="AkvaLink is a single-SoC, battery-powered Matter temperature sensor on u-blox NORA-W40 (ESP32-C6). Multi-year battery life. Local Matter over Thread or Wi-Fi. No cloud, ever." />
+<link rel="alternate" hreflang="en" href="https://akvalink.com/" />
+<link rel="alternate" hreflang="sv" href="https://akvalink.com/index.sv.html" />
+<link rel="alternate" hreflang="x-default" href="https://akvalink.com/" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="AkvaLink — battery-powered Matter pool &amp; aquatic temperature sensor" />
+<meta property="og:description" content="Single-SoC, battery-powered Matter temperature sensor on u-blox NORA-W40 (ESP32-C6). Multi-year battery life. Local Matter over Thread or Wi-Fi. No cloud, ever." />
+<meta property="og:url" content="https://akvalink.com/" />
+<meta property="og:image" content="https://akvalink.com/assets/overview.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="AkvaLink — battery-powered Matter pool &amp; aquatic temperature sensor" />
+<meta name="twitter:description" content="Single-SoC, battery-powered Matter temperature sensor on u-blox NORA-W40 (ESP32-C6). Multi-year battery life. Local Matter over Thread or Wi-Fi. No cloud, ever." />
+<meta name="twitter:image" content="https://akvalink.com/assets/overview.jpg" />
 <!-- ESP Web Tools: browser-based USB serial flashing (Web Serial API). One
      deliberate external-CDN exception to this page's self-contained rule —
      see .github/copilot-instructions.md "Project web page" for why. -->
@@ -463,7 +475,7 @@
 <section id="battery">
   <div class="wrap">
     <h2>Battery life</h2>
-    <p class="lead">Heated pool at 28–29 °C with a 0.25 °C report threshold. <strong>Realistic expectation: 5–7 years</strong> on alkaline AA/AAA — shelf-life and self-discharge cap them well below the draw-limited numbers below for those two rows. Lithium primary (CR2477) and Li-ion (18650) age differently and land closer to the modeled figures.</p>
+    <p class="lead">Heated pool at 28–29 °C with a 0.25 °C report threshold. <strong>Realistic expectation: 5–7 years</strong> on alkaline AA/AAA — shelf-life and self-discharge cap them well below the draw-limited numbers below for those two rows. CR2477 (lithium primary) has the best shelf life of the four and lands closest to its modeled figure. Li-ion (18650) calendar-ages a few percent capacity per year regardless of load, so treat its figures the same as the alkaline rows, not as decades.</p>
     <div class="tbl-scroll">
       <table>
         <thead><tr><th>Battery</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (disconnect)</th></tr></thead>
@@ -471,11 +483,12 @@
           <tr><td>CR2477 (1000 mAh)</td><td>~5 years</td><td>~6 months</td><td>~3.3 years</td></tr>
           <tr><td>2× AAA (1200 mAh)<sup>*</sup></td><td>~6 years</td><td>~8 months</td><td>~4 years</td></tr>
           <tr><td class="hi">2× AA (2800 mAh)<sup>*</sup></td><td class="hi">~12 years</td><td class="hi">~1.8 years</td><td class="hi">~9 years</td></tr>
-          <tr><td>18650 (3400 mAh)</td><td>~15+ years</td><td>~2.2 years</td><td>~11 years</td></tr>
+          <tr><td>18650 (3400 mAh)<sup>*</sup></td><td>~15+ years</td><td>~2.2 years</td><td>~11 years</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="lead" style="margin-top:14px"><sup>*</sup> Draw-limited power-model estimate — alkaline cells self-discharge over time regardless of load, capping real-world life at roughly 5–7 years. Real measurement (PPK2/Joulescope) is on the roadmap.</p>
+    <p class="lead" style="margin-top:14px"><sup>*</sup> Draw-limited power-model estimate. Alkaline cells (AAA/AA) self-discharge over time regardless of load, capping real-world life at roughly 5–7 years. Li-ion (18650) calendar-ages and self-discharges faster than alkaline too — its real-world life is years, not the 11–15+ the draw model alone suggests. Real measurement (PPK2/Joulescope) is on the roadmap.</p>
+    <p class="lead" style="margin-top:10px">Coin-cell (CR2477) builds: coin cells fail on peak current, not capacity. A Wi-Fi or Thread TX burst can pull a few hundred mA, more than a CR2477's internal impedance likes — add a bulk capacitor (a few hundred µF) across the module's supply rail, or TX bursts will brown out the regulator.</p>
   </div>
 </section>
 
@@ -668,6 +681,14 @@
         <h3>Matter/Thread commissioning</h3>
         <p>Standard Matter PASE/CASE commissioning via the printed setup code — the same security model as any other Matter device, not something AkvaLink adds or weakens.</p>
       </div>
+      <div class="card">
+        <h3>ESP-NOW is unencrypted</h3>
+        <p>The ESP-NOW variant broadcasts temperature readings in the clear with no encryption or authentication. Anyone in range can read them — or spoof a fake reading. Fine for a hobby sensor; not a fit for anything adversarial.</p>
+      </div>
+      <div class="card">
+        <h3>Station Wi-Fi + MQTT</h3>
+        <p>The station build's local web page (akvalink.local) has no login. If your MQTT broker needs a username/password, it's embedded in the broker URL and compiled straight into the firmware image — anyone who extracts the binary can read it. Use a broker on a trusted LAN, or a dedicated low-privilege MQTT account.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -692,6 +713,7 @@
       <li class="done"><span class="mark">✓</span>ESP-NOW broadcast — deep-sleep sensor, no hub, no provisioning</li>
       <li class="done"><span class="mark">✓</span>ESPHome / Home Assistant native API variant (adopt-and-customize YAML, dashboard OTA)</li>
       <li class="done"><span class="mark">✓</span>Native companion app (Windows/Linux/macOS/Android/iOS) — live temperature + one-click OTA</li>
+      <li class="todo"><span class="mark">▹</span>Signed OTA images (ESP-IDF secure app verification)</li>
       <li class="todo"><span class="mark">▹</span>Real power measurement + deep sleep</li>
       <li class="todo"><span class="mark">▹</span>E-ink display (big-digit, battery, trend)</li>
       <li class="todo"><span class="mark">▹</span>Battery voltage + low-battery Matter event</li>
