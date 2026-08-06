@@ -324,10 +324,12 @@
         <p>iPhone / iPad companion app. Build with Xcode on a Mac.</p>
         <code class="cmd">akvalink.sh --app --ios</code></div>
       <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 9.5v6.2c0 .5.4.9.9.9H8.6v2.7a1.3 1.3 0 0 0 2.6 0V16.6h1.6v2.7a1.3 1.3 0 0 0 2.6 0V16.6h.7c.5 0 .9-.4.9-.9V9.5H7z"/><path d="M16.9 9c-.25-1.55-1.15-2.85-2.4-3.7l1-1.4a.55.55 0 1 0-.9-.65l-1.05 1.45a5.5 5.5 0 0 0-3.1 0L9.4 3.25a.55.55 0 1 0-.9.65l1 1.4C8.25 6.15 7.35 7.45 7.1 9h9.8z"/><circle cx="10" cy="7.5" r=".6" fill="var(--card)"/><circle cx="14" cy="7.5" r=".6" fill="var(--card)"/></svg></div><h3>Android</h3>
-        <p>APK built from source.</p>
+        <p>Prebuilt APK, or build from source.</p>
+        <p class="cta" style="margin-top:8px"><a id="dlAppApk" class="ghost" href="https://github.com/stenmo/AkvaLink/releases">Download APK</a></p>
         <code class="cmd">akvalink.cmd --app --android</code></div>
       <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></div><h3>Windows</h3>
-        <p>Build &amp; run here on the desktop.</p>
+        <p>Prebuilt .zip (unsigned), or build &amp; run from source.</p>
+        <p class="cta" style="margin-top:8px"><a id="dlAppWindows" class="ghost" href="https://github.com/stenmo/AkvaLink/releases">Download .zip</a></p>
         <code class="cmd">akvalink.cmd --app --run</code></div>
       <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c-3.4 0-6.2 2.7-6.4 6.1-1.7 2-2.6 4.7-2.3 7.7.15 1.4 1.3 2.3 2.6 2.1.5-.08.9-.3 1.2-.6.5.9 1.5 1.5 2.6 1.5h4.6c1.1 0 2.1-.6 2.6-1.5.3.3.7.5 1.2.6 1.3.2 2.45-.7 2.6-2.1.3-3-.6-5.7-2.3-7.7-.2-3.4-3-6.1-6.4-6.1z"/><ellipse cx="9.7" cy="7.2" rx="1.15" ry="1.4" fill="var(--card)"/><ellipse cx="14.3" cy="7.2" rx="1.15" ry="1.4" fill="var(--card)"/><circle cx="9.9" cy="7.5" r=".55"/><circle cx="14.1" cy="7.5" r=".55"/><path d="M8.6 10.5c-.9 2.7-.9 5.6.1 7.7.3.6 1 1 1.7 1h3.2c.7 0 1.4-.4 1.7-1 1-2.1 1-5 .1-7.7-1.1.6-2.3.9-3.4.9s-2.3-.3-3.4-.9z" fill="var(--card)"/><ellipse cx="7.3" cy="19.6" rx="1.8" ry="1.1" fill="var(--card)"/><ellipse cx="16.7" cy="19.6" rx="1.8" ry="1.1" fill="var(--card)"/></svg></div><h3>Linux</h3>
         <p>Build &amp; run here on the desktop.</p>
@@ -337,7 +339,7 @@
         <code class="cmd">akvalink.sh --app --macos</code></div>
     </div>
     <p class="cta"><a class="ghost" href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">App source &amp; build guide</a></p>
-    <p class="ble-note">No prebuilt app download yet — the launcher above builds it for your platform in one command. Prebuilt app binaries are on the roadmap.</p>
+    <p class="ble-note">Windows and Android are prebuilt and attached to every <a href="https://github.com/stenmo/AkvaLink/releases/latest">GitHub release</a>. The Windows build is unsigned (SmartScreen will warn on first run) and the APK needs "install from unknown sources" — no app-store distribution yet. iOS, macOS and Linux still build from source; there's no Apple or Linux CI to sign/package them.</p>
     <p class="ble-note">Apple, Android, Windows and Linux/Tux are trademarks or symbols of their respective owners, named here only to show platform support — the icons above are our own monochrome glyphs, not the official logos.</p>
   </div>
 </section>
@@ -1248,6 +1250,13 @@
         if (el && url)       el.setAttribute('href', url);
         if (appEl && appUrl) appEl.setAttribute('href', appUrl);
       });
+      // Companion-app builds (Windows zip / Android APK), attached by publish_app.py.
+      var apkEl = document.getElementById('dlAppApk');
+      var winEl = document.getElementById('dlAppWindows');
+      var apkUrl = assetUrl(assets, /^akvalink-app-android-v.*\.apk$/);
+      var winUrl = assetUrl(assets, /^akvalink-app-windows-v.*\.zip$/);
+      if (apkEl && apkUrl) apkEl.setAttribute('href', apkUrl);
+      if (winEl && winUrl) winEl.setAttribute('href', winUrl);
     })
     .catch(function () { /* keep fallback links to the releases page */ });
 })();

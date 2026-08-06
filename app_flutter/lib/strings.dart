@@ -26,6 +26,7 @@ class Strings {
     required this.justNow,
     required this.firmwareUpdate,
     required this.otaConnectFirst,
+    required this.otaFindFirst,
     required this.flashLatest,
     required this.updating,
     required this.connectFirst,
@@ -90,6 +91,7 @@ class Strings {
   final String justNow;
   final String firmwareUpdate;
   final String otaConnectFirst;
+  final String otaFindFirst;
   final String flashLatest;
   final String updating;
   final String connectFirst;
@@ -165,9 +167,8 @@ class Strings {
   String foundOnLan(String host) =>
       isSwedish ? 'Hittades på $host' : 'Found at $host';
 
-  String connectedViaWifi(String host) => isSwedish
-      ? 'Ansluten via Wi-Fi · $host'
-      : 'Connected via Wi-Fi · $host';
+  String connectedViaWifi(String host) =>
+      isSwedish ? 'Ansluten via Wi-Fi · $host' : 'Connected via Wi-Fi · $host';
 
   String waitingForReading(String host) => isSwedish
       ? 'Hittades vid $host – väntar på en avläsning…'
@@ -203,6 +204,7 @@ class Strings {
     justNow,
     firmwareUpdate,
     otaConnectFirst,
+    otaFindFirst,
     flashLatest,
     updating,
     connectFirst,
@@ -280,6 +282,8 @@ class Strings {
     firmwareUpdate: 'Firmware update',
     otaConnectFirst:
         'Connect to an AkvaLink to update its firmware over Bluetooth.',
+    otaFindFirst:
+        'Find it on the Wi-Fi network first to update its firmware over Wi-Fi.',
     flashLatest: 'Flash latest firmware',
     updating: 'Updating…',
     connectFirst: 'Connect first',
@@ -344,6 +348,8 @@ class Strings {
     firmwareUpdate: 'Uppdatera firmware',
     otaConnectFirst:
         'Anslut till en AkvaLink för att uppdatera dess firmware via Bluetooth.',
+    otaFindFirst:
+        'Hitta den på Wi-Fi-nätverket för att uppdatera dess firmware via Wi-Fi.',
     flashLatest: 'Installera senaste firmware',
     updating: 'Uppdaterar…',
     connectFirst: 'Anslut först',

@@ -5,11 +5,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../net/station_discovery.dart';
 import '../ota/ota_controller.dart';
+import '../ota/wifi_ota_controller.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/hero_header.dart';
 import '../widgets/ota_card.dart';
 import '../widgets/temperature_card.dart';
+import '../widgets/wifi_ota_card.dart';
 import 'wifi_setup_screen.dart';
 
 /// Same repo used everywhere else in this project (README badge, OTA update
@@ -31,9 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch the newest release tag once so the OTA button is labelled.
+    // Fetch the newest release tag once so the OTA buttons are labelled.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OtaController>().refreshLatestTag();
+      context.read<WifiOtaController>().refreshLatestTag();
     });
   }
 
@@ -82,11 +85,30 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           const TemperatureReadoutCard(),
                           const SizedBox(height: 16),
-                          const BleConnectCard(),
-                          const SizedBox(height: 16),
-                          const _LanDiscoveryCard(),
-                          const SizedBox(height: 16),
-                          const OtaCard(),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    const BleConnectCard(),
+                                    const SizedBox(height: 16),
+                                    const OtaCard(),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    const _LanDiscoveryCard(),
+                                    const SizedBox(height: 16),
+                                    const WifiOtaCard(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 16),
                           _WifiSetupEntry(onTap: _openWifiSetup),
                           const SizedBox(height: 20),
