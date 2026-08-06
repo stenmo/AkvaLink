@@ -85,30 +85,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           const TemperatureReadoutCard(),
                           const SizedBox(height: 16),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  children: [
-                                    const BleConnectCard(),
-                                    const SizedBox(height: 16),
-                                    const OtaCard(),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  children: [
-                                    const _LanDiscoveryCard(),
-                                    const SizedBox(height: 16),
-                                    const WifiOtaCard(),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                          const BleConnectCard(),
+                          const SizedBox(height: 16),
+                          const OtaCard(),
+                          const SizedBox(height: 16),
+                          const _LanDiscoveryCard(),
+                          const SizedBox(height: 16),
+                          const WifiOtaCard(),
                           const SizedBox(height: 16),
                           _WifiSetupEntry(onTap: _openWifiSetup),
                           const SizedBox(height: 20),
