@@ -269,6 +269,7 @@
     <p class="cta">
       <a class="primary" href="https://github.com/stenmo/AkvaLink">View on GitHub</a>
       <a class="ghost" href="#download">Download firmware</a>
+      <a class="ghost" href="#get-app">Download app</a>
       <a class="ghost" href="#how">How it works</a>
     </p>
   </div>
@@ -641,7 +642,30 @@
       <div class="progress"><div id="otaBar" class="bar"></div></div>
       <div id="otaStatus" class="status"></div>
     </div>
-    <p class="ble-note">Prefer a native app over the browser? The <a href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">AkvaLink companion app</a> (Windows/Linux/macOS/Android/iOS) shows live temperature and flashes OTA updates too — build it from source.</p>
+
+    <hr class="dl-divider">
+
+    <h3 class="dl-subhead" id="get-app"><span class="dl-num">3</span>Or use the app</h3>
+    <p class="ota-hint">Prefer a native app over the browser? Same live temperature and one-click OTA, no Web Bluetooth required.</p>
+    <div class="grid">
+      <div class="dl-card">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span><h3>Windows</h3><p>Prebuilt .zip (unsigned) — extract and run.</p>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlAppWindowsFw" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> Download .zip</a>
+          </div>
+        </div>
+      </div>
+      <div class="dl-card">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 9.5v6.2c0 .5.4.9.9.9H8.6v2.7a1.3 1.3 0 0 0 2.6 0V16.6h1.6v2.7a1.3 1.3 0 0 0 2.6 0V16.6h.7c.5 0 .9-.4.9-.9V9.5H7z"/><path d="M16.9 9c-.25-1.55-1.15-2.85-2.4-3.7l1-1.4a.55.55 0 1 0-.9-.65l-1.05 1.45a5.5 5.5 0 0 0-3.1 0L9.4 3.25a.55.55 0 1 0-.9.65l1 1.4C8.25 6.15 7.35 7.45 7.1 9h9.8z"/><circle cx="10" cy="7.5" r=".6" fill="var(--card)"/><circle cx="14" cy="7.5" r=".6" fill="var(--card)"/></svg></span><h3>Android</h3><p>Prebuilt APK — enable "install from unknown sources" to run it.</p>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlAppApkFw" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> Download APK</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="ble-note">iOS, macOS and Linux still build from source — see the <a href="#app">companion app section</a> above for details.</p>
   </div>
 </section>
 
@@ -1251,12 +1275,16 @@
         if (appEl && appUrl) appEl.setAttribute('href', appUrl);
       });
       // Companion-app builds (Windows zip / Android APK), attached by publish_app.py.
-      var apkEl = document.getElementById('dlAppApk');
-      var winEl = document.getElementById('dlAppWindows');
       var apkUrl = assetUrl(assets, /^akvalink-app-android-v.*\.apk$/);
       var winUrl = assetUrl(assets, /^akvalink-app-windows-v.*\.zip$/);
-      if (apkEl && apkUrl) apkEl.setAttribute('href', apkUrl);
-      if (winEl && winUrl) winEl.setAttribute('href', winUrl);
+      ['dlAppApk', 'dlAppApkFw'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el && apkUrl) el.setAttribute('href', apkUrl);
+      });
+      ['dlAppWindows', 'dlAppWindowsFw'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el && winUrl) el.setAttribute('href', winUrl);
+      });
     })
     .catch(function () { /* keep fallback links to the releases page */ });
 })();

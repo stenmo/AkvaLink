@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.ublox" "\0"
-            VALUE "FileDescription", "akvalink" "\0"
+            VALUE "FileDescription", "AkvaLink" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "akvalink" "\0"
+            VALUE "InternalName", "AkvaLink" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.ublox. All rights reserved." "\0"
-            VALUE "OriginalFilename", "akvalink.exe" "\0"
-            VALUE "ProductName", "akvalink" "\0"
+            VALUE "OriginalFilename", "AkvaLink.exe" "\0"
+            VALUE "ProductName", "AkvaLink" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
