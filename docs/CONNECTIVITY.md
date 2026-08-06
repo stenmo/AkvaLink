@@ -134,18 +134,50 @@ We don't write one for v1. The expectation is:
 ## Mode 4 — Standalone Wi-Fi *(local LAN, no controller)*
 
 - Joins the user's Wi-Fi (provisioned via BLE — see below).
-- Exposes:
-  - **mDNS** record `_akvalink._tcp.local`.
-  - **HTTP server** on `:80` with two endpoints:
-    - `GET /api/v1/sensor` → JSON `{ "temp_c": 28.4, "battery_pct": 87, "rssi": -52, "uptime_s": ... }`.
-    - `GET /` → minimal HTML/PWA dashboard for phone browsers.
-  - Optional **MQTT publish to a user-configured local broker** (off by
-    default; turn on for Home Assistant integration).
+- Exposes (`main/web_page.cpp`, shared verbatim by both `--ap` and
+  `--station` — same HTML/JS page, same endpoints, only the network setup
+  differs):
+  - **mDNS** (`--station` only; `--ap` clients join the SoftAP directly at
+    the fixed `192.168.4.1` and don't need discovery) — hostname
+    `akvalink-<last4mac>.local`, instance name "AkvaLink temperature",
+    `_http._tcp`.
+  - **HTTP server** on `:80`:
+    - `GET /` → self-contained HTML/JS dashboard (live reading, trend arrow,
+      min/max, 24 h/7 d history chart) for any phone/laptop browser.
+    - `GET /temp` → `{"celsius": 28.4}` (or `null` before the first reading).
+    - `GET /battery` → `{"percent": 87}` (or `null` if unknown).
+    - `GET /trend` → `{"direction": "rising"|"stable"|"falling", "delta_c_per_min": 0.02}`
+      from the last 5 readings.
+    - `GET /stats` → `{"min": 26.10, "max": 29.80, "since_s": 3600}` since boot.
+    - `GET /history` → `{"minute": [...], "hourly": [...]}` — 288 entries at
+      5-min resolution (24 h) + 168 entries at 1-hr resolution (7 d),
+      RAM-only ring buffers, reset by `POST /history/reset`. **Not persisted
+      across reboot/OTA/power loss** — see the note below on why.
+    - `GET /mqtt-status` → `{"connected": true|false}` (`--station` only).
+    - `POST /ota` → raw firmware binary body, flashes the inactive OTA slot
+      and reboots (used by `wifi_ota_card.dart` in the Flutter app).
+  - Optional **MQTT publish to a user-configured local broker** (`--station`
+    only, off by default; turn on for Home Assistant integration).
 - Same disconnect-mode trick as Matter-over-Wi-Fi for battery.
 
 **Why offer it:** Home Assistant / Node-RED / integrator scenarios.
-Plus, an `_akvalink._tcp.local` device on the LAN is friction-free:
-no app, no account, just `http://akvalink.local`.
+Plus, an mDNS-discoverable device on the LAN is friction-free:
+no app, no account, just `http://akvalink-<last4mac>.local`.
+
+**Why `/history` isn't flash-persisted:** the ring buffers are tiny
+(288 + 168 floats ≈ 1.8 KB), but `--ap`/`--station` are mains-powered
+demo targets that rarely reboot, and the battery-critical Thread SED
+variant doesn't run this HTTP server at all (Matter attribute reporting
+covers it, and a hub/Home app already retains its own history). Adding
+NVS wear-levelled persistence for ~1.8 KB that's lost only on the rare
+reboot isn't worth the flash-wear complexity — revisit only if a real
+use case needs history to survive a power cycle.
+
+The Flutter companion app consumes `/temp`, `/trend` and `/stats` (trend
+arrow + min/max, matching the device's own page) over this same Wi-Fi path,
+but not yet `/history` (the sparkline chart) — and BLE mode (3) doesn't
+expose any of this at all (`main/ble_gatt.cpp` only has the live temperature
+characteristic). See [docs/KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).
 
 ---
 

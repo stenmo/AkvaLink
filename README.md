@@ -78,8 +78,9 @@ supported (`--clickboard` build flag).
 
 # Or the Wi-Fi station variant — joins your home Wi-Fi (provisioned once over
 # BLE with the free "ESP BLE Provisioning" app), then serves the temperature
-# page at http://akvalink-<last4mac>.local (unique per device). Also publishes
-# to MQTT for Home Assistant autodiscovery (default broker: homeassistant.local:1883).
+# page at http://akvalink-<last4mac>.local (found via mDNS, unique per device).
+# Also publishes to MQTT for Home Assistant autodiscovery (default broker:
+# homeassistant.local:1883).
 .\akvalink.cmd --station build
 
 # Or just bench-test the DS18B20 probe (no Matter/BLE — logs temp every 30 s)
@@ -102,8 +103,9 @@ printed on the serial console at first boot.
 ### Companion app (optional)
 
 A native **Flutter** app (Windows/Linux/macOS/Android/iOS) shows live
-temperature over Bluetooth and one-click OTA-updates the device — same GATT
-contract as the web page, no browser needed:
+temperature over Bluetooth or Wi-Fi (finds a `--station` device on the LAN via
+mDNS) and one-click OTA-updates the device — same GATT/HTTP contract as the
+web page, no browser needed:
 
 ```powershell
 .\akvalink.cmd --app --run

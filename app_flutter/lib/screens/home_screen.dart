@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
     ).push(MaterialPageRoute(builder: (_) => const WifiSetupScreen()));
     // Coming back from a scrolled-down entry point otherwise leaves the
-    // temperature card half-hidden under the fixed header.
+    // rest of the page scrolled past where the user left it.
     if (mounted && _scrollController.hasClients) {
       _scrollController.animateTo(
         0,
@@ -69,40 +69,56 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const HeroHeader(),
           Expanded(
-            // HeroHeader already handles the top inset; this covers the
-            // bottom nav bar / gesture inset so the footer isn't hidden under it.
-            child: SafeArea(
-              top: false,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 460),
-                    child: ChangeNotifierProvider.value(
-                      value: _discovery,
-                      child: Column(
-                        children: [
-                          const TemperatureReadoutCard(),
-                          const SizedBox(height: 16),
-                          const BleConnectCard(),
-                          const SizedBox(height: 16),
-                          const OtaCard(),
-                          const SizedBox(height: 16),
-                          const _LanDiscoveryCard(),
-                          const SizedBox(height: 16),
-                          const WifiOtaCard(),
-                          const SizedBox(height: 16),
-                          _WifiSetupEntry(onTap: _openWifiSetup),
-                          const SizedBox(height: 20),
-                          const _FooterNote(),
-                          const SizedBox(height: 10),
-                          const _FooterLinks(),
-                        ],
+            child: ChangeNotifierProvider.value(
+              value: _discovery,
+              child: Column(
+                children: [
+                  // Kept outside the scroll view so the live reading stays
+                  // visible no matter how far the rest of the page scrolls.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 460),
+                        child: const TemperatureReadoutCard(),
                       ),
                     ),
                   ),
-                ),
+                  Expanded(
+                    // HeroHeader + the fixed card above already handle the top
+                    // inset; this covers the bottom nav bar / gesture inset so
+                    // the footer isn't hidden under it.
+                    child: SafeArea(
+                      top: false,
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 460),
+                            child: Column(
+                              children: [
+                                const BleConnectCard(),
+                                const SizedBox(height: 16),
+                                const OtaCard(),
+                                const SizedBox(height: 16),
+                                const _LanDiscoveryCard(),
+                                const SizedBox(height: 16),
+                                const WifiOtaCard(),
+                                const SizedBox(height: 16),
+                                _WifiSetupEntry(onTap: _openWifiSetup),
+                                const SizedBox(height: 20),
+                                const _FooterNote(),
+                                const SizedBox(height: 10),
+                                const _FooterLinks(),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -4,13 +4,18 @@ Native companion app for the **AkvaLink** battery-powered Matter pool &
 aquatic temperature sensor (u-blox NORA-W40 / ESP32-C6).
 
 Same look & feel as the [web landing page](../web/index.html), but focused on
-the two things that matter in the hand:
+the things that matter in the hand:
 
-1. **Live temperature** — connect over Bluetooth and watch the reading update.
+1. **Live temperature** — connect over Bluetooth, or find a `--station` device
+   on the local Wi-Fi network via mDNS, and watch the reading update. Tap the
+   °C/°F unit to switch scales.
 2. **Firmware updates** — one-click OTA that auto-selects the right release
-   asset for the connected device's variant.
+   asset for the connected device's variant (over BLE or Wi-Fi).
+3. **Wi-Fi provisioning** — set up a `--station` device's home Wi-Fi over BLE,
+   no separate app needed.
 
 Runs on **iOS, Android, Windows, Linux and macOS** from one codebase.
+Local Bluetooth or Wi-Fi only — no cloud, ever.
 
 ## Why Flutter (not Flet)
 
@@ -21,6 +26,8 @@ single pixel-identical UI on all five platforms with native BLE — Flet's BLE
 story across desktop + mobile is far weaker.
 
 ## How it works
+
+### Over Bluetooth (`--ble`, `--thread`, `--wifi` variants)
 
 The app speaks the same GATT contract as the firmware
 (`main/ble_gatt.cpp`, `main/ble_escape.cpp`):
@@ -41,6 +48,21 @@ picking.
 OTA protocol: write `0x01` (BEGIN, device erases the passive slot) → stream the
 image to the data characteristic in MTU-safe chunks → write `0x02` (END, device
 finalises and reboots). `0x03` aborts.
+
+### Over Wi-Fi (`--station` variant)
+
+A `--station` device is provisioned over BLE directly from the app
+(`lib/ble/prov_controller.dart`, Espressif's `wifi_provisioning`/`protocomm`
+wire format re-implemented in Dart — see
+[docs/CONNECTIVITY.md](../docs/CONNECTIVITY.md#in-app-provisioning-flutter-companion-app)).
+Once it joins the home Wi-Fi, `lib/net/station_discovery.dart` finds it again
+by **mDNS** (`akvalink-<last4mac>.local`, via the `multicast_dns` package) and
+polls `main/web_page.cpp`'s `/temp` JSON directly — no BLE link needed.
+OTA over Wi-Fi (`lib/widgets/wifi_ota_card.dart`) uses the same station's
+`/ota` HTTP endpoint instead of the BLE OTA characteristics.
+
+History (`/history` sparkline chart on the same web server) isn't consumed
+by the app yet — see [docs/KNOWN_LIMITATIONS.md](../docs/KNOWN_LIMITATIONS.md).
 
 ## Build & run
 
@@ -95,9 +117,18 @@ Coverage:
 - `test/ota_controller_test.dart` — release-asset selection, happy-path
   BEGIN→stream→END, and corner cases: device-reported error, dropped link
   mid-upload, missing asset, bad download, busy-guard, local-file flash.
+- `test/prov_controller_test.dart` — Wi-Fi provisioning scan → connect →
+  session → set-config → apply → poll-to-connected, plus auth/rejection
+  errors and scan timeout.
+- `test/prov_proto_test.dart` — the hand-written protobuf wire codec for
+  provisioning messages.
+- `test/station_discovery_test.dart` — mDNS hostname resolve/browse and
+  `/temp` polling.
 - `test/spellcheck_test.dart` — every UI string (EN + SV) screened against a
   hand-curated dictionary, plus parity, whitespace and misspelling checks.
 - `test/firmware_parse_test.dart` — firmware-revision → version/variant parsing.
+- `test/app_version_test.dart` — the UI version badge stays in sync with
+  `pubspec.yaml`.
 
 ## Versioning
 
@@ -119,17 +150,26 @@ together when cutting a release so "On device" vs "app expects" line up.
 lib/
   main.dart                     app entry, providers, theme wiring
   theme.dart                    colours + light/dark themes (mirror web palette)
+  app_version.dart              single source of truth for the UI version badge
+  strings.dart                  EN/SV localized strings
   ble/
     akvalink_uuids.dart         the GATT contract (UUIDs + OTA opcodes)
     akvalink_controller.dart    scan → connect → temperature/battery/firmware
+    prov_uuids.dart             Wi-Fi provisioning (protocomm) UUIDs
+    prov_proto.dart             minimal protobuf wire codec for provisioning
+    prov_controller.dart        BLE Wi-Fi provisioning state machine
+  net/
+    station_discovery.dart      mDNS discovery + polling of a --station device
   ota/
     ota_controller.dart         OTA flow + GitHub release asset selection
   screens/
-    home_screen.dart            hero + temperature + OTA
+    home_screen.dart            hero + temperature + OTA + Wi-Fi setup entry
+    wifi_setup_screen.dart      BLE Wi-Fi provisioning UI
   widgets/
     hero_header.dart            water-gradient brand band
-    temperature_card.dart       big live readout + connect button
-    ota_card.dart               firmware update card
+    temperature_card.dart       big live readout (BLE or Wi-Fi) + °C/°F toggle
+    ota_card.dart                firmware update card (BLE)
+    wifi_ota_card.dart          firmware update card (Wi-Fi / --station)
 ```
 
-No cloud, ever — local Bluetooth only.
+No cloud, ever — local Bluetooth or Wi-Fi only.

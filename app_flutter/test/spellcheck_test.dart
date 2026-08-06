@@ -155,6 +155,8 @@ const _englishDict = {
   'router',
   'client',
   'isolation',
+  'tap',
+  'switch',
 };
 
 /// Correctly-spelled Swedish words appearing in the UI.
@@ -279,6 +281,8 @@ const _swedishDict = {
   'klientisolering',
   'routern',
   'vid',
+  'tryck',
+  'växla',
 };
 
 /// Split a UI string into lowercase word tokens, dropping punctuation, digits,

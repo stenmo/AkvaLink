@@ -75,6 +75,12 @@
   temperature over standard ESS GATT (plus a custom OTA service) — enough
   for the in-browser live demo — but the richer app service (battery %,
   thresholds, history) is still planned.
+- **Flutter app has no full history chart yet.** `main/web_page.cpp` serves
+  a 24 h/7 d sparkline via `/history` to the `--station`/`--ap` on-device
+  page; the app now shows the same trend arrow and min/max
+  (`/trend`, `/stats`) over Wi-Fi, but not yet the chart itself. BLE has
+  none of this — no equivalent GATT characteristics. See
+  [TODO.md](../TODO.md#apps--integrations).
 - **No Thread commissioning UX assist.** If commissioning fails you get
   raw esp-matter logs and have to dig.
 - **Windows app mDNS discovery needs a firewall rule.** The Flutter

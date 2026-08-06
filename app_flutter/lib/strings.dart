@@ -74,6 +74,7 @@ class Strings {
     required this.lanDiscoverIntro,
     required this.lanSearching,
     required this.lanNotFoundHint,
+    required this.tempToggleHint,
   });
 
   final String tagline;
@@ -134,6 +135,7 @@ class Strings {
   final String lanDiscoverIntro;
   final String lanSearching;
   final String lanNotFoundHint;
+  final String tempToggleHint;
 
   // ---- Parameterised helpers (kept out of the constructor) ----------------
 
@@ -261,6 +263,7 @@ class Strings {
     lanDiscoverIntro,
     lanSearching,
     lanNotFoundHint,
+    tempToggleHint,
   ];
 
   // ---- The two locales ----------------------------------------------------
@@ -288,7 +291,7 @@ class Strings {
     updating: 'Updating…',
     connectFirst: 'Connect first',
     dismiss: 'Dismiss',
-    footerLocal: 'Local Bluetooth only · no cloud, ever.',
+    footerLocal: 'Local Bluetooth or Wi-Fi · no cloud, ever.',
     footerHw: 'u-blox NORA-W40 · ESP32-C6',
     otaFetching: 'Fetching firmware…',
     otaConnecting: 'Connecting…',
@@ -328,6 +331,7 @@ class Strings {
     lanSearching: 'Searching the network…',
     lanNotFoundHint:
         'No AkvaLink found via mDNS. It may be blocked by a firewall or router client isolation.',
+    tempToggleHint: 'Tap to switch °C/°F',
   );
 
   static const sv = Strings(
@@ -354,7 +358,7 @@ class Strings {
     updating: 'Uppdaterar…',
     connectFirst: 'Anslut först',
     dismiss: 'Stäng',
-    footerLocal: 'Endast lokal Bluetooth · aldrig något moln.',
+    footerLocal: 'Lokal Bluetooth eller Wi-Fi · aldrig något moln.',
     footerHw: 'u-blox NORA-W40 · ESP32-C6',
     otaFetching: 'Hämtar firmware…',
     otaConnecting: 'Ansluter…',
@@ -394,6 +398,7 @@ class Strings {
     lanSearching: 'Söker på nätverket…',
     lanNotFoundHint:
         'Ingen AkvaLink hittades via mDNS. Den kan vara blockerad av en brandvägg eller klientisolering i routern.',
+    tempToggleHint: 'Tryck för att växla °C/°F',
   );
 
   /// Pick a locale's strings from a [Locale] (falls back to English).

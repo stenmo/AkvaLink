@@ -67,6 +67,53 @@ double? parseTempJson(String body) {
   }
 }
 
+/// Direction reported by main/web_page.cpp's `/trend` endpoint, derived from
+/// the last 5 readings.
+enum TrendDirection { rising, stable, falling }
+
+/// Parses the `{"direction": "rising"|"stable"|"falling", ...}` body of
+/// main/web_page.cpp's `/trend` endpoint. Returns null on a malformed body.
+TrendDirection? parseTrendJson(String body) {
+  try {
+    final json = jsonDecode(body) as Map<String, dynamic>;
+    switch (json['direction']) {
+      case 'rising':
+        return TrendDirection.rising;
+      case 'falling':
+        return TrendDirection.falling;
+      case 'stable':
+        return TrendDirection.stable;
+      default:
+        return null;
+    }
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Min/max since boot, from main/web_page.cpp's `/stats` endpoint.
+class TempStats {
+  const TempStats({this.min, this.max});
+  final double? min;
+  final double? max;
+}
+
+/// Parses the `{"min": 26.10, "max": 29.80, "since_s": ...}` body of
+/// main/web_page.cpp's `/stats` endpoint. Returns null on a malformed body.
+TempStats? parseStatsJson(String body) {
+  try {
+    final json = jsonDecode(body) as Map<String, dynamic>;
+    final min = json['min'];
+    final max = json['max'];
+    return TempStats(
+      min: min == null ? null : (min as num).toDouble(),
+      max: max == null ? null : (max as num).toDouble(),
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
 enum DiscoveryPhase { idle, resolving, browsing, found, notFound, error }
 
 class StationDiscoveryController extends ChangeNotifier {
@@ -197,6 +244,24 @@ class StationDiscoveryController extends ChangeNotifier {
     final r = await _client.get(Uri.parse('http://$ip/temp'));
     if (r.statusCode != 200) return null;
     return parseTempJson(r.body);
+  }
+
+  /// Fetch the rising/stable/falling direction from the station's `/trend`.
+  Future<TrendDirection?> fetchTrend() async {
+    final ip = _ip;
+    if (ip == null) return null;
+    final r = await _client.get(Uri.parse('http://$ip/trend'));
+    if (r.statusCode != 200) return null;
+    return parseTrendJson(r.body);
+  }
+
+  /// Fetch the min/max since boot from the station's `/stats`.
+  Future<TempStats?> fetchStats() async {
+    final ip = _ip;
+    if (ip == null) return null;
+    final r = await _client.get(Uri.parse('http://$ip/stats'));
+    if (r.statusCode != 200) return null;
+    return parseStatsJson(r.body);
   }
 
   Future<void> forget() async {

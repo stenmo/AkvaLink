@@ -293,6 +293,14 @@ above has happened.
     service** that's already implemented in firmware (uptime, device name,
     alert thresholds — see the BLE GATT contract section above) before
     tackling provisioning.
+  - **Trend/min-max parity with the device's own web page** ✅ **implemented**
+    — `lib/widgets/temperature_card.dart` polls `main/web_page.cpp`'s
+    `/trend` (rising/stable/falling arrow) and `/stats` (min/max since boot)
+    over the Wi-Fi/mDNS path, matching the on-device page's own display.
+    Only reachable over Wi-Fi: `--ble`'s GATT contract has no equivalent
+    characteristics (see [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)).
+    **Not yet done:** the `/history` 24 h/7 d sparkline chart — smallest
+    viable next step if wanted.
 - **Home Assistant integration** — works today over Matter; also evaluate a
   native path (local HTTP/JSON REST or MQTT-over-LAN) for users who want
   richer history/automation without a Matter controller.

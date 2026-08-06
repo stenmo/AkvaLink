@@ -21,8 +21,13 @@ class TemperatureReadoutCard extends StatefulWidget {
 
 class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
   Timer? _pollTimer;
+  Timer? _trendTimer;
+  Timer? _statsTimer;
   StationDiscoveryController? _pollDiscovery;
   double? _lanCelsius;
+  TrendDirection? _lanTrend;
+  TempStats? _lanStats;
+  bool _useFahrenheit = false;
 
   @override
   void didChangeDependencies() {
@@ -42,18 +47,36 @@ class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
       final v = await _pollDiscovery!.fetchTemperature();
       if (mounted) setState(() => _lanCelsius = v);
     });
+    // Same cadence as main/web_page.cpp's own dashboard (trend every 10 s,
+    // stats every 30 s) — this data changes far slower than the reading.
+    _trendTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+      final t = await _pollDiscovery!.fetchTrend();
+      if (mounted) setState(() => _lanTrend = t);
+    });
+    _statsTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
+      final st = await _pollDiscovery!.fetchStats();
+      if (mounted) setState(() => _lanStats = st);
+    });
   }
 
   void _stopLanPolling() {
     _pollTimer?.cancel();
     _pollTimer = null;
+    _trendTimer?.cancel();
+    _trendTimer = null;
+    _statsTimer?.cancel();
+    _statsTimer = null;
     _pollDiscovery = null;
     _lanCelsius = null;
+    _lanTrend = null;
+    _lanStats = null;
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _trendTimer?.cancel();
+    _statsTimer?.cancel();
     super.dispose();
   }
 
@@ -100,37 +123,103 @@ class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
       subtitleColor = AkvaColors.muted;
     }
 
-    final tempText = celsius == null ? '––.–' : celsius.toStringAsFixed(2);
+    final displayC = _useFahrenheit && celsius != null
+        ? celsius * 9 / 5 + 32
+        : celsius;
+    final tempText = displayC == null ? '––.–' : displayC.toStringAsFixed(2);
+    final unitText = _useFahrenheit ? '°F' : '°C';
+
+    // Trend/min-max only exist on the Wi-Fi (/trend, /stats) path — the BLE
+    // GATT contract has no equivalent characteristics.
+    String? trendSymbol;
+    var trendColor = AkvaColors.muted;
+    if (lanFound && _lanTrend != null) {
+      switch (_lanTrend!) {
+        case TrendDirection.rising:
+          trendSymbol = '↑';
+          trendColor = const Color(0xFFFF7043);
+        case TrendDirection.falling:
+          trendSymbol = '↓';
+          trendColor = const Color(0xFF64B5F6);
+        case TrendDirection.stable:
+          trendSymbol = '→';
+          trendColor = const Color(0xFF90A4AE);
+      }
+    }
+
+    String? minMaxText;
+    final stats = _lanStats;
+    if (lanFound && stats != null && (stats.min != null || stats.max != null)) {
+      final parts = <String>[];
+      if (stats.min != null) {
+        final v = _useFahrenheit ? stats.min! * 9 / 5 + 32 : stats.min!;
+        parts.add('↓ ${v.toStringAsFixed(1)}$unitText');
+      }
+      if (stats.max != null) {
+        final v = _useFahrenheit ? stats.max! * 9 / 5 + 32 : stats.max!;
+        parts.add('↑ ${v.toStringAsFixed(1)}$unitText');
+      }
+      minMaxText = parts.join('   ');
+    }
 
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
         child: Column(
           children: [
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: tempText,
-                    style: TextStyle(
-                      fontSize: 60,
-                      fontWeight: FontWeight.w800,
-                      height: 1,
-                      color: celsius == null
-                          ? Theme.of(context).disabledColor
-                          : AkvaColors.water,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  tempText,
+                  style: TextStyle(
+                    fontSize: 60,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                    color: celsius == null
+                        ? Theme.of(context).disabledColor
+                        : AkvaColors.water,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Tooltip(
+                  message: s.tempToggleHint,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () =>
+                        setState(() => _useFahrenheit = !_useFahrenheit),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 6,
+                      ),
+                      child: Text(
+                        unitText,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AkvaColors.water2,
+                        ),
+                      ),
                     ),
                   ),
-                  TextSpan(
-                    text: '  °C',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: AkvaColors.water2,
+                ),
+                if (trendSymbol != null) ...[
+                  const SizedBox(width: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      trendSymbol,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: trendColor,
+                      ),
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
             const SizedBox(height: 12),
             Text(
@@ -141,6 +230,14 @@ class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            if (minMaxText != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  minMaxText,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
             if (bleConnected && ble.lastUpdate != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),

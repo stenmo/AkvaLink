@@ -47,4 +47,47 @@ void main() {
       expect(parseTempJson('{}'), isNull);
     });
   });
+
+  group('parseTrendJson', () {
+    test('parses rising', () {
+      expect(
+        parseTrendJson('{"direction":"rising","delta_c_per_min":0.12}'),
+        TrendDirection.rising,
+      );
+    });
+
+    test('parses falling', () {
+      expect(
+        parseTrendJson('{"direction":"falling","delta_c_per_min":-0.08}'),
+        TrendDirection.falling,
+      );
+    });
+
+    test('parses stable', () {
+      expect(
+        parseTrendJson('{"direction":"stable","delta_c_per_min":0.00}'),
+        TrendDirection.stable,
+      );
+    });
+
+    test('returns null for an unknown direction', () {
+      expect(parseTrendJson('{"direction":"sideways"}'), isNull);
+    });
+
+    test('returns null for malformed body', () {
+      expect(parseTrendJson('not json'), isNull);
+    });
+  });
+
+  group('parseStatsJson', () {
+    test('parses min and max', () {
+      final stats = parseStatsJson('{"min":26.10,"max":29.80,"since_s":3600}');
+      expect(stats!.min, closeTo(26.10, 1e-9));
+      expect(stats.max, closeTo(29.80, 1e-9));
+    });
+
+    test('returns null for malformed body', () {
+      expect(parseStatsJson('not json'), isNull);
+    });
+  });
 }
