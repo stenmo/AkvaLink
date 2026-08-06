@@ -176,7 +176,7 @@ static const char PAGE_HTML[] = R"HTML(<!doctype html>
 <body><div class="c">
   <h1>AkvaLink <svg width="20" height="20" viewBox="0 0 24 24" fill="#28c2d6" style="vertical-align:-3px"><path d="M12 2.5c3 4 6 7.8 6 11.3a6 6 0 1 1-12 0c0-3.5 3-7.3 6-11.3z"/></svg></h1>
   <div class="row">
-    <span class="t" id="t">&ndash;</span><span class="u">&deg;C</span>
+    <span class="t" id="t">&ndash;</span><span class="u" id="u" role="button" title="Click to switch &deg;C/&deg;F" style="cursor:pointer">&deg;C</span>
     <span class="arrow ok" id="arr">&rarr;</span>
   </div>
   <div class="s" id="s">reading&hellip;</div>
@@ -205,11 +205,28 @@ static const char PAGE_HTML[] = R"HTML(<!doctype html>
 </div>
 <script>
 var histData={m:[],h:[]},tab=0;
-function fmt(v){return v==null?'\u2013':Number(v).toFixed(1);}
+// °C/°F unit toggle — stores the last raw celsius readings so a click can
+// re-render everything without waiting on the next poll.
+var useFahrenheit=false;
+var lastCelsius=null,lastMin=null,lastMax=null;
+function conv(c){return useFahrenheit?(c*9/5+32):c;}
+function fmt(v){return v==null?'\u2013':Number(conv(v)).toFixed(1);}
+function renderTemp(){document.getElementById('t').textContent=lastCelsius==null?'\u2013':fmt(lastCelsius);}
+function renderStats(){
+  var s=document.getElementById('st');
+  s.textContent=(lastMin==null&&lastMax==null)?'':'\u2193\u00a0'+fmt(lastMin)+'\u00b0 \u00b7 \u2191\u00a0'+fmt(lastMax)+'\u00b0';
+}
+document.getElementById('u').onclick=function(){
+  useFahrenheit=!useFahrenheit;
+  document.getElementById('u').textContent=useFahrenheit?'\u00b0F':'\u00b0C';
+  renderTemp();renderStats();
+  if(histData.minute||histData.hourly)showTab(tab);
+};
 function u(){fetch('/temp',{cache:'no-store'}).then(r=>r.json()).then(d=>{
-  var t=document.getElementById('t'),s=document.getElementById('s');
-  if(d.celsius==null){t.textContent='\u2013';s.textContent='no reading yet';}
-  else{t.textContent=Number(d.celsius).toFixed(1);s.textContent='live \u00b7 updates every 2s';}
+  var s=document.getElementById('s');
+  lastCelsius=d.celsius;
+  renderTemp();
+  s.textContent=d.celsius==null?'no reading yet':'live \u00b7 updates every 2s';
 }).catch(function(){document.getElementById('s').textContent='disconnected';});}
 function trend(){fetch('/trend',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
   if(!d)return;
@@ -220,8 +237,8 @@ function trend(){fetch('/trend',{cache:'no-store'}).then(function(r){return r.ok
 }).catch(function(){});}
 function stats(){fetch('/stats',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
   if(!d)return;
-  var s=document.getElementById('st');
-  s.textContent='\u2193\u00a0'+fmt(d.min)+'\u00b0 \u00b7 \u2191\u00a0'+fmt(d.max)+'\u00b0';
+  lastMin=d.min;lastMax=d.max;
+  renderStats();
 }).catch(function(){});}
 function bat(){fetch('/battery',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
   if(!d||d.percent===null)return;

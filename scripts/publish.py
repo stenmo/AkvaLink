@@ -148,14 +148,22 @@ def _query(cmd: list[str]) -> str:
 
 
 def github_token() -> str | None:
-    """Prefer $GITHUB_TOKEN; else ask Git Credential Manager for github.com."""
+    """Prefer $GITHUB_TOKEN; else ask Git Credential Manager for github.com.
+
+    Must pass `username=` in the query — Git Credential Manager stores entries
+    per-account, and this repo's remote pins a specific account (see
+    docs/... git identity notes). A host-only query (no username) silently
+    returns no credential at all rather than an error, which then sends
+    "Bearer None" to the API and GitHub reports that as 404 (not 401).
+    """
     tok = os.environ.get("GITHUB_TOKEN")
     if tok:
         return tok.strip()
+    username = REPO_SLUG.split("/", 1)[0]
     try:
         proc = subprocess.run(
             ["git", "credential", "fill"],
-            input="protocol=https\nhost=github.com\n\n",
+            input=f"protocol=https\nhost=github.com\nusername={username}\n\n",
             text=True, capture_output=True, check=False,
         )
     except FileNotFoundError:
