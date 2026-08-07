@@ -77,14 +77,16 @@
 - **No structured logging.** All logs are `ESP_LOGI/W/E` text. No JSON
   output, no metrics export. Fine for a demo, painful for a fleet.
 - **BLE direct-to-app path is early.** The `--ble` variant exposes
-  temperature over standard ESS GATT (plus a custom OTA service) — enough
-  for the in-browser live demo — but the richer app service (battery %,
-  thresholds, history) is still planned.
-- **Flutter app has no full history chart yet.** `main/web_page.cpp` serves
-  a 24 h/7 d sparkline via `/history` to the `--station`/`--ap` on-device
-  page; the app now shows the same trend arrow and min/max
-  (`/trend`, `/stats`) over Wi-Fi, but not yet the chart itself. BLE has
-  none of this — no equivalent GATT characteristics. See
+  temperature over standard ESS GATT, a custom OTA service, and the two
+  alert thresholds (readable and writable from the landing page and the
+  app). Still missing from that service: battery %, history, and the
+  writable device name / uptime, which only `scripts/ble_gatt_client.py`
+  reaches.
+- **No history over BLE.** `main/web_page.cpp` serves a 24 h/7 d sparkline
+  via `/history`, and both the device's own page and the Flutter app draw
+  it — but only over Wi-Fi. BLE has no equivalent characteristic, so a
+  hub-less BLE-only unit shows the live reading and nothing historic.
+  History is RAM-only either way and resets on reboot. See
   [TODO.md](../TODO.md#apps--integrations).
 - **No Thread commissioning UX assist.** If commissioning fails you get
   raw esp-matter logs and have to dig.
