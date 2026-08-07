@@ -164,10 +164,13 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 - [x] ESP-NOW variant (`--espnow`) — deep-sleep broadcast, no hub, no provisioning
 - [x] ESPHome variant — native Home Assistant API, dashboard-adopted + dashboard OTA
 - [x] Native Flutter companion app (Windows/Linux/macOS/Android/iOS) — live temperature + one-click OTA
+- [x] Temperature alerts — high/low thresholds set from the browser or the app, stored on the device; the `--station` build publishes crossings to Home Assistant over MQTT
+- [x] 24 h / 7 d history — sparkline on the device's own page and in the app (Wi-Fi path; RAM-only, resets on reboot)
+- [x] Matter keepalive report so a dead-flat sensor isn't marked offline
 - [ ] **Real power measurement (Joulescope/PPK2) + deep sleep** — see [TODO.md](TODO.md)
 - [ ] **E-ink display** (big-digit, battery, trend) — see [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md)
 - [ ] Wi-Fi 6 TWT integration in code (currently DTIM only)
-- [ ] Battery voltage monitoring + low-battery Matter event
+- [ ] Battery voltage monitoring — firmware side is in (`CONFIG_AKVALINK_BATTERY_ADC`, off by default), but no board has the sense divider fitted, so the level reads as *unknown*
 - [ ] OTA via Matter
 - [ ] Production enclosure design (waterproof, IP67)
 
