@@ -114,6 +114,35 @@ TempStats? parseStatsJson(String body) {
   }
 }
 
+/// Oldest-to-newest temperature history from main/web_page.cpp's `/history`
+/// endpoint: `minute` is up to 288 five-minute averages (24 h), `hourly` up to
+/// 168 one-hour averages (7 d). RAM-only on the device — both reset on reboot.
+class TempHistory {
+  const TempHistory({required this.minute, required this.hourly});
+  final List<double> minute;
+  final List<double> hourly;
+
+  bool get isEmpty => minute.isEmpty && hourly.isEmpty;
+}
+
+/// Parses the `{"minute":[...],"hourly":[...]}` body of `/history`. Entries
+/// the firmware couldn't format (it emits bare `null` for an empty slot) are
+/// dropped rather than faked. Returns null on a malformed body.
+TempHistory? parseHistoryJson(String body) {
+  try {
+    final json = jsonDecode(body) as Map<String, dynamic>;
+    List<double> series(String key) {
+      final raw = json[key];
+      if (raw is! List) return const [];
+      return raw.whereType<num>().map((n) => n.toDouble()).toList();
+    }
+
+    return TempHistory(minute: series('minute'), hourly: series('hourly'));
+  } catch (_) {
+    return null;
+  }
+}
+
 enum DiscoveryPhase { idle, resolving, browsing, found, notFound, error }
 
 class StationDiscoveryController extends ChangeNotifier {
@@ -262,6 +291,15 @@ class StationDiscoveryController extends ChangeNotifier {
     final r = await _client.get(Uri.parse('http://$ip/stats'));
     if (r.statusCode != 200) return null;
     return parseStatsJson(r.body);
+  }
+
+  /// Fetch the 24 h / 7 d history from the station's `/history`.
+  Future<TempHistory?> fetchHistory() async {
+    final ip = _ip;
+    if (ip == null) return null;
+    final r = await _client.get(Uri.parse('http://$ip/history'));
+    if (r.statusCode != 200) return null;
+    return parseHistoryJson(r.body);
   }
 
   Future<void> forget() async {

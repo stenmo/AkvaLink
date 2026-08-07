@@ -10,6 +10,7 @@ import '../strings.dart';
 import '../theme.dart';
 import '../widgets/alerts_card.dart';
 import '../widgets/hero_header.dart';
+import '../widgets/history_chart_card.dart';
 import '../widgets/ota_card.dart';
 import '../widgets/temperature_card.dart';
 import '../widgets/wifi_ota_card.dart';
@@ -106,6 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const SizedBox(height: 16),
                                 const _LanDiscoveryCard(),
                                 const SizedBox(height: 16),
+                                const HistoryChartCard(),
                                 const WifiOtaCard(),
                                 const SizedBox(height: 16),
                                 _WifiSetupEntry(onTap: _openWifiSetup),

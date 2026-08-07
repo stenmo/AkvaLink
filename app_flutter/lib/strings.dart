@@ -84,6 +84,11 @@ class Strings {
     required this.alertSaved,
     required this.alertSaveFailed,
     required this.alertRangeError,
+    // Temperature history chart (LAN only — BLE exposes no history).
+    required this.historyTitle,
+    required this.history24h,
+    required this.history7d,
+    required this.historyBuilding,
   });
 
   final String tagline;
@@ -153,6 +158,10 @@ class Strings {
   final String alertSaved;
   final String alertSaveFailed;
   final String alertRangeError;
+  final String historyTitle;
+  final String history24h;
+  final String history7d;
+  final String historyBuilding;
 
   // ---- Parameterised helpers (kept out of the constructor) ----------------
 
@@ -201,6 +210,10 @@ class Strings {
 
   String passwordPromptFor(String ssid) =>
       isSwedish ? 'Ange lösenord för $ssid' : 'Enter password for $ssid';
+
+  String historyRange(String min, String max) => isSwedish
+      ? 'Lägst $min °C · högst $max °C'
+      : 'Low $min °C · high $max °C';
 
   bool get isSwedish => this == sv;
 
@@ -289,6 +302,11 @@ class Strings {
     alertSaved,
     alertSaveFailed,
     alertRangeError,
+    historyTitle,
+    history24h,
+    history7d,
+    historyBuilding,
+    historyRange('26.1', '29.8'),
   ];
 
   // ---- The two locales ----------------------------------------------------
@@ -366,6 +384,10 @@ class Strings {
     alertSaved: 'Saved to the sensor',
     alertSaveFailed: 'Could not save',
     alertRangeError: 'Enter a value between -55 and 125 °C',
+    historyTitle: 'History',
+    history24h: '24 h',
+    history7d: '7 d',
+    historyBuilding: 'Building history — check back in a few minutes.',
   );
 
   static const sv = Strings(
@@ -442,6 +464,10 @@ class Strings {
     alertSaved: 'Sparat i sensorn',
     alertSaveFailed: 'Kunde inte spara',
     alertRangeError: 'Ange ett värde mellan -55 och 125 °C',
+    historyTitle: 'Historik',
+    history24h: '24 h',
+    history7d: '7 d',
+    historyBuilding: 'Bygger historik — kom tillbaka om några minuter.',
   );
 
   /// Pick a locale's strings from a [Locale] (falls back to English).

@@ -172,6 +172,12 @@ const _englishDict = {
   'value',
   'between',
   'and',
+  'history',
+  'building',
+  'check',
+  'back',
+  'few',
+  'minutes',
 };
 
 /// Correctly-spelled Swedish words appearing in the UI.
@@ -313,6 +319,14 @@ const _swedishDict = {
   'sparat',
   'värde',
   'mellan',
+  'historik',
+  'bygger',
+  'kom',
+  'tillbaka',
+  'några',
+  'minuter',
+  'lägst',
+  'högst',
 };
 
 /// Split a UI string into lowercase word tokens, dropping punctuation, digits,

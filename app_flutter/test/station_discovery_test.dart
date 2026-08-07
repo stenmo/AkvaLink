@@ -90,4 +90,42 @@ void main() {
       expect(parseStatsJson('not json'), isNull);
     });
   });
+
+  group('parseHistoryJson', () {
+    test('parses both series, oldest first', () {
+      final h = parseHistoryJson(
+        '{"minute":[26.1,26.2,26.4],"hourly":[25.0,27.5]}',
+      );
+      expect(h!.minute, [26.1, 26.2, 26.4]);
+      expect(h.hourly, [25.0, 27.5]);
+      expect(h.isEmpty, isFalse);
+    });
+
+    test('a fresh device with no history yet is empty, not an error', () {
+      final h = parseHistoryJson('{"minute":[],"hourly":[]}');
+      expect(h!.isEmpty, isTrue);
+    });
+
+    test('drops null slots rather than charting them as 0 °C', () {
+      final h = parseHistoryJson('{"minute":[26.1,null,26.3],"hourly":[]}');
+      expect(h!.minute, [26.1, 26.3]);
+    });
+
+    test('handles integer-valued samples', () {
+      expect(parseHistoryJson('{"minute":[26,27],"hourly":[]}')!.minute, [
+        26.0,
+        27.0,
+      ]);
+    });
+
+    test('missing keys give empty series', () {
+      final h = parseHistoryJson('{}');
+      expect(h!.minute, isEmpty);
+      expect(h.hourly, isEmpty);
+    });
+
+    test('returns null for malformed body', () {
+      expect(parseHistoryJson('not json'), isNull);
+    });
+  });
 }
