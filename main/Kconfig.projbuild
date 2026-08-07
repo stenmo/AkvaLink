@@ -130,6 +130,77 @@ menu "AkvaLink"
             low alert. Publishes {"state":"low"} — see the high threshold
             above for the full behaviour.
 
+    # ---- Battery monitoring -------------------------------------------------
+
+    config AKVALINK_BATTERY_ADC
+        bool "Measure battery voltage on the ADC"
+        default n
+        help
+            Read the battery voltage through a resistor divider on an
+            analog-capable pin and report it as a percentage.
+
+            OFF BY DEFAULT, deliberately: no AkvaLink hardware has the
+            divider populated yet (the EVK runs from USB). While this is
+            off the firmware reports the level as *unknown* rather than
+            inventing a number — the BLE Battery Service isn't registered
+            at all, and HTTP /battery returns null. A fabricated "100 %"
+            on a product sold on battery life is worse than no reading.
+
+    config AKVALINK_BATTERY_ADC_GPIO
+        int "GPIO for the battery-sense divider"
+        depends on AKVALINK_BATTERY_ADC
+        default 2
+        range 0 6
+        help
+            Must be an ADC1 channel. On ESP32-C6 that's GPIO0-GPIO6, and
+            the NORA-W40 data sheet marks GPIO0, GPIO1, GPIO2 and GPIO6
+            "analog-capable".
+
+            GPIO2 is the default: ADC1_CH2, broken out on EVK-NORA-W40
+            header J15.24, not a strapping pin (those are GPIO4, GPIO5,
+            GPIO8, GPIO9, GPIO15), and no clash with 1-Wire (GPIO15), the
+            DS2482 Click I2C (GPIO6/GPIO7) or the BOOT button (GPIO9).
+
+            Avoid GPIO0/GPIO1 — they are the 32 kHz crystal pins, which
+            the low-power sleep modes need.
+
+    config AKVALINK_BATTERY_DIVIDER_PERMILLE
+        int "Divider ratio Vadc/Vbat, x1000"
+        depends on AKVALINK_BATTERY_ADC
+        default 500
+        range 50 1000
+        help
+            500 = a 1:1 divider (two equal resistors), halving the pack
+            voltage so 3.0 V lands near 1.5 V — comfortably inside the
+            ADC's usable range at 12 dB attenuation. 1000 = no divider
+            (only safe if the pack can never exceed ~2.5 V).
+
+            Use high resistor values (e.g. 2x 1 MOhm) or a switched
+            divider: a permanently connected 2x 100 kOhm divider burns
+            ~15 uA, which is a third of the entire power budget.
+
+    config AKVALINK_BATTERY_FULL_MV
+        int "Pack voltage treated as 100 % (mV)"
+        depends on AKVALINK_BATTERY_ADC
+        default 3000
+        range 500 12000
+        help
+            3000 mV = a fresh 2x AA pack. Lithium AA (recommended for
+            cold) sits nearer 3.2 V off-load.
+
+    config AKVALINK_BATTERY_EMPTY_MV
+        int "Pack voltage treated as 0 % (mV)"
+        depends on AKVALINK_BATTERY_ADC
+        default 2000
+        range 500 12000
+        help
+            2000 mV = 1.0 V/cell on a 2x AA pack, about where an alkaline
+            cell is done. Must be below the "100 %" voltage above.
+
+            The mapping between the two is linear, which alkaline
+            chemistry is not — treat the percentage as a coarse gauge
+            until it's been characterised against a real discharge curve.
+
     config AKVALINK_BLE_ESCAPE_HATCH
         bool "BLE escape hatch (hold GPIO9 at boot to enter minimal BLE mode)"
         default y if AKVALINK_AP

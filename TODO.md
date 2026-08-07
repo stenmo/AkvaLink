@@ -42,9 +42,21 @@ gets started.
 - [x] **Re-provisioning button** ✓ — long-press GPIO9 (EVK boot button) 5 s
       to erase Wi-Fi NVS + re-enter BLE provisioning. Currently the only
       recovery path is a manual flash-erase.
-- [x] **GATT Battery Service (BAS) + writable device name** ✓ — BAS stub
-      at 100 % until ADC wired; writable device-name char (NVS-backed);
-      alert high/low threshold chars (NVS-backed, sint16 0.01 °C).
+- [x] **GATT Battery Service (BAS) + writable device name** ✓ — writable
+      device-name char (NVS-backed); alert high/low threshold chars
+      (NVS-backed, sint16 0.01 °C). BAS no longer reports a fake 100 %:
+      the read fails until something measures the pack.
+- [x] **Alert thresholds end-to-end** ✓ — settable from the landing page
+      (Web Bluetooth) and the Flutter app, not just `ble_gatt_client.py`.
+      Needed a firmware fix first: `gatt_access()` had been rejecting
+      *every* GATT write with `WRITE_NOT_PERMITTED`.
+- [~] **Battery ADC** — `CONFIG_AKVALINK_BATTERY_ADC` (off by default) plus
+      `main/battery.cpp`: ADC1 oneshot + curve-fitting calibration on GPIO2
+      (EVK header J15.24), divider ratio and empty/full voltages all
+      configurable. **Untested on hardware — no board has the sense divider
+      fitted.** Still open: fit the divider (high-value resistors or a
+      switched rail), verify against a bench supply, and replace the linear
+      mV→% mapping with a real alkaline/lithium discharge curve.
 - [x] **Temperature alerts via MQTT** ✓ — publishes `{"state":"high"}` /
       `"low"` / `"ok"` to `akvalink/<mac>/alert` (retained, qos 1) on threshold
       crossings only, with 0.25 °C hysteresis. Thresholds come from the
@@ -55,7 +67,7 @@ gets started.
       to point at a different broker.
 - [ ] **Low battery alert (10 %)** — publish `{"battery":9}` to
       `akvalink/<mac>/battery` and MQTT alert when level ≤ 10 %.
-      Requires the BAS + ADC item above.
+      Blocked on the battery ADC above actually being fitted and verified.
 - [ ] **OTA over HTTP** for `--station` — device polls a URL for new
       firmware, downloads and flashes via esp_https_ota. Complementary to
       the existing BLE OTA in `--ble`.

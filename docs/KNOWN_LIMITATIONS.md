@@ -19,6 +19,14 @@
   therefore higher than the steady-state target.
 - **DS18B20 is permanently powered** from the EVK 3V3 rail. It should be
   powered from a GPIO so it can be cut between samples.
+- **No battery measurement.** `CONFIG_AKVALINK_BATTERY_ADC` (off by
+  default) adds ADC1 sensing on GPIO2 / EVK header J15.24, but no board
+  has the sense divider fitted, so nothing reports a level today. The
+  firmware says *unknown* rather than inventing one: the BLE Battery
+  Level read fails and HTTP `/battery` returns `null`. The percentage
+  curve is a straight line between the configured empty/full voltages,
+  which alkaline chemistry is not — it needs characterising against a
+  real discharge before it's trustworthy.
 - **Wi-Fi build does not disconnect after commissioning.** It stays
   associated and uses TWT or DTIM only. The "report-and-disconnect"
   mode that gives the multi-year Wi-Fi number isn't implemented.

@@ -3,7 +3,8 @@
 // Standalone BLE GATT server for the --ble AkvaLink variant (NimBLE).
 //
 // Services:
-//   - Battery (0x180F): Battery Level 0x2A19 (uint8 0-100, stub=100 until ADC wired)
+//   - Battery (0x180F): Battery Level 0x2A19 (uint8 0-100; the read fails
+//     until a real ADC measurement exists — see CONFIG_AKVALINK_BATTERY_ADC)
 //   - Device Information (0x180A): manufacturer, model, firmware revision
 //   - Environmental Sensing (0x181A): Temperature 0x2A6E (sint16, 0.01 \u00b0C), notify
 //   - AkvaLink custom service: uptime, writable device name (NVS-backed),
@@ -117,9 +118,12 @@ static uint16_t s_uptime_val_handle = 0;
 static bool     s_temp_subscribed   = false;
 static int16_t  s_temp_centi        = 0;   // temperature in 0.01 \u00b0C units
 
-// Battery level (0-100). Stub at 100 % until the ADC circuit is populated.
-// Call akvalink_ble_gatt_set_battery() when the ADC is ready.
-static uint8_t s_battery_percent = 100;
+// Battery level 0-100, or <0 when nothing has ever measured it. A read of the
+// Battery Level characteristic fails while it's <0: a made-up "100 %" on a
+// product sold on battery life is worse than no reading at all. Populated by
+// akvalink_ble_gatt_set_battery() once CONFIG_AKVALINK_BATTERY_ADC is on and
+// the divider is fitted.
+static int s_battery_percent = -1;
 
 // Alert thresholds (int16, 0.01 \u00b0C). 0 = disabled. Persisted in NVS.
 #define NVS_NS        "akvalink"
@@ -267,9 +271,14 @@ static int gatt_access(uint16_t /*conn*/, uint16_t /*attr*/,
         case 0x2A6E:  // Temperature (sint16, 0.01 \u00b0C)
             return os_mbuf_append(ctxt->om, &s_temp_centi, sizeof(s_temp_centi)) == 0
                        ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
-        case 0x2A19:  // Battery Level (uint8, 0-100 %)
-            return os_mbuf_append(ctxt->om, &s_battery_percent, sizeof(s_battery_percent)) == 0
+        case 0x2A19: {  // Battery Level (uint8, 0-100 %)
+            if (s_battery_percent < 0) {
+                return BLE_ATT_ERR_UNLIKELY;   // never measured — don't invent one
+            }
+            uint8_t pct = (uint8_t)s_battery_percent;
+            return os_mbuf_append(ctxt->om, &pct, sizeof(pct)) == 0
                        ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+        }
         default:
             return BLE_ATT_ERR_UNLIKELY;
     }

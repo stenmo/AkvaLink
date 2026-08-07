@@ -10,6 +10,7 @@
 
 #include "ds18b20_task.h"
 #include "app_priv.h"
+#include "battery.h"
 #include "ble_gatt.h"
 #include "ap_web.h"
 #include "station_web.h"
@@ -211,6 +212,29 @@ static void push_to_matter(float celsius)
 }
 #endif  // !CONFIG_AKVALINK_BLE_ONLY
 
+#if !CONFIG_AKVALINK_SENSOR_TEST
+// Sample the pack and hand the level to whichever transport this variant runs.
+// No-op unless CONFIG_AKVALINK_BATTERY_ADC is enabled — nothing is reported
+// rather than a placeholder, so clients can tell "unknown" from "full".
+static void update_battery(void)
+{
+    uint8_t pct = 0;
+    if (!akvalink_battery_read(nullptr, &pct)) {
+        return;
+    }
+#if CONFIG_AKVALINK_BLE_ONLY
+    akvalink_ble_gatt_set_battery(pct);
+#elif CONFIG_AKVALINK_AP
+    akvalink_web_set_battery(pct);
+#elif CONFIG_AKVALINK_STATION
+    akvalink_web_set_battery(pct);
+    akvalink_ble_gatt_set_battery(pct);
+#else
+    (void)pct;   // Matter PowerSource cluster isn't wired up yet
+#endif
+}
+#endif  // !CONFIG_AKVALINK_SENSOR_TEST
+
 static void sample_task(void *)
 {
     if (sensor_init() != ESP_OK) {
@@ -218,7 +242,7 @@ static void sample_task(void *)
         vTaskDelete(nullptr);
         return;
     }
-
+    akvalink_battery_init();
 #if CONFIG_AKVALINK_SENSOR_TEST
     // Sensor test mode: print the full sensor identity once, then log a rich
     // reading at a steady 30 s cadence. No adaptive rate, no Matter/BLE — this
@@ -247,11 +271,19 @@ static void sample_task(void *)
     float prev_celsius = NAN;
     int stable_count = APP_FAST_COUNT;  // start in slow mode
     uint32_t sample_ms = APP_SAMPLE_PERIOD_SLOW_MS;
+    int64_t last_batt_us = 0;
 
     ESP_LOGI(TAG, "Adaptive sampling: fast=%dms slow=%dms threshold=%.1f°C",
              APP_SAMPLE_PERIOD_FAST_MS, APP_SAMPLE_PERIOD_SLOW_MS, APP_FAST_THRESHOLD_C);
 
     while (true) {
+        const int64_t now_us = esp_timer_get_time();
+        if (last_batt_us == 0 ||
+            now_us - last_batt_us >= (int64_t)APP_BATTERY_PERIOD_MS * 1000) {
+            last_batt_us = now_us;
+            update_battery();
+        }
+
         float celsius = NAN;
         if (sensor_read(&celsius) == ESP_OK &&
             celsius > -55.0f && celsius < 125.0f) {

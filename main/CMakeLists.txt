@@ -3,6 +3,7 @@
 set(SRCS
     "app_main.cpp"
     "ds18b20_task.cpp"
+    "battery.cpp"
 )
 
 # DS2482 Click board support (I2C-to-1-Wire bridge on MikroBUS 1).
@@ -64,7 +65,7 @@ endif()
 # The --ble / --sensor variants drop the whole Matter stack (with no
 # Thread/Wi-Fi transport esp-matter's NetworkCommissioning static_assert fails).
 # Gate on env vars for the same expansion-timing reason as above.
-set(AQ_PRIV_REQ nvs_flash driver esp_timer
+set(AQ_PRIV_REQ nvs_flash driver esp_timer esp_adc
     espressif__ds18b20 espressif__onewire_bus)
 if(DEFINED ENV{AKVALINK_BLE})
     list(APPEND AQ_PRIV_REQ bt esp_app_format app_update)

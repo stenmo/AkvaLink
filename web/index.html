@@ -715,7 +715,7 @@
           <tr><td rowspan="3">Device Information<br><code>0x180A</code></td><td>Manufacturer</td><td><code>0x2A29</code></td><td>Read</td><td>"u-blox"</td></tr>
           <tr><td>Model</td><td><code>0x2A24</code></td><td>Read</td><td>"AkvaLink NORA-W40"</td></tr>
           <tr><td>Firmware Revision</td><td><code>0x2A26</code></td><td>Read</td><td>"{version}-{variant}" — what "Flash latest firmware" compares against</td></tr>
-          <tr><td>Battery<br><code>0x180F</code></td><td>Battery Level</td><td><code>0x2A19</code></td><td>Read</td><td>uint8, 0–100 % (stubbed at 100 — no battery-voltage circuit yet)</td></tr>
+          <tr><td>Battery<br><code>0x180F</code></td><td>Battery Level</td><td><code>0x2A19</code></td><td>Read</td><td>uint8, 0–100 % — the read <em>fails</em> until a real measurement exists, so clients show "unknown" instead of a made-up level. No battery-sense divider is fitted yet; enable <code>CONFIG_AKVALINK_BATTERY_ADC</code> once one is.</td></tr>
           <tr><td rowspan="4">AkvaLink <em>(custom)</em><br><code>…6c0001</code></td><td>Uptime</td><td><code>…6c0002</code></td><td>Read</td><td>uint32, seconds since boot</td></tr>
           <tr><td>Device name</td><td><code>…6c0003</code></td><td>Read, Write</td><td>UTF-8 string, saved to NVS, takes effect next reboot</td></tr>
           <tr><td>Alert high</td><td><code>…6c0004</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>

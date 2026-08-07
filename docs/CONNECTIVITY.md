@@ -81,7 +81,7 @@ extracts the UUIDs from all four places and fails CI if any of them drift.
 | | Model | `0x2A24` | Read | `"AkvaLink NORA-W40"` |
 | | Firmware Revision | `0x2A26` | Read | `"{version}-{variant}"` (drives app auto-OTA-asset-select) |
 | Environmental Sensing `0x181A` | Temperature | `0x2A6E` | Read, Notify | sint16, 0.01 °C, little-endian |
-| Battery `0x180F` | Battery Level | `0x2A19` | Read | uint8 0–100 % (stub `100` until ADC circuit is populated) |
+| Battery `0x180F` | Battery Level | `0x2A19` | Read | uint8 0–100 %; the read **fails** until a real measurement exists (see `CONFIG_AKVALINK_BATTERY_ADC`) |
 | AkvaLink custom (`f0a00001-…-0001`, 128-bit) | Uptime | `…-0002` | Read | uint32 seconds since boot |
 | | Device name | `…-0003` | Read, Write | UTF-8 string, NVS-backed, takes effect next reboot |
 | | Alert high | `…-0004` | Read, Write | sint16, 0.01 °C, NVS-backed, `0` = disabled |
@@ -95,8 +95,10 @@ extracts the UUIDs from all four places and fails CI if any of them drift.
 connected — empty field = `0` = disabled. Neither surface exposes the
 writable device name or uptime yet; `scripts/ble_gatt_client.py` is the
 only client for those (`--set-name`, and it reads uptime on connect).
-Battery level is also still a hard-coded `100 %` stub everywhere until
-the ADC voltage-divider circuit is populated (see the roadmap item in
+Battery level is reported as *unknown* everywhere until the ADC
+voltage-divider circuit is populated and `CONFIG_AKVALINK_BATTERY_ADC`
+is enabled — the GATT read fails and HTTP `/battery` returns `null`
+rather than a placeholder (see the roadmap item in
 [TODO.md](../TODO.md)).
 
 > Writes to this service were rejected outright by firmware before
