@@ -120,6 +120,17 @@
   .live-card .cta .primary:hover { background: var(--deep); }
   .ble-note { color: var(--muted); font-size: .84rem; margin: 14px 0 0; }
 
+  /* Alert thresholds (custom AkvaLink service) */
+  .alert-box { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); text-align: left; }
+  .alert-title { margin: 0 0 4px; color: var(--deep); font-weight: 700; font-size: .95rem; }
+  .alert-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .alert-row label { color: var(--muted); font-size: .84rem; }
+  .alert-row input {
+    width: 72px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px;
+    font: inherit; font-size: .9rem; color: var(--deep); background: #fff;
+  }
+  .alert-row .file-btn { margin-left: auto; padding: 7px 18px; }
+
   /* OTA card */
   .ota-card { margin-top: 18px; }
   .ota-title { margin: 0 0 4px; color: var(--deep); font-size: 1.1rem; }
@@ -682,6 +693,18 @@
       <div id="bleFw" class="age"></div>
       <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
+      <div id="alertBox" class="alert-box" hidden>
+        <p class="alert-title">Temperature alerts</p>
+        <p class="ble-note" style="margin-top:0">Stored on the device itself, in °C. It flags a warning when the water crosses a limit — leave a field blank to switch that one off.</p>
+        <div class="alert-row">
+          <label for="alertHigh">High</label>
+          <input id="alertHigh" type="number" step="0.1" min="-55" max="125" inputmode="decimal">
+          <label for="alertLow">Low</label>
+          <input id="alertLow" type="number" step="0.1" min="-55" max="125" inputmode="decimal">
+          <span id="alertSave" class="file-btn" role="button">Save</span>
+        </div>
+        <p id="alertMsg" class="ble-note"></p>
+      </div>
     </div>
     <p class="lead" style="margin-top:22px">What's actually on the wire — the full GATT service table exposed by the <strong>BLE-only</strong> firmware, UUIDs and all, if you want to build your own client:</p>
     <div class="tbl-scroll">
@@ -847,6 +870,9 @@
   var OTA_SERVICE = 'f0a00001-6e40-4a71-9b2c-6b6e696c0010';
   var OTA_CTRL    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0011';   // write + notify status
   var OTA_DATA    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0012';   // write firmware chunks
+  var AKVA_SERVICE    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0001';
+  var ALERT_HIGH_CHAR = 'f0a00001-6e40-4a71-9b2c-6b6e696c0004';   // sint16, 0.01 °C, NVS-backed
+  var ALERT_LOW_CHAR  = 'f0a00001-6e40-4a71-9b2c-6b6e696c0005';
 
   // Deploy (pages.yml) now sed-stamps #verBadge directly, same as #siteVer, so
   // non-JS clients (crawlers, link previews, curl) see the real version too.
@@ -936,6 +962,8 @@
     lastUpdate = 0;
     ageEl.textContent = '';
     tempChar = null;
+    alertChars = null;
+    if (alertBox) alertBox.hidden = true;
     if (fwEl) fwEl.textContent = '';
     statusEl.textContent = 'Disconnected';
     statusEl.className = 'status';
@@ -960,6 +988,74 @@
 
   function isAkva(d) { return d && d.name && d.name.indexOf('AkvaLink') === 0; }
 
+  // --- Alert thresholds (custom AkvaLink service) ---------------------------
+  var alertBox = document.getElementById('alertBox');
+  var alertHighEl = document.getElementById('alertHigh');
+  var alertLowEl = document.getElementById('alertLow');
+  var alertSaveBtn = document.getElementById('alertSave');
+  var alertMsg = document.getElementById('alertMsg');
+  var alertChars = null;
+
+  function int16le(v) {
+    var b = new DataView(new ArrayBuffer(2));
+    b.setInt16(0, v, true);
+    return b;
+  }
+
+  function writeChar(ch, dv) {
+    return ch.writeValueWithResponse ? ch.writeValueWithResponse(dv) : ch.writeValue(dv);
+  }
+
+  // Blank input = 0 = disabled. Returns null if the text isn't a usable number.
+  function parseAlertInput(el) {
+    if (el.value.trim() === '') return 0;
+    var v = parseFloat(el.value);
+    if (isNaN(v) || v < -55 || v > 125) return null;
+    return Math.round(v * 100);
+  }
+
+  // Read the two NVS-backed thresholds so the inputs show what the device is
+  // actually enforcing rather than a guess. Absent on non-BLE variants and on
+  // firmware older than v0.3.6 — in that case just don't offer the controls.
+  async function loadAlerts(server) {
+    if (!alertBox) return;
+    try {
+      var svc = await server.getPrimaryService(AKVA_SERVICE);
+      var hi = await svc.getCharacteristic(ALERT_HIGH_CHAR);
+      var lo = await svc.getCharacteristic(ALERT_LOW_CHAR);
+      var hiRaw = (await hi.readValue()).getInt16(0, true);
+      var loRaw = (await lo.readValue()).getInt16(0, true);
+      alertHighEl.value = hiRaw === 0 ? '' : String(hiRaw / 100);
+      alertLowEl.value = loRaw === 0 ? '' : String(loRaw / 100);
+      alertChars = { high: hi, low: lo };
+      alertMsg.textContent = '';
+      alertBox.hidden = false;
+    } catch (e) {
+      console.warn('[BLE] alert thresholds unavailable', e);
+      alertBox.hidden = true;
+    }
+  }
+
+  if (alertSaveBtn) {
+    alertSaveBtn.addEventListener('click', async function () {
+      if (!alertChars) return;
+      var hi = parseAlertInput(alertHighEl);
+      var lo = parseAlertInput(alertLowEl);
+      if (hi === null || lo === null) {
+        alertMsg.textContent = 'Enter a value between −55 and 125 °C, or leave it blank to disable.';
+        return;
+      }
+      alertMsg.textContent = 'Saving…';
+      try {
+        await writeChar(alertChars.high, int16le(hi));
+        await writeChar(alertChars.low, int16le(lo));
+        alertMsg.textContent = 'Saved to the device.';
+      } catch (e) {
+        alertMsg.textContent = 'Could not save: ' + e.message;
+      }
+    });
+  }
+
   // Shared: open GATT, subscribe to the temperature, update the UI.
   async function attach(dev) {
     device = dev;
@@ -982,6 +1078,7 @@
     ageTimer = setInterval(renderAge, 1000);   // tick the "updated Ns ago" line
 
     showFwVersion(server);   // best-effort: read + show the running firmware version
+    loadAlerts(server);      // best-effort: read the NVS-backed alert thresholds
 
     statusEl.textContent = 'Connected to ' + (dev.name || 'AkvaLink');
     statusEl.className = 'status on';
@@ -1015,12 +1112,12 @@
     try {
       var dev = await navigator.bluetooth.requestDevice(broad ? {
         acceptAllDevices: true,
-        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
+        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE, AKVA_SERVICE]
       } : {
         // Match by the advertised ESS service (reliable in Chrome AND iOS/Bluefy)
         // OR the device name. The firmware advertises 0x181A in its adv packet.
         filters: [{ services: [ESS_SERVICE] }, { namePrefix: 'AkvaLink' }],
-        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
+        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE, AKVA_SERVICE]
       });
       wantsBroaderScan = false;
       await attach(dev);

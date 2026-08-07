@@ -99,6 +99,9 @@ def test_web_page_uuids_match_firmware(path):
     assert str_vars.get("OTA_SERVICE", "").endswith(FW_CUSTOM["OTA_SVC"])
     assert str_vars.get("OTA_CTRL", "").endswith(FW_CUSTOM["OTA_CTRL"])
     assert str_vars.get("OTA_DATA", "").endswith(FW_CUSTOM["OTA_DATA"])
+    assert str_vars.get("AKVA_SERVICE", "").endswith(FW_CUSTOM["AKVALINK_SVC"])
+    assert str_vars.get("ALERT_HIGH_CHAR", "").endswith(FW_CUSTOM["ALERT_HIGH"])
+    assert str_vars.get("ALERT_LOW_CHAR", "").endswith(FW_CUSTOM["ALERT_LOW"])
 
 
 def _short16(uuid128: str) -> int:

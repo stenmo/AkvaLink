@@ -132,6 +132,17 @@
   .live-card .cta .primary:hover { background: var(--deep); }
   .ble-note { color: var(--muted); font-size: .84rem; margin: 14px 0 0; }
 
+  /* Larmgränser (egen AkvaLink-tjänst) */
+  .alert-box { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); text-align: left; }
+  .alert-title { margin: 0 0 4px; color: var(--deep); font-weight: 700; font-size: .95rem; }
+  .alert-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .alert-row label { color: var(--muted); font-size: .84rem; }
+  .alert-row input {
+    width: 72px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px;
+    font: inherit; font-size: .9rem; color: var(--deep); background: #fff;
+  }
+  .alert-row .file-btn { margin-left: auto; padding: 7px 18px; }
+
   /* OTA card */
   .ota-card { margin-top: 18px; }
   .ota-title { margin: 0 0 4px; color: var(--deep); font-size: 1.1rem; }
@@ -666,6 +677,18 @@
       <div id="bleFw" class="age"></div>
       <p class="cta"><a id="bleBtn" class="primary" role="button">Anslut via Bluetooth</a></p>
       <p id="bleNote" class="ble-note"></p>
+      <div id="alertBox" class="alert-box" hidden>
+        <p class="alert-title">Temperaturlarm</p>
+        <p class="ble-note" style="margin-top:0">Sparas i enheten själv, i °C. Den flaggar en varning när vattnet passerar en gräns — lämna fältet tomt för att stänga av det.</p>
+        <div class="alert-row">
+          <label for="alertHigh">Hög</label>
+          <input id="alertHigh" type="number" step="0.1" min="-55" max="125" inputmode="decimal">
+          <label for="alertLow">Låg</label>
+          <input id="alertLow" type="number" step="0.1" min="-55" max="125" inputmode="decimal">
+          <span id="alertSave" class="file-btn" role="button">Spara</span>
+        </div>
+        <p id="alertMsg" class="ble-note"></p>
+      </div>
     </div>
     <p class="lead" style="margin-top:22px">Vad som faktiskt ligger på länken — hela GATT-tjänstetabellen som exponeras av <strong>Endast BLE</strong>-firmware, med UUID:er och allt, om du vill bygga din egen klient:</p>
     <div class="tbl-scroll">
@@ -827,6 +850,9 @@
   var OTA_SERVICE = 'f0a00001-6e40-4a71-9b2c-6b6e696c0010';
   var OTA_CTRL    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0011';   // write + notify status
   var OTA_DATA    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0012';   // write firmware chunks
+  var AKVA_SERVICE    = 'f0a00001-6e40-4a71-9b2c-6b6e696c0001';
+  var ALERT_HIGH_CHAR = 'f0a00001-6e40-4a71-9b2c-6b6e696c0004';   // sint16, 0.01 °C, NVS-backed
+  var ALERT_LOW_CHAR  = 'f0a00001-6e40-4a71-9b2c-6b6e696c0005';
 
   // Deploy (pages.yml) sed-stämplar nu #verBadge direkt, precis som #siteVer,
   // så icke-JS-klienter (crawlers, länkförhandsvisningar, curl) ser den riktiga
@@ -916,6 +942,8 @@
     lastUpdate = 0;
     ageEl.textContent = '';
     tempChar = null;
+    alertChars = null;
+    if (alertBox) alertBox.hidden = true;
     if (fwEl) fwEl.textContent = '';
     statusEl.textContent = 'Frånkopplad';
     statusEl.className = 'status';
@@ -940,6 +968,74 @@
 
   function isAkva(d) { return d && d.name && d.name.indexOf('AkvaLink') === 0; }
 
+  // --- Larmgränser (egen AkvaLink-tjänst) -----------------------------------
+  var alertBox = document.getElementById('alertBox');
+  var alertHighEl = document.getElementById('alertHigh');
+  var alertLowEl = document.getElementById('alertLow');
+  var alertSaveBtn = document.getElementById('alertSave');
+  var alertMsg = document.getElementById('alertMsg');
+  var alertChars = null;
+
+  function int16le(v) {
+    var b = new DataView(new ArrayBuffer(2));
+    b.setInt16(0, v, true);
+    return b;
+  }
+
+  function writeChar(ch, dv) {
+    return ch.writeValueWithResponse ? ch.writeValueWithResponse(dv) : ch.writeValue(dv);
+  }
+
+  // Tomt fält = 0 = avstängt. Returnerar null om texten inte är ett giltigt tal.
+  function parseAlertInput(el) {
+    if (el.value.trim() === '') return 0;
+    var v = parseFloat(el.value);
+    if (isNaN(v) || v < -55 || v > 125) return null;
+    return Math.round(v * 100);
+  }
+
+  // Läs de två NVS-lagrade gränserna så att fälten visar vad enheten faktiskt
+  // övervakar, inte en gissning. Saknas på icke-BLE-varianter och på firmware
+  // äldre än v0.3.6 — då visar vi helt enkelt inte kontrollerna.
+  async function loadAlerts(server) {
+    if (!alertBox) return;
+    try {
+      var svc = await server.getPrimaryService(AKVA_SERVICE);
+      var hi = await svc.getCharacteristic(ALERT_HIGH_CHAR);
+      var lo = await svc.getCharacteristic(ALERT_LOW_CHAR);
+      var hiRaw = (await hi.readValue()).getInt16(0, true);
+      var loRaw = (await lo.readValue()).getInt16(0, true);
+      alertHighEl.value = hiRaw === 0 ? '' : String(hiRaw / 100);
+      alertLowEl.value = loRaw === 0 ? '' : String(loRaw / 100);
+      alertChars = { high: hi, low: lo };
+      alertMsg.textContent = '';
+      alertBox.hidden = false;
+    } catch (e) {
+      console.warn('[BLE] larmgränser ej tillgängliga', e);
+      alertBox.hidden = true;
+    }
+  }
+
+  if (alertSaveBtn) {
+    alertSaveBtn.addEventListener('click', async function () {
+      if (!alertChars) return;
+      var hi = parseAlertInput(alertHighEl);
+      var lo = parseAlertInput(alertLowEl);
+      if (hi === null || lo === null) {
+        alertMsg.textContent = 'Ange ett värde mellan −55 och 125 °C, eller lämna fältet tomt för att stänga av.';
+        return;
+      }
+      alertMsg.textContent = 'Sparar…';
+      try {
+        await writeChar(alertChars.high, int16le(hi));
+        await writeChar(alertChars.low, int16le(lo));
+        alertMsg.textContent = 'Sparat i enheten.';
+      } catch (e) {
+        alertMsg.textContent = 'Kunde inte spara: ' + e.message;
+      }
+    });
+  }
+
   // Gemensam sökväg: öppna GATT, prenumerera på temperaturen, uppdatera UI.
   async function attach(dev) {
     device = dev;
@@ -962,6 +1058,7 @@
     ageTimer = setInterval(renderAge, 1000);   // ticka "uppdaterad för Ns sedan"
 
     showFwVersion(server);   // best-effort: läs + visa körande programvaruversion
+    loadAlerts(server);      // best-effort: läs de NVS-lagrade larmgränserna
 
     statusEl.textContent = 'Ansluten till ' + (dev.name || 'AkvaLink');
     statusEl.className = 'status on';
@@ -995,12 +1092,12 @@
     try {
       var dev = await navigator.bluetooth.requestDevice(broad ? {
         acceptAllDevices: true,
-        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
+        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE, AKVA_SERVICE]
       } : {
         // Match by the advertised ESS service (reliable in Chrome AND iOS/Bluefy)
         // OR the device name. The firmware advertises 0x181A in its adv packet.
         filters: [{ services: [ESS_SERVICE] }, { namePrefix: 'AkvaLink' }],
-        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE]
+        optionalServices: [ESS_SERVICE, OTA_SERVICE, DIS_SERVICE, AKVA_SERVICE]
       });
       wantsBroaderScan = false;
       await attach(dev);
