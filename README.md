@@ -80,7 +80,8 @@ supported (`--clickboard` build flag).
 # BLE with the free "ESP BLE Provisioning" app), then serves the temperature
 # page at http://akvalink-<last4mac>.local (found via mDNS, unique per device).
 # Also publishes to MQTT for Home Assistant autodiscovery (default broker:
-# homeassistant.local:1883).
+# homeassistant.local:1883), plus high/low temperature alerts on
+# akvalink/<mac>/alert once you set a threshold (menuconfig → AkvaLink).
 .\akvalink.cmd --station build
 
 # Or just bench-test the DS18B20 probe (no Matter/BLE — logs temp every 30 s)

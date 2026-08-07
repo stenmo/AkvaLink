@@ -157,7 +157,14 @@ We don't write one for v1. The expectation is:
     - `POST /ota` → raw firmware binary body, flashes the inactive OTA slot
       and reboots (used by `wifi_ota_card.dart` in the Flutter app).
   - Optional **MQTT publish to a user-configured local broker** (`--station`
-    only, off by default; turn on for Home Assistant integration).
+    only, off by default; turn on for Home Assistant integration). Topics:
+    - `akvalink/<mac>/temperature` → `{"celsius": 28.4}` (qos 0, not retained).
+    - `akvalink/<mac>/status` → `online` / `offline` (retained, LWT-backed).
+    - `akvalink/<mac>/alert` → `{"state": "high"|"low"|"ok"}` (retained),
+      published only when the reading crosses `CONFIG_AKVALINK_ALERT_HIGH_CC` /
+      `_LOW_CC` (0.01 °C, 0 = disabled, overridden by the BLE GATT threshold
+      characteristics). 0.25 °C of hysteresis on the way back to `ok`.
+      Trigger HA automations on this topic for push notifications.
 - Same disconnect-mode trick as Matter-over-Wi-Fi for battery.
 
 **Why offer it:** Home Assistant / Node-RED / integrator scenarios.

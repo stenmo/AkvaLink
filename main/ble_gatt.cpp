@@ -129,11 +129,16 @@ static uint8_t s_battery_percent = 100;
 #define DEV_NAME_MAX  32
 
 static char    s_dev_name[DEV_NAME_MAX + 1] = DEVICE_NAME;
-static int16_t s_alert_high = 0;    // 0 = disabled
-static int16_t s_alert_low  = 0;    // 0 = disabled
+static int16_t s_alert_high = CONFIG_AKVALINK_ALERT_HIGH_CC;   // 0 = disabled
+static int16_t s_alert_low  = CONFIG_AKVALINK_ALERT_LOW_CC;    // 0 = disabled
+static bool    s_nvs_loaded = false;
 
 static void load_nvs_settings(void)
 {
+    if (s_nvs_loaded) {
+        return;
+    }
+    s_nvs_loaded = true;
     nvs_handle_t h;
     if (nvs_open(NVS_NS, NVS_READONLY, &h) != ESP_OK) {
         return;  // no settings yet — use defaults
@@ -792,6 +797,8 @@ void akvalink_ble_gatt_set_battery(uint8_t percent)
     // val_handle + notify call (like temperature) when the ADC is wired.
 }
 
-int16_t akvalink_ble_gatt_get_alert_high(void) { return s_alert_high; }
-int16_t akvalink_ble_gatt_get_alert_low(void)  { return s_alert_low;  }
+// Lazy-load: --station reads the thresholds for its MQTT alerts without ever
+// starting the GATT server (that only happens via the GPIO9 escape hatch).
+int16_t akvalink_ble_gatt_get_alert_high(void) { load_nvs_settings(); return s_alert_high; }
+int16_t akvalink_ble_gatt_get_alert_low(void)  { load_nvs_settings(); return s_alert_low;  }
 

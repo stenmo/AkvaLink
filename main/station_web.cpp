@@ -8,6 +8,7 @@
 // Long-press GPIO9 (EVK BOOT button) 5 s → erases Wi-Fi creds + re-provisions.
 
 #include "station_web.h"
+#include "ble_gatt.h"   // alert thresholds (NVS-backed, seeded from Kconfig)
 #include "web_page.h"
 
 #include <inttypes.h>
@@ -59,6 +60,15 @@ static bool s_mqtt_connected = false;
 static char s_mac[13];          // "aabbccddeeff"
 static char s_state_topic[48];  // "akvalink/<mac>/temperature"
 static char s_avail_topic[44];  // "akvalink/<mac>/status"
+static char s_alert_topic[44];  // "akvalink/<mac>/alert"
+
+// --- Temperature alerts -----------------------------------------------------
+// Thresholds live in ble_gatt.cpp (GATT-writable, NVS-backed, Kconfig-seeded).
+// Hysteresis keeps a temperature parked on a threshold from flapping the topic.
+#define ALERT_HYSTERESIS_C  0.25f
+
+typedef enum { ALERT_UNKNOWN, ALERT_OK, ALERT_HIGH, ALERT_LOW } alert_state_t;
+static alert_state_t s_alert_state = ALERT_UNKNOWN;
 
 // True once WE own (re)connecting to Wi-Fi — either already provisioned at
 // boot, or BLE provisioning just finished. False while wifi_prov_mgr owns the
@@ -158,6 +168,7 @@ static void mqtt_event_handler(void *arg, esp_event_base_t base, int32_t id, voi
     switch ((esp_mqtt_event_id_t)id) {
     case MQTT_EVENT_CONNECTED:
         s_mqtt_connected = true;
+        s_alert_state = ALERT_UNKNOWN;   // republish the alert state after a reconnect
         mqtt_publish_discovery();
         break;
     case MQTT_EVENT_DISCONNECTED: {
@@ -191,6 +202,7 @@ static void start_mqtt(void)
              mac[3], mac[4], mac[5]);
     snprintf(s_state_topic, sizeof(s_state_topic), "akvalink/%s/temperature", s_mac);
     snprintf(s_avail_topic, sizeof(s_avail_topic), "akvalink/%s/status", s_mac);
+    snprintf(s_alert_topic, sizeof(s_alert_topic), "akvalink/%s/alert", s_mac);
 
     char resolved_uri[96];
     const char *broker_uri = MQTT_BROKER_URL;
@@ -212,6 +224,47 @@ static void start_mqtt(void)
     esp_mqtt_client_register_event(s_mqtt, MQTT_EVENT_ANY, mqtt_event_handler, NULL);
     esp_mqtt_client_start(s_mqtt);
     ESP_LOGI(TAG, "MQTT client started — broker %s", broker_uri);
+}
+
+// Where the reading sits relative to the thresholds, holding the current state
+// while inside the hysteresis band on the way back to normal.
+static alert_state_t next_alert_state(float celsius, int16_t high, int16_t low)
+{
+    if (high != 0 && celsius >= high / 100.0f) return ALERT_HIGH;
+    if (low  != 0 && celsius <= low  / 100.0f) return ALERT_LOW;
+    if (s_alert_state == ALERT_HIGH && high != 0 &&
+        celsius > high / 100.0f - ALERT_HYSTERESIS_C) return ALERT_HIGH;
+    if (s_alert_state == ALERT_LOW && low != 0 &&
+        celsius < low / 100.0f + ALERT_HYSTERESIS_C) return ALERT_LOW;
+    return ALERT_OK;
+}
+
+// Publish {"state":"high"|"low"|"ok"} to akvalink/<mac>/alert, but only when
+// the state actually changes — Home Assistant automations trigger on it.
+static void publish_alert(float celsius)
+{
+    int16_t high = akvalink_ble_gatt_get_alert_high();
+    int16_t low  = akvalink_ble_gatt_get_alert_low();
+    if (isnan(celsius) || (high == 0 && low == 0)) {
+        return;                                 // no reading, or alerts disabled
+    }
+
+    alert_state_t next = next_alert_state(celsius, high, low);
+    if (next == s_alert_state) {
+        return;
+    }
+    s_alert_state = next;
+
+    const char *name = next == ALERT_HIGH ? "high" : (next == ALERT_LOW ? "low" : "ok");
+    char buf[24];
+    int n = snprintf(buf, sizeof(buf), "{\"state\":\"%s\"}", name);
+    // qos=1 + retain=1: rare, and a controller subscribing later must still
+    // learn the current state rather than wait for the next crossing.
+    esp_mqtt_client_publish(s_mqtt, s_alert_topic, buf, n, 1, 1);
+
+    int centi = (int)lroundf(celsius * 100.0f);
+    ESP_LOGI(TAG, "Temperature alert → %s (%s%d.%02d °C)", name,
+             centi < 0 ? "-" : "", abs(centi) / 100, abs(centi) % 100);
 }
 
 // Push the latest temperature for the web page AND publish to MQTT.
@@ -236,6 +289,8 @@ void akvalink_station_set_temperature(float celsius)
     }
     // qos=0, no retain: state updates are frequent; HA only needs the latest.
     esp_mqtt_client_publish(s_mqtt, s_state_topic, buf, n, 0, 0);
+
+    publish_alert(celsius);
 }
 
 static esp_err_t mqtt_status_get(httpd_req_t *req)

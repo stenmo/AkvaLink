@@ -45,10 +45,11 @@ gets started.
 - [x] **GATT Battery Service (BAS) + writable device name** ✓ — BAS stub
       at 100 % until ADC wired; writable device-name char (NVS-backed);
       alert high/low threshold chars (NVS-backed, sint16 0.01 °C).
-- [ ] **Temperature alerts via MQTT** — publish `{"state":"high"}` / `"low"` /
-      `"ok"` to `akvalink/<mac>/alert` when temperature crosses configurable
-      thresholds. HA automations can then push notifications. Depends on
-      alert threshold storage (from GATT item above, or just Kconfig for now).
+- [x] **Temperature alerts via MQTT** ✓ — publishes `{"state":"high"}` /
+      `"low"` / `"ok"` to `akvalink/<mac>/alert` (retained, qos 1) on threshold
+      crossings only, with 0.25 °C hysteresis. Thresholds come from the
+      NVS-backed GATT characteristics, seeded by `CONFIG_AKVALINK_ALERT_HIGH_CC`
+      / `_LOW_CC` (0.01 °C, 0 = disabled). HA automations trigger on the topic.
 - [ ] **MQTT broker URL at runtime** — HTTP POST to `/config` on
       `akvalink-<mac>.local` to store broker URL in NVS. No rebuild needed
       to point at a different broker.

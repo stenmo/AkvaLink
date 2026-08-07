@@ -85,6 +85,15 @@ def main(argv: list[str] | None = None) -> int:
             mac = topic.split("/")[1] if "/" in topic else "?"
             print(f"[{ts}] {icon} Device {mac}: {payload}")
 
+        elif topic.endswith("/alert"):
+            # Threshold crossing (published only on state change)
+            try:
+                state = json.loads(payload).get("state", "?")
+            except ValueError:
+                state = payload
+            icon = {"high": "🔥", "low": "❄️"}.get(state, "✅")
+            print(f"[{ts}] {icon} Alert: {state}")
+
         elif "/config" in topic:
             # HA autodiscovery config
             try:

@@ -104,6 +104,32 @@ menu "AkvaLink"
             broker runs on a different host, port, or scheme (e.g.
             mqtt://192.168.1.10:1883 or mqtts://... for TLS).
 
+    config AKVALINK_ALERT_HIGH_CC
+        int "High temperature alert threshold (0.01 °C, 0 = disabled)"
+        default 0
+        range -5500 12500
+        help
+            Seed value for the high temperature alert, in hundredths of a
+            degree Celsius (3000 = 30.00 °C). 0 disables the high alert.
+
+            The --station variant publishes {"state":"high"} to
+            akvalink/<mac>/alert when the temperature reaches this, and
+            {"state":"ok"} once it drops back below it (with hysteresis).
+            Home Assistant automations trigger on that topic.
+
+            Overridden at runtime by the BLE GATT alert-threshold
+            characteristic, which persists the value to NVS.
+
+    config AKVALINK_ALERT_LOW_CC
+        int "Low temperature alert threshold (0.01 °C, 0 = disabled)"
+        default 0
+        range -5500 12500
+        help
+            Seed value for the low temperature alert, in hundredths of a
+            degree Celsius (500 = 5.00 °C, -200 = -2.00 °C). 0 disables the
+            low alert. Publishes {"state":"low"} — see the high threshold
+            above for the full behaviour.
+
     config AKVALINK_BLE_ESCAPE_HATCH
         bool "BLE escape hatch (hold GPIO9 at boot to enter minimal BLE mode)"
         default y if AKVALINK_AP
