@@ -159,8 +159,10 @@ above has happened.
 - *Auto-detect storage* — v2 only, too risky for v1.
 
 ## Smart reporting
-- Keepalive interval (default 4 h, Kconfig) so controllers don't mark
-  the device offline.
+- [x] **Keepalive report** ✓ — `CONFIG_AKVALINK_MATTER_KEEPALIVE_MIN`
+      (default 240 min, 0 = off) re-sends the temperature even when it hasn't
+      crossed the report threshold, so controllers don't mark a dead-flat
+      sensor offline. Matter variants only.
 - Hysteresis on the threshold to stop edge-flicker reporting.
 - Boot-time burst suppression (one report in the first 30 s).
 

@@ -33,9 +33,6 @@
 
 ## Matter
 
-- **No keepalive report.** If temperature is genuinely flat for hours,
-  controllers (especially Apple Home) may mark the device offline.
-  Mitigation today: lower the threshold or wait for the keepalive feature.
 - **No Matter OTA.** `esp_matter_ota` is linked but not wired into a
   working update path. (The `--ble` variant *does* have a working BLE OTA
   over a custom GATT service; Matter-transport OTA is still TODO.)

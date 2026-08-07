@@ -49,6 +49,7 @@ using namespace chip::app::Clusters;
 static const char * TAG = "ds18b20";
 
 static float __attribute__((unused)) s_last_pushed_c = -1000.0f;
+static int64_t __attribute__((unused)) s_last_push_us = -1;   // -1 = nothing pushed yet
 
 // ============================================================================
 // Sensor abstraction: two compile-time implementations
@@ -192,7 +193,14 @@ static void push_to_matter(float celsius)
     if (g_temp_endpoint_id == 0) {
         return;                                 // Matter not yet up
     }
-    if (fabsf(celsius - s_last_pushed_c) < APP_REPORT_THRESHOLD_C) {
+    const int64_t now_us = esp_timer_get_time();
+
+    const bool keepalive_due =
+        APP_MATTER_KEEPALIVE_MS > 0 && s_last_push_us != 0 &&
+        now_us - s_last_push_us >= (int64_t)APP_MATTER_KEEPALIVE_MS * 1000;
+
+    if (!keepalive_due &&
+        fabsf(celsius - s_last_pushed_c) < APP_REPORT_THRESHOLD_C) {
         return;                                 // suppress noise → save radio
     }
 
@@ -207,8 +215,10 @@ static void push_to_matter(float celsius)
                       TemperatureMeasurement::Attributes::MeasuredValue::Id,
                       &val);
 
-    ESP_LOGI(TAG, "📈 Pushed MeasuredValue: %.2f °C (raw %d)", celsius, measured);
+    ESP_LOGI(TAG, "📈 Pushed MeasuredValue: %.2f °C (raw %d)%s",
+             celsius, measured, keepalive_due ? " [keepalive]" : "");
     s_last_pushed_c = celsius;
+    s_last_push_us  = now_us;
 }
 #endif  // !CONFIG_AKVALINK_BLE_ONLY
 

@@ -130,6 +130,26 @@ menu "AkvaLink"
             low alert. Publishes {"state":"low"} — see the high threshold
             above for the full behaviour.
 
+    config AKVALINK_MATTER_KEEPALIVE_MIN
+        int "Matter keepalive report interval (minutes, 0 = off)"
+        default 240
+        range 0 1440
+        help
+            Re-send the temperature to Matter at least this often, even when
+            it hasn't moved enough to cross the report threshold.
+
+            Water in a pool or a wine cellar can sit dead flat for hours, and
+            with threshold-gated reporting that means no Matter traffic at
+            all — at which point controllers (Apple Home especially) start
+            showing the device as unresponsive. 240 minutes costs one extra
+            radio wake every 4 h, which is nothing beside a Thread SED's own
+            poll traffic.
+
+            0 disables it, restoring pure report-on-change.
+
+            Only affects the Matter variants; BLE notifies on change and the
+            MQTT path has its own availability topic.
+
     # ---- Battery monitoring -------------------------------------------------
 
     config AKVALINK_BATTERY_ADC

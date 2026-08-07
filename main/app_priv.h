@@ -6,6 +6,8 @@
 
 #include <stdint.h>
 
+#include "sdkconfig.h"   // CONFIG_* used by the timing macros below
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,6 +45,14 @@ extern "C" {
 // A pack voltage moves far slower than water temperature, and each read powers
 // up the ADC — 10 min is plenty. Only used when CONFIG_AKVALINK_BATTERY_ADC=y.
 #define APP_BATTERY_PERIOD_MS       600000    // 10 min
+
+// ---- Matter keepalive ------------------------------------------------------
+// Threshold-gated reporting means a pool sitting at a steady temperature can go
+// many hours without a single Matter push, and controllers (Apple Home in
+// particular) start showing the device as unresponsive. Re-send the current
+// value at least this often even when nothing changed. One extra radio wake
+// every few hours is noise next to the SED's own poll traffic.
+#define APP_MATTER_KEEPALIVE_MS     (CONFIG_AKVALINK_MATTER_KEEPALIVE_MIN * 60000)
 
 // --sensor test build: fixed cadence, no adaptive logic — just a steady
 // heartbeat with full sensor detail for bench verification of the probe.
