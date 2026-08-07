@@ -8,6 +8,7 @@ import '../ota/ota_controller.dart';
 import '../ota/wifi_ota_controller.dart';
 import '../strings.dart';
 import '../theme.dart';
+import '../widgets/alerts_card.dart';
 import '../widgets/hero_header.dart';
 import '../widgets/ota_card.dart';
 import '../widgets/temperature_card.dart';
@@ -100,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 const BleConnectCard(),
                                 const SizedBox(height: 16),
+                                const AlertsCard(),
                                 const OtaCard(),
                                 const SizedBox(height: 16),
                                 const _LanDiscoveryCard(),

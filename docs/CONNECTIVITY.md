@@ -89,16 +89,15 @@ extracts the UUIDs from all four places and fails CI if any of them drift.
 | AkvaLink OTA (`f0a00001-…-0010`, 128-bit) | Control | `…-0011` | Write, Notify | `0x01` BEGIN / `0x02` END / `0x03` ABORT; notifies `[opcode, result]` |
 | | Data | `…-0012` | Write / Write-no-rsp | Raw firmware chunks, in order |
 
-**Partly surfaced.** The landing page (`web/index.html` + `index.sv.html`)
-reads and writes the two alert thresholds over Web Bluetooth once
-connected — blank field = `0` = disabled. The **Flutter app still
-ignores the whole custom service**, and neither surface exposes the
+**Partly surfaced.** Both the landing page (`web/index.html` +
+`index.sv.html`, Web Bluetooth) and the Flutter app
+(`widgets/alerts_card.dart`) read and write the two alert thresholds once
+connected — empty field = `0` = disabled. Neither surface exposes the
 writable device name or uptime yet; `scripts/ble_gatt_client.py` is the
 only client for those (`--set-name`, and it reads uptime on connect).
-Candidates for a future pass: the same threshold fields in the app, plus
-uptime as a diagnostic. Battery level is also still a hard-coded `100 %`
-stub everywhere until the ADC voltage-divider circuit is populated (see
-the roadmap item in [TODO.md](../TODO.md)).
+Battery level is also still a hard-coded `100 %` stub everywhere until
+the ADC voltage-divider circuit is populated (see the roadmap item in
+[TODO.md](../TODO.md)).
 
 > Writes to this service were rejected outright by firmware before
 > v0.3.6 — `gatt_access()` returned `WRITE_NOT_PERMITTED` for every

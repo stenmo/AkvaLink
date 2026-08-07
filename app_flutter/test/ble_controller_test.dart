@@ -240,6 +240,76 @@ void main() {
     });
   });
 
+  group('alert thresholds', () {
+    test('reads both thresholds from the custom service', () async {
+      seedDevice('dev-1');
+      fake.setRead(AkvaUuids.akvaService, AkvaUuids.alertHighChar, centi(3000));
+      fake.setRead(AkvaUuids.akvaService, AkvaUuids.alertLowChar, centi(500));
+      final c = newController();
+      await c.scanAndConnect();
+      await settle();
+      expect(c.alertsSupported, isTrue);
+      expect(c.alertHighC, 30.0);
+      expect(c.alertLowC, 5.0);
+      c.dispose();
+    });
+
+    test('0 reads back as "disabled" (null), not 0 °C', () async {
+      seedDevice('dev-1');
+      fake.setRead(AkvaUuids.akvaService, AkvaUuids.alertHighChar, centi(0));
+      fake.setRead(AkvaUuids.akvaService, AkvaUuids.alertLowChar, centi(-250));
+      final c = newController();
+      await c.scanAndConnect();
+      await settle();
+      expect(c.alertsSupported, isTrue);
+      expect(c.alertHighC, isNull);
+      expect(c.alertLowC, -2.5); // negative thresholds must survive sign-extension
+      c.dispose();
+    });
+
+    test('unsupported when the custom service is absent', () async {
+      seedDevice('dev-1'); // no alert characteristics seeded → reads throw
+      final c = newController();
+      await c.scanAndConnect();
+      await settle();
+      expect(c.state, AkvaConnState.connected);
+      expect(c.alertsSupported, isFalse);
+      c.dispose();
+    });
+
+    test('setAlerts writes little-endian sint16, null = 0 = disabled', () async {
+      seedDevice('dev-1');
+      fake.setRead(AkvaUuids.akvaService, AkvaUuids.alertHighChar, centi(0));
+      fake.setRead(AkvaUuids.akvaService, AkvaUuids.alertLowChar, centi(0));
+      final c = newController();
+      await c.scanAndConnect();
+      await settle();
+      fake.writes.clear();
+
+      expect(await c.setAlerts(highC: 29.5, lowC: null), isTrue);
+      final writes = fake.writes
+          .where((w) => w.characteristic.toLowerCase().contains('6c000'))
+          .toList();
+      expect(writes.length, 2);
+      expect(writes[0].value, centi(2950)); // 29.50 °C → 0x0B86 → 86 0b
+      expect(writes[1].value, centi(0)); // null → disabled
+      expect(c.alertHighC, 29.5);
+      expect(c.alertLowC, isNull);
+      c.dispose();
+    });
+
+    test('setAlerts is a no-op when the device has no custom service', () async {
+      seedDevice('dev-1');
+      final c = newController();
+      await c.scanAndConnect();
+      await settle();
+      fake.writes.clear();
+      expect(await c.setAlerts(highC: 30), isFalse);
+      expect(fake.writes, isEmpty);
+      c.dispose();
+    });
+  });
+
   group('connection lifecycle', () {
     test('link dropped by peripheral → returns to idle, clears data', () async {
       seedDevice('dev-1');

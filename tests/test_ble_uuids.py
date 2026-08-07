@@ -127,6 +127,9 @@ def test_flutter_app_uuids_match_firmware():
     assert v["otaService"][-2:] == FW_CUSTOM["OTA_SVC"]
     assert v["otaCtrl"][-2:] == FW_CUSTOM["OTA_CTRL"]
     assert v["otaData"][-2:] == FW_CUSTOM["OTA_DATA"]
+    assert v["akvaService"][-2:] == FW_CUSTOM["AKVALINK_SVC"]
+    assert v["alertHighChar"][-2:] == FW_CUSTOM["ALERT_HIGH"]
+    assert v["alertLowChar"][-2:] == FW_CUSTOM["ALERT_LOW"]
 
 
 def _py_script_vars() -> dict:

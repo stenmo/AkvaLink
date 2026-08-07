@@ -75,6 +75,15 @@ class Strings {
     required this.lanSearching,
     required this.lanNotFoundHint,
     required this.tempToggleHint,
+    // Alert thresholds (custom AkvaLink GATT service).
+    required this.alertsTitle,
+    required this.alertsHint,
+    required this.alertHighLabel,
+    required this.alertLowLabel,
+    required this.alertSave,
+    required this.alertSaved,
+    required this.alertSaveFailed,
+    required this.alertRangeError,
   });
 
   final String tagline;
@@ -136,6 +145,14 @@ class Strings {
   final String lanSearching;
   final String lanNotFoundHint;
   final String tempToggleHint;
+  final String alertsTitle;
+  final String alertsHint;
+  final String alertHighLabel;
+  final String alertLowLabel;
+  final String alertSave;
+  final String alertSaved;
+  final String alertSaveFailed;
+  final String alertRangeError;
 
   // ---- Parameterised helpers (kept out of the constructor) ----------------
 
@@ -264,6 +281,14 @@ class Strings {
     lanSearching,
     lanNotFoundHint,
     tempToggleHint,
+    alertsTitle,
+    alertsHint,
+    alertHighLabel,
+    alertLowLabel,
+    alertSave,
+    alertSaved,
+    alertSaveFailed,
+    alertRangeError,
   ];
 
   // ---- The two locales ----------------------------------------------------
@@ -332,6 +357,15 @@ class Strings {
     lanNotFoundHint:
         'No AkvaLink found via mDNS. It may be blocked by a firewall or router client isolation.',
     tempToggleHint: 'Tap to switch °C/°F',
+    alertsTitle: 'Temperature alerts',
+    alertsHint:
+        'Saved on the sensor itself. Leave a field empty to switch that alert off.',
+    alertHighLabel: 'High',
+    alertLowLabel: 'Low',
+    alertSave: 'Save',
+    alertSaved: 'Saved to the sensor',
+    alertSaveFailed: 'Could not save',
+    alertRangeError: 'Enter a value between -55 and 125 °C',
   );
 
   static const sv = Strings(
@@ -399,6 +433,15 @@ class Strings {
     lanNotFoundHint:
         'Ingen AkvaLink hittades via mDNS. Den kan vara blockerad av en brandvägg eller klientisolering i routern.',
     tempToggleHint: 'Tryck för att växla °C/°F',
+    alertsTitle: 'Temperaturlarm',
+    alertsHint:
+        'Sparas i sensorn. Lämna ett fält tomt för att stänga av det larmet.',
+    alertHighLabel: 'Hög',
+    alertLowLabel: 'Låg',
+    alertSave: 'Spara',
+    alertSaved: 'Sparat i sensorn',
+    alertSaveFailed: 'Kunde inte spara',
+    alertRangeError: 'Ange ett värde mellan -55 och 125 °C',
   );
 
   /// Pick a locale's strings from a [Locale] (falls back to English).

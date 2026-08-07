@@ -41,6 +41,23 @@ class AkvaLinkController extends ChangeNotifier {
   int? _batteryPercent;
   int? get batteryPercent => _batteryPercent;
 
+  // Alert thresholds, in 0.01 °C as stored on the device. null = the custom
+  // service wasn't readable (non-BLE variant, or firmware older than v0.3.6),
+  // in which case the UI hides the controls entirely.
+  int? _alertHighCenti;
+  int? _alertLowCenti;
+
+  /// True once both thresholds have been read — i.e. the device supports them.
+  bool get alertsSupported => _alertHighCenti != null && _alertLowCenti != null;
+
+  /// High alert threshold in °C, or null when disabled (stored as 0).
+  double? get alertHighC =>
+      (_alertHighCenti ?? 0) == 0 ? null : _alertHighCenti! / 100.0;
+
+  /// Low alert threshold in °C, or null when disabled (stored as 0).
+  double? get alertLowC =>
+      (_alertLowCenti ?? 0) == 0 ? null : _alertLowCenti! / 100.0;
+
   /// Full firmware revision string, e.g. "0.3.1-thread".
   String? _firmware;
   String? get firmware => _firmware;
@@ -360,14 +377,79 @@ class AkvaLinkController extends ChangeNotifier {
       );
       if (bat.isNotEmpty) _batteryPercent = bat[0];
     } catch (_) {}
+    await _readAlerts(id);
     notifyListeners();
   }
+
+  /// Read both NVS-backed alert thresholds. Best-effort: the custom service is
+  /// absent on non-BLE variants, and writes to it were rejected by firmware
+  /// older than v0.3.6, so failure here just leaves [alertsSupported] false.
+  Future<void> _readAlerts(String id) async {
+    try {
+      final hi = await UniversalBle.read(
+        id,
+        AkvaUuids.akvaService,
+        AkvaUuids.alertHighChar,
+      );
+      final lo = await UniversalBle.read(
+        id,
+        AkvaUuids.akvaService,
+        AkvaUuids.alertLowChar,
+      );
+      _alertHighCenti = _decodeInt16(hi);
+      _alertLowCenti = _decodeInt16(lo);
+    } catch (_) {
+      _alertHighCenti = null;
+      _alertLowCenti = null;
+    }
+  }
+
+  static int? _decodeInt16(Uint8List v) {
+    if (v.length < 2) return null;
+    final raw = v[0] | (v[1] << 8);
+    return raw >= 0x8000 ? raw - 0x10000 : raw;
+  }
+
+  /// Write both thresholds back to the device (persisted in its NVS).
+  /// Pass null for a threshold to disable it. Values are °C; the firmware
+  /// stores hundredths. Returns false if the write failed.
+  Future<bool> setAlerts({double? highC, double? lowC}) async {
+    final id = _deviceId;
+    if (id == null || !alertsSupported) return false;
+    final hi = highC == null ? 0 : (highC * 100).round();
+    final lo = lowC == null ? 0 : (lowC * 100).round();
+    try {
+      await UniversalBle.write(
+        id,
+        AkvaUuids.akvaService,
+        AkvaUuids.alertHighChar,
+        _encodeInt16(hi),
+      );
+      await UniversalBle.write(
+        id,
+        AkvaUuids.akvaService,
+        AkvaUuids.alertLowChar,
+        _encodeInt16(lo),
+      );
+      _alertHighCenti = hi;
+      _alertLowCenti = lo;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Uint8List _encodeInt16(int v) =>
+      Uint8List.fromList([v & 0xff, (v >> 8) & 0xff]);
 
   void _onDisconnected() {
     _pollTimer?.cancel();
     _pollTimer = null;
     _temperatureC = null;
     _batteryPercent = null;
+    _alertHighCenti = null;
+    _alertLowCenti = null;
     _set(AkvaConnState.idle);
   }
 

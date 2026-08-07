@@ -258,13 +258,11 @@ happen to agree today.
   contract changes — it's meant to reflect the real firmware, not a
   proposal.
 - **Known gap:** the custom AkvaLink service is only *partly* wired up
-  end-to-end. The **web page reads/writes the two alert thresholds** over
-  Web Bluetooth (shipped Aug 2026); the **Flutter app still ignores the
-  entire custom service**, and the writable device name + uptime are only
-  reachable from `scripts/ble_gatt_client.py`. Closing the app side is the
-  natural next step — but don't silently "complete" the rest (device name,
-  uptime) without being asked; that part is still a deliberate KISS-scoped
-  gap, not a bug.
+  end-to-end. The **web page and the Flutter app both read/write the two
+  alert thresholds** (shipped Aug 2026); the **writable device name and
+  uptime are still only reachable from `scripts/ble_gatt_client.py`**.
+  Don't silently "complete" those two without being asked — that part is
+  still a deliberate KISS-scoped gap, not a bug.
 
 ## Software bill of materials (SBOM) — keep it synced with the real toolchain
 

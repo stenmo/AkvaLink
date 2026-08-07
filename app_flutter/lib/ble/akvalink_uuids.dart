@@ -20,6 +20,14 @@ class AkvaUuids {
   static const basService = '0000180f-0000-1000-8000-00805f9b34fb';
   static const batteryChar = '00002a19-0000-1000-8000-00805f9b34fb';
 
+  // Custom AkvaLink service (128-bit). Same base as ble_gatt.cpp:
+  //   f0a00001-6e40-4a71-9b2c-6b6e696c00XX
+  static const akvaService = 'f0a00001-6e40-4a71-9b2c-6b6e696c0001';
+  static const alertHighChar =
+      'f0a00001-6e40-4a71-9b2c-6b6e696c0004'; // sint16, 0.01 °C, NVS-backed
+  static const alertLowChar =
+      'f0a00001-6e40-4a71-9b2c-6b6e696c0005'; // sint16, 0.01 °C, NVS-backed
+
   // Custom AkvaLink OTA service (128-bit). Same base as ble_gatt.cpp:
   //   f0a00001-6e40-4a71-9b2c-6b6e696c00XX
   static const otaService = 'f0a00001-6e40-4a71-9b2c-6b6e696c0010';
