@@ -18,6 +18,8 @@ Usage:
     python scripts/ble_gatt_client.py --scan       # scan only, no connect
     python scripts/ble_gatt_client.py --addr XX:XX:XX:XX:XX:XX
     python scripts/ble_gatt_client.py --time 30    # stay connected 30 s (default 10)
+    python scripts/ble_gatt_client.py --set-alert-high 30 --set-alert-low 5
+    python scripts/ble_gatt_client.py --set-name "Pool probe"
 """
 
 import argparse
@@ -47,6 +49,10 @@ BAS_SVC  = "0000180f-0000-1000-8000-00805f9b34fb"  # Battery Service
 BAT_CHR  = "00002a19-0000-1000-8000-00805f9b34fb"  # Battery Level (uint8, %)
 
 AKVA_SVC  = "f0a00001-6e40-4a71-9b2c-6b6e696c0001"  # AkvaLink Custom
+UPTIME_CHR   = "f0a00001-6e40-4a71-9b2c-6b6e696c0002"  # Uptime (uint32 s)
+NAME_CHR     = "f0a00001-6e40-4a71-9b2c-6b6e696c0003"  # Device name (utf-8, writable)
+ALERT_HI_CHR = "f0a00001-6e40-4a71-9b2c-6b6e696c0004"  # Alert high (sint16, 0.01 °C)
+ALERT_LO_CHR = "f0a00001-6e40-4a71-9b2c-6b6e696c0005"  # Alert low  (sint16, 0.01 °C)
 OTA_SVC   = "f0a00001-6e40-4a71-9b2c-6b6e696c0010"  # AkvaLink OTA
 OTA_CTRL  = "f0a00001-6e40-4a71-9b2c-6b6e696c0011"  # OTA Control
 OTA_DATA  = "f0a00001-6e40-4a71-9b2c-6b6e696c0012"  # OTA Data
@@ -66,6 +72,10 @@ KNOWN_CHARS = {
     MODEL_CHR: "Model Number",
     MFR_CHR:   "Manufacturer Name",
     BAT_CHR:   "Battery Level (%)",
+    UPTIME_CHR:   "Uptime (uint32 s)",
+    NAME_CHR:     "Device Name (writable)",
+    ALERT_HI_CHR: "Alert High (sint16, 0.01 °C, writable)",
+    ALERT_LO_CHR: "Alert Low (sint16, 0.01 °C, writable)",
     OTA_CTRL:  "OTA Control",
     OTA_DATA:  "OTA Data",
     "00002a00-0000-1000-8000-00805f9b34fb": "Device Name",
@@ -96,6 +106,20 @@ def _fmt_battery(data: bytes) -> str:
     return f"{data[0]} %" if data else "??"
 
 
+def _fmt_uptime(data: bytes) -> str:
+    if len(data) < 4:
+        return f"?? (raw {data.hex()})"
+    s = struct.unpack_from("<I", data)[0]
+    return f"{s} s  ({s // 3600} h {(s % 3600) // 60} m)"
+
+
+def _fmt_alert(data: bytes) -> str:
+    if len(data) < 2:
+        return f"?? (raw {data.hex()})"
+    raw = struct.unpack_from("<h", data)[0]
+    return "disabled (0)" if raw == 0 else f"{raw / 100:.2f} °C"
+
+
 async def scan(timeout: float) -> list:
     print(f"Scanning {timeout:.0f} s for AkvaLink devices…")
     devices = []
@@ -111,7 +135,7 @@ async def scan(timeout: float) -> list:
     return devices
 
 
-async def explore(address: str, stay: int) -> None:
+async def explore(address: str, stay: int, set_high=None, set_low=None, set_name=None) -> None:
     print(f"\nConnecting to {address} …")
     # On Windows the WinRT GATT stack caches service tables per device address.
     # Pass use_cached_services=False to force a fresh ATT discovery so we see
@@ -145,12 +169,38 @@ async def explore(address: str, stay: int) -> None:
         print("  Reading known characteristics…")
         print(f"{'═'*65}")
 
+        writes = [
+            (ALERT_HI_CHR, "alert high", set_high),
+            (ALERT_LO_CHR, "alert low", set_low),
+        ]
+        if any(v is not None for _, _, v in writes) or set_name is not None:
+            for uuid, label, val in writes:
+                if val is None:
+                    continue
+                raw = struct.pack("<h", int(round(val * 100)))
+                try:
+                    await client.write_gatt_char(uuid, raw, response=True)
+                    print(f"  wrote {label:<12} {val:.2f} °C  (raw {raw.hex()})")
+                except Exception as e:
+                    print(f"  wrote {label:<12} ✗  {e}")
+            if set_name is not None:
+                try:
+                    await client.write_gatt_char(NAME_CHR, set_name.encode("utf-8"), response=True)
+                    print(f"  wrote device name \"{set_name}\" (takes effect on reboot)")
+                except Exception as e:
+                    print(f"  wrote device name ✗  {e}")
+            print()
+
         reads = [
             (FW_CHR,    "Firmware revision", _fmt_utf8),
             (MODEL_CHR, "Model number",      _fmt_utf8),
             (MFR_CHR,   "Manufacturer",      _fmt_utf8),
             (BAT_CHR,   "Battery",           _fmt_battery),
             (TEMP_CHR,  "Temperature",       _fmt_temp),
+            (UPTIME_CHR,   "Uptime",         _fmt_uptime),
+            (NAME_CHR,     "Device name",    _fmt_utf8),
+            (ALERT_HI_CHR, "Alert high",     _fmt_alert),
+            (ALERT_LO_CHR, "Alert low",      _fmt_alert),
         ]
         for uuid, name, fmt in reads:
             try:
@@ -189,10 +239,23 @@ async def main() -> None:
                     help="scan duration in seconds (default 5)")
     ap.add_argument("--time", "-t", type=int, default=10, metavar="S",
                     help="seconds to stay connected (default 10)")
+    ap.add_argument("--set-alert-high", type=float, metavar="C",
+                    help="write the high alert threshold in °C (0 disables), then read it back")
+    ap.add_argument("--set-alert-low", type=float, metavar="C",
+                    help="write the low alert threshold in °C (0 disables), then read it back")
+    ap.add_argument("--set-name", metavar="NAME",
+                    help="write the device name (max 32 bytes; takes effect on reboot)")
     args = ap.parse_args()
 
+    for opt, val in (("--set-alert-high", args.set_alert_high),
+                     ("--set-alert-low", args.set_alert_low)):
+        if val is not None and not (-55.0 <= val <= 125.0):
+            sys.exit(f"{opt}: {val} °C is outside the DS18B20 range (-55…125 °C)")
+    if args.set_name is not None and not 0 < len(args.set_name.encode("utf-8")) <= 32:
+        sys.exit("--set-name: must be 1–32 bytes of UTF-8")
+
     if args.addr:
-        await explore(args.addr, args.time)
+        await explore(args.addr, args.time, args.set_alert_high, args.set_alert_low, args.set_name)
         return
 
     devices = await scan(args.scan_time)
@@ -212,7 +275,7 @@ async def main() -> None:
     # Pick the strongest RSSI.
     best_dev, best_adv = max(devices, key=lambda x: x[1].rssi or -999)
     print(f"\nSelecting: {best_dev.name}  {best_dev.address}")
-    await explore(best_dev.address, args.time)
+    await explore(best_dev.address, args.time, args.set_alert_high, args.set_alert_low, args.set_name)
 
 
 if __name__ == "__main__":

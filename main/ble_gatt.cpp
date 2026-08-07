@@ -165,26 +165,57 @@ static void adv_rotate_start(uint8_t instance);
 #endif
 static int  build_adv_data(struct os_mbuf **out);
 
-// --- GATT characteristic access (reads) -------------------------------------
+// Shared by the alert high/low characteristics. The length check matters: a
+// short write would otherwise leave the int16 half-updated.
+static int write_alert_threshold(struct ble_gatt_access_ctxt *ctxt, int16_t *dst,
+                                 const char *nvs_key, const char *label)
+{
+    int16_t  val = 0;
+    uint16_t len = 0;
+    if (ble_hs_mbuf_to_flat(ctxt->om, &val, sizeof(val), &len) != 0 || len != sizeof(val)) {
+        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+    }
+
+    *dst = val;
+    nvs_handle_t h;
+    if (nvs_open(NVS_NS, NVS_READWRITE, &h) == ESP_OK) {
+        nvs_set_i16(h, nvs_key, val);
+        nvs_commit(h);
+        nvs_close(h);
+    }
+
+    int a = val < 0 ? -val : val;
+    ESP_LOGI(TAG, "Alert %s threshold set to %s%d.%02d °C%s", label,
+             val < 0 ? "-" : "", a / 100, a % 100, val == 0 ? " (disabled)" : "");
+    return 0;
+}
+
+// --- GATT characteristic access (reads + writes) ----------------------------
 static int gatt_access(uint16_t /*conn*/, uint16_t /*attr*/,
                        struct ble_gatt_access_ctxt *ctxt, void * /*arg*/)
 {
-    if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR) {
-        return BLE_ATT_ERR_WRITE_NOT_PERMITTED;
+    const bool is_write = (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR);
+    if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR && !is_write) {
+        return BLE_ATT_ERR_UNLIKELY;
     }
 
     // Custom 128-bit characteristics.
     if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_UPTIME.u) == 0) {
+        if (is_write) {
+            return BLE_ATT_ERR_WRITE_NOT_PERMITTED;
+        }
         uint32_t uptime_s = (uint32_t)(esp_timer_get_time() / 1000000);
         return os_mbuf_append(ctxt->om, &uptime_s, sizeof(uptime_s)) == 0
                    ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
     }
     if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_DEV_NAME.u) == 0) {
-        if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
+        if (is_write) {
             // Writable device name: update NVS + in-memory copy.
             uint16_t len = 0;
             char buf[DEV_NAME_MAX + 1] = {};
-            ble_hs_mbuf_to_flat(ctxt->om, buf, DEV_NAME_MAX, &len);
+            if (ble_hs_mbuf_to_flat(ctxt->om, buf, DEV_NAME_MAX, &len) != 0 || len == 0) {
+                return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+            }
             buf[len] = '\0';
             strncpy(s_dev_name, buf, DEV_NAME_MAX);
             nvs_handle_t h;
@@ -200,34 +231,23 @@ static int gatt_access(uint16_t /*conn*/, uint16_t /*attr*/,
                    ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
     }
     if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_ALERT_HIGH.u) == 0) {
-        if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
-            uint16_t len = 0;
-            ble_hs_mbuf_to_flat(ctxt->om, &s_alert_high, sizeof(s_alert_high), &len);
-            nvs_handle_t h;
-            if (nvs_open(NVS_NS, NVS_READWRITE, &h) == ESP_OK) {
-                nvs_set_i16(h, NVS_KEY_HIGH, s_alert_high);
-                nvs_commit(h); nvs_close(h);
-            }
-            ESP_LOGI(TAG, "Alert high set to %d (%.2f\u00b0C)", s_alert_high, s_alert_high / 100.0f);
-            return 0;
+        if (is_write) {
+            return write_alert_threshold(ctxt, &s_alert_high, NVS_KEY_HIGH, "high");
         }
         return os_mbuf_append(ctxt->om, &s_alert_high, sizeof(s_alert_high)) == 0
                    ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
     }
     if (ble_uuid_cmp(ctxt->chr->uuid, &UUID_ALERT_LOW.u) == 0) {
-        if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
-            uint16_t len = 0;
-            ble_hs_mbuf_to_flat(ctxt->om, &s_alert_low, sizeof(s_alert_low), &len);
-            nvs_handle_t h;
-            if (nvs_open(NVS_NS, NVS_READWRITE, &h) == ESP_OK) {
-                nvs_set_i16(h, NVS_KEY_LOW, s_alert_low);
-                nvs_commit(h); nvs_close(h);
-            }
-            ESP_LOGI(TAG, "Alert low set to %d (%.2f\u00b0C)", s_alert_low, s_alert_low / 100.0f);
-            return 0;
+        if (is_write) {
+            return write_alert_threshold(ctxt, &s_alert_low, NVS_KEY_LOW, "low");
         }
         return os_mbuf_append(ctxt->om, &s_alert_low, sizeof(s_alert_low)) == 0
                    ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+    }
+
+    // Everything below is read-only.
+    if (is_write) {
+        return BLE_ATT_ERR_WRITE_NOT_PERMITTED;
     }
 
     switch (ble_uuid_u16(ctxt->chr->uuid)) {
