@@ -116,23 +116,25 @@ web page, no browser needed:
 
 ## Battery life examples
 
-For a heated pool at 28–29 °C with 0.25 °C report threshold. **Realistic
-expectation: 5–7 years** on alkaline AA/AAA — shelf life and self-discharge
-cap them well below the draw-limited numbers below. CR2477 (lithium primary)
-has the best shelf life and lands closest to its modeled figure; 18650
-(Li-ion) calendar-ages a few percent capacity per year regardless of load, so
-treat it like the alkaline rows, not as decades:
+For a heated pool at 28–29 °C with 0.25 °C report threshold. Leading with the
+**realistic** number for each cell: alkaline (AAA/AA) self-discharge and
+Li-ion (18650) calendar aging cap real-world life at roughly 5–7 years no
+matter what the draw-limited model alone predicts, so that cap is shown
+wherever the model overshoots it. CR2477 (lithium primary) has the best
+shelf life of the four and needs no such cap — its model figure already *is*
+the realistic one:
 
 | Battery | Thread SED | Wi-Fi (TWT) | Wi-Fi (disconnect) |
 |---------|-----------|-------------|--------------------|
 | CR2477 (1000 mAh) | ~5 years | ~6 months | ~3.3 years |
-| 2× AAA (1200 mAh)* | ~6 years | ~8 months | ~4 years |
-| **2× AA (2800 mAh)*** | **~12 years** | **~1.8 years** | **~9 years** |
-| 18650 (3400 mAh)* | ~15+ years | ~2.2 years | ~11 years |
+| 2× AAA (1200 mAh) | ~5–6 years | ~8 months | ~4 years |
+| **2× AA (2800 mAh)** | **~5–7 years** *(model: ~12 years)* | **~1.8 years** | **~5–7 years** *(model: ~9 years)* |
+| 18650 Li-ion (3400 mAh) | years, not decades *(model: ~15+ years)* | ~2.2 years | years, not decades *(model: ~11 years)* |
 
-<sup>*</sup> Draw-limited power-model estimate — self-discharge/calendar aging
-caps real-world life well below this for alkaline and Li-ion cells. Real
-measurement (PPK2/Joulescope) is on the roadmap.
+The italic *(model: ...)* figure is the theoretical, draw-limited ceiling —
+only shown where it's materially higher than the realistic number. Real
+measurement (PPK2/Joulescope) to replace "years, not decades" with an actual
+figure is on the roadmap.
 
 See [docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md) for the full
 analysis (DTIM strategies, TWT setup, sensor variants, schematic).
@@ -192,6 +194,7 @@ Built on:
 
 - 🤝 [CONTRIBUTING.md](.github/CONTRIBUTING.md) — how to build, test, and submit changes (KISS, battery-first, no cloud)
 - 🔒 [SECURITY.md](.github/SECURITY.md) — report a vulnerability privately (AkvaLink is a networked Matter device)
+- 🔏 [Code signing policy](CODESIGNING.md) — how the Windows companion app is signed (free signing via SignPath.io)
 
 ## License
 

@@ -216,6 +216,26 @@
     border-radius: 50%; background: var(--water); color: #fff; font-size: .9rem; font-weight: 700; flex: none; }
   .dl-divider { border: none; border-top: 1px solid var(--line); margin: 30px 0 0; }
 
+  /* Variant picker */
+  .picker { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 18px 0 22px; }
+  .picker-title { margin: 0 0 12px; color: var(--deep); font-size: 1.05rem; }
+  .picker-q { margin: 0 0 10px; font-weight: 600; color: var(--deep); }
+  .picker-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .picker-opt { background: transparent; border: 1.5px solid var(--water); color: var(--water); border-radius: 999px;
+    padding: 8px 14px; font-size: .88rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .picker-opt:hover { background: var(--water); color: #fff; }
+  .picker-restart { background: none; border: none; color: var(--muted); text-decoration: underline; cursor: pointer;
+    font-size: .85rem; padding: 0; margin-top: 6px; font-family: inherit; }
+  .dl-card.recommended { border-color: var(--water); box-shadow: 0 0 0 3px rgba(10,162,192,.18); }
+
+  /* Advanced (demoted) variants */
+  details.advanced-variants { margin-top: 18px; }
+  details.advanced-variants > summary { cursor: pointer; color: var(--water); font-weight: 600; font-size: .92rem; list-style: none; }
+  details.advanced-variants > summary::-webkit-details-marker { display: none; }
+  details.advanced-variants > summary::before { content: "▸ "; }
+  details.advanced-variants[open] > summary::before { content: "▾ "; }
+  details.advanced-variants > .grid { margin-top: 16px; }
+
   /* Wiring schematic */
   .schematic { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 8px; margin-top: 16px; }
   .schematic svg { width: 100%; height: auto; max-width: 560px; display: block; margin: 0 auto; }
@@ -476,19 +496,19 @@
 <section id="battery">
   <div class="wrap">
     <h2>Batteritid</h2>
-    <p class="lead">Uppvärmd pool vid 28–29 °C med 0,25 °C rapporteringströskel. <strong>Realistisk förväntan: 5–7 år</strong> på alkaliska AA/AAA — hållbarhet och självurladdning begränsar dem långt under de förbrukningsberoende siffrorna nedan för de två raderna. CR2477 (litium primärcell) har bäst hållbarhet av de fyra och hamnar närmast sin modellsiffra. Litiumjon (18650) åldras med några procents kapacitetsförlust per år oavsett belastning — behandla dess siffror likadant som de alkaliska raderna, inte som decennier.</p>
+    <p class="lead">Uppvärmd pool vid 28–29 °C med 0,25 °C rapporteringströskel. Vi leder med den <strong>realistiska</strong> siffran för varje cell: alkaliska (AAA/AA) självurladdas och litiumjon (18650) åldras kalendariskt, vilket begränsar den verkliga livslängden till ungefär 5–7 år oavsett vad den förbrukningsberoende modellen ensam förutspår — den gränsen visas där modellen överskrider den. CR2477 (litium primärcell) har bäst hållbarhet av de fyra och behöver ingen sådan gräns — dess modellsiffra <em>är</em> redan den realistiska.</p>
     <div class="tbl-scroll">
       <table>
         <thead><tr><th>Batteri</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (frånkopplad)</th></tr></thead>
         <tbody>
           <tr><td>CR2477 (1000 mAh)</td><td>~5 år</td><td>~6 månader</td><td>~3,3 år</td></tr>
-          <tr><td>2× AAA (1200 mAh)<sup>*</sup></td><td>~6 år</td><td>~8 månader</td><td>~4 år</td></tr>
-          <tr><td class="hi">2× AA (2800 mAh)<sup>*</sup></td><td class="hi">~12 år</td><td class="hi">~1,8 år</td><td class="hi">~9 år</td></tr>
-          <tr><td>18650 (3400 mAh)<sup>*</sup></td><td>~15+ år</td><td>~2,2 år</td><td>~11 år</td></tr>
+          <tr><td>2× AAA (1200 mAh)</td><td>~5–6 år</td><td>~8 månader</td><td>~4 år</td></tr>
+          <tr><td class="hi">2× AA (2800 mAh)</td><td class="hi">~5–7 år <em>(modell: ~12 år)</em></td><td class="hi">~1,8 år</td><td class="hi">~5–7 år <em>(modell: ~9 år)</em></td></tr>
+          <tr><td>18650 litiumjon (3400 mAh)</td><td>år, inte decennier <em>(modell: ~15+ år)</em></td><td>~2,2 år</td><td>år, inte decennier <em>(modell: ~11 år)</em></td></tr>
         </tbody>
       </table>
     </div>
-    <p class="lead" style="margin-top:14px"><sup>*</sup> Förbrukningsberoende uppskattning från effektmodellen. Alkaliska celler (AAA/AA) självurladdas över tid oavsett belastning, vilket begränsar den verkliga livslängden till ungefär 5–7 år. Litiumjon (18650) åldras kalendariskt och självurladdas snabbare än alkaliskt också — dess verkliga livslängd räknas i år, inte de 11–15+ som modellen ensam antyder. Riktig mätning (PPK2/Joulescope) finns på färdplanen.</p>
+    <p class="lead" style="margin-top:14px">Den kursiverade <em>(modell: ...)</em>-siffran är det teoretiska, förbrukningsberoende taket — visas bara där den är märkbart högre än den realistiska siffran. Alkaliska celler självurladdas oavsett belastning; litiumjon åldras kalendariskt och självurladdas ännu snabbare, så "år, inte decennier" ersätter en exakt siffra tills en riktig PPK2/Joulescope-mätning finns. Riktig mätning finns på färdplanen.</p>
     <p class="lead" style="margin-top:10px">Myntcellsbygge (CR2477): myntceller går sönder på toppström, inte kapacitet. En Wi-Fi- eller Thread-sändningsburst kan dra några hundra mA, mer än en CR2477:s inre impedans gillar — lägg till en bulkkondensator (några hundra µF) över modulens matningsskena, annars faller regulatorn ur vid sändningsbursterna.</p>
   </div>
 </section>
@@ -530,13 +550,50 @@
   <div class="wrap">
     <h2>Ladda ner firmware</h2>
     <p class="lead">Förbyggda enfilsbinärer för NORA-W40 (ESP32-C6) — alltid senaste releasen.</p>
-    <p class="lead">Osäker på vilken? <strong>Thread</strong> och <strong>Wi-Fi</strong> dyker upp i Apple / Google / Alexa som en vanlig Matter-givare. <strong>ESPHome</strong> integrerar direkt med Home Assistant. <strong>Endast BLE</strong> pratar direkt med din telefon. <strong>AP</strong> och <strong>Station</strong> serverar en live-webbsida — ingen hub, ingen app, bara en webbläsare (kräver nät/USB-ström).</p>
     <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Senaste release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=senaste&amp;logo=github"></a></p>
+
+    <div class="picker" id="variantPicker">
+      <h3 class="picker-title">Osäker på vilken? Svara på ett par snabba frågor</h3>
+      <div class="picker-step" data-step="1">
+        <p class="picker-q">Hur vill du nå den till vardags?</p>
+        <div class="picker-opts">
+          <button type="button" class="picker-opt" data-goto="2-matter">En smart hem-app — Apple Home, Google Home, Alexa</button>
+          <button type="button" class="picker-opt" data-goto="2-ha">Home Assistant</button>
+          <button type="button" class="picker-opt" data-result="ble">Bara min telefon, direkt — ingen hub</button>
+          <button type="button" class="picker-opt" data-goto="2-browser">Bara en webbläsare — ingen app alls</button>
+        </div>
+      </div>
+      <div class="picker-step" data-step="2-matter" hidden>
+        <p class="picker-q">Har du redan en Thread-gränsrouter — HomePod mini/2, Apple TV 4K, Nest Hub (2:a gen+) eller Echo (4:e gen+)?</p>
+        <div class="picker-opts">
+          <button type="button" class="picker-opt" data-result="thread">Ja</button>
+          <button type="button" class="picker-opt" data-result="wifi">Nej / osäker</button>
+        </div>
+      </div>
+      <div class="picker-step" data-step="2-ha" hidden>
+        <p class="picker-q">Vill du ha noll extra konfiguration, eller kör du redan MQTT?</p>
+        <div class="picker-opts">
+          <button type="button" class="picker-opt" data-result="esphome">Noll extra konfiguration (ESPHome)</button>
+          <button type="button" class="picker-opt" data-result="station">Jag använder redan MQTT</button>
+        </div>
+      </div>
+      <div class="picker-step" data-step="2-browser" hidden>
+        <p class="picker-q">Har du Wi-Fi att ge den, eller vill du ha en fristående hotspot utan router?</p>
+        <div class="picker-opts">
+          <button type="button" class="picker-opt" data-result="station">Anslut till mitt Wi-Fi</button>
+          <button type="button" class="picker-opt" data-result="ap">Fristående hotspot, ingen router</button>
+        </div>
+      </div>
+      <div class="picker-step" data-step="result" id="pickerResult" hidden>
+        <p class="picker-q">Rekommenderas: <strong id="pickerResultName"></strong> — <a href="#" id="pickerResultLink" class="dl-btn dl-ota">Hoppa till den ↓</a></p>
+        <button type="button" class="picker-restart" id="pickerRestart">Börja om</button>
+      </div>
+    </div>
 
     <h3 class="dl-subhead"><span class="dl-num">1</span>Flasha den</h3>
     <p class="ota-hint">Välj en variant, flasha sedan hela avbildningen — kommandoraden, eller direkt från webbläsaren via USB.</p>
     <div class="grid">
-      <div class="dl-card">
+      <div class="dl-card" id="card-thread">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 5 17h14z"/><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="17" r="1.6" fill="currentColor" stroke="none"/></svg></span><h3>Thread</h3><p>Matter via Thread · bäst batteri. Kräver en hub — HomePod, Apple TV, Nest eller Echo.</p>
         <div class="dl-btns">
           <div class="dl-btns-row">
@@ -547,7 +604,7 @@
           <esp-web-install-button manifest="manifests/thread.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flasha via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
         </div>
       </div>
-      <div class="dl-card">
+      <div class="dl-card" id="card-wifi">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8.5a12 12 0 0 1 16 0"/><path d="M7 12a7.5 7.5 0 0 1 10 0"/><path d="M10 15.5a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg></span><h3>Wi-Fi</h3><p>Matter via Wi-Fi · ingen Thread-hub. Går också på batteri — men färre år. Din router + valfri Matter-app.</p>
         <div class="dl-btns">
           <div class="dl-btns-row">
@@ -558,7 +615,7 @@
           <esp-web-install-button manifest="manifests/wifi.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flasha via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
         </div>
       </div>
-      <div class="dl-card">
+      <div class="dl-card" id="card-ble">
         <span class="ico"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg></span><h3>Endast BLE</h3><p>Ingen hub, inget moln · direkt till din telefon via Bluetooth.</p>
         <div class="dl-btns">
           <div class="dl-btns-row">
@@ -569,40 +626,7 @@
           <esp-web-install-button manifest="manifests/ble.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flasha via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
         </div>
       </div>
-      <div class="dl-card">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4"/><path d="M8 9a6 6 0 0 1 8 0"/><path d="M5.5 6.5a10 10 0 0 1 13 0"/><path d="M9 21h6l-1-8h-4z"/></svg></span><h3>Wi-Fi AP</h3><p>Öppet nätverk “AkvaLink” · anslut, sidan öppnas automatiskt. Ingen router, ingen app, vilken telefon som helst. <em>Kräver nät/USB-ström.</em></p>
-        <div class="dl-btns">
-          <div class="dl-btns-row">
-            <a id="dlAp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-            <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-          </div>
-          <span class="dl-or">eller flasha direkt</span>
-          <esp-web-install-button manifest="manifests/ap.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flasha via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-        </div>
-      </div>
-      <div class="dl-card">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg></span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink-&lt;sista4mac&gt;.local</strong> i valfri webbläsare på ditt LAN. Autodetekteras av <strong>Home Assistant</strong> via MQTT. Flera enheter får unika värdnamn. <em>Kräver nät/USB-ström.</em></p>
-        <div class="dl-btns">
-          <div class="dl-btns-row">
-            <a id="dlStation" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-            <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-          </div>
-          <span class="dl-or">eller flasha direkt</span>
-          <esp-web-install-button manifest="manifests/station.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flasha via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-        </div>
-      </div>
-      <div class="dl-card">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></span><h3>ESP-NOW</h3><p>Deep-sleep-utsändning — vaknar, läser DS18B20, skickar ett paket till valfri ESP32 på samma Wi-Fi-kanal, sover. Ingen hub, ingen driftsättning, maximal batteritid. <em>Mottagaren behöver en ESP32-skiss.</em></p>
-        <div class="dl-btns">
-          <div class="dl-btns-row">
-            <a id="dlEspnow" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-            <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-          </div>
-          <span class="dl-or">eller flasha direkt</span>
-          <esp-web-install-button manifest="manifests/espnow.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flasha via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-        </div>
-      </div>
-      <div class="dl-card">
+      <div class="dl-card" id="card-esphome">
         <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></span><h3>ESPHome</h3><p>Inbyggt <strong>Home Assistant</strong>-API — ingen MQTT-broker behövs. Flasha en gång, adoptera i ESPHome-dashboarden, OTA-uppdatera från Home Assistant. Driftsätts med Improv via USB-seriell.</p>
         <div class="dl-btns">
           <div class="dl-btns-row">
@@ -614,6 +638,45 @@
         </div>
       </div>
     </div>
+
+    <details class="advanced-variants" id="advancedVariants">
+      <summary>Visa 3 fler varianter — Wi-Fi AP, Wi-Fi station, ESP-NOW (lokal webbsida eller en egen mottagare, ingen hub behövs)</summary>
+      <div class="grid">
+        <div class="dl-card" id="card-ap">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4"/><path d="M8 9a6 6 0 0 1 8 0"/><path d="M5.5 6.5a10 10 0 0 1 13 0"/><path d="M9 21h6l-1-8h-4z"/></svg></span><h3>Wi-Fi AP</h3><p>Öppet nätverk “AkvaLink” · anslut, sidan öppnas automatiskt. Ingen router, ingen app, vilken telefon som helst. <em>Kräver nät/USB-ström.</em></p>
+          <div class="dl-btns">
+            <div class="dl-btns-row">
+              <a id="dlAp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+              <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+            </div>
+            <span class="dl-or">eller flasha direkt</span>
+            <esp-web-install-button manifest="manifests/ap.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flasha via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+          </div>
+        </div>
+        <div class="dl-card" id="card-station">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg></span><h3>Wi-Fi station</h3><p>Ansluter till ditt hemma-Wi-Fi (driftsätts en gång via BLE). Öppna <strong>akvalink-&lt;sista4mac&gt;.local</strong> i valfri webbläsare på ditt LAN. Autodetekteras av <strong>Home Assistant</strong> via MQTT. Flera enheter får unika värdnamn. <em>Kräver nät/USB-ström.</em></p>
+          <div class="dl-btns">
+            <div class="dl-btns-row">
+              <a id="dlStation" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+              <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+            </div>
+            <span class="dl-or">eller flasha direkt</span>
+            <esp-web-install-button manifest="manifests/station.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flasha via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+          </div>
+        </div>
+        <div class="dl-card" id="card-espnow">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></span><h3>ESP-NOW</h3><p>Deep-sleep-utsändning — vaknar, läser DS18B20, skickar ett paket till valfri ESP32 på samma Wi-Fi-kanal, sover. Ingen hub, ingen driftsättning, maximal batteritid. <em>Mottagaren behöver en ESP32-skiss.</em></p>
+          <div class="dl-btns">
+            <div class="dl-btns-row">
+              <a id="dlEspnow" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+              <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+            </div>
+            <span class="dl-or">eller flasha direkt</span>
+            <esp-web-install-button manifest="manifests/espnow.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flasha via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+          </div>
+        </div>
+      </div>
+    </details>
     <p class="ble-note"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>&nbsp;Flasha via USB</strong> — klicka, välj serieporten, klart. Ingen installation, inga drivrutiner: flashar direkt från webbläsaren via <strong>Web Serial API</strong>. Kräver <strong>Chrome, Edge eller Opera</strong> (dator, v89+) — Firefox och Safari saknar stöd för Web Serial, så knappen döljer sig själv där.</p>
     <p class="ble-note"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg>&nbsp;esptool&nbsp;.bin</strong> — samma fullständiga bild, flashad från kommandoraden istället: <code>pip install esptool</code> (ett litet fristående PyPI-paket — hela ESP-IDF behövs inte), sedan <code>esptool --chip esp32c6 write-flash 0x0 &lt;fil&gt;.bin</code>. Vill du hellre slippa Python? Hämta en färdigbyggd binär från <a href="https://github.com/espressif/esptool/releases" target="_blank" rel="noopener">esptools release-sida</a> istället. Obs: esptool v5 döpte om underkommandon med bindestreck (<code>write-flash</code>, <code>merge-bin</code>) — v4 använde understreck (<code>write_flash</code>); om ett kopierat kommando ger fel är det oftast därför.</p>
     <p class="ble-note"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg>&nbsp;OTA&nbsp;.bin</strong> — enbart app-partition. Använd för uppdatering <em>inom samma variant</em> (BLE→BLE, Thread→Thread osv.) utan att påverka NVS eller driftsättningsdata. Korsvariant-OTA (t.ex. BLE→Thread) är möjlig men kräver fabråterställning efterpå. · <a href="https://github.com/stenmo/AkvaLink/releases">Alla releaser &amp; ändringslogg</a></p>
@@ -742,6 +805,10 @@
       <div class="card">
         <h3>Station-Wi-Fi + MQTT</h3>
         <p>Stationsbyggets lokala webbsida (akvalink.local) har ingen inloggning. Om din MQTT-mäklare kräver användarnamn/lösenord ligger det inbäddat i mäklar-URL:en och kompileras rakt in i firmware-avbilden — vem som helst som extraherar binären kan läsa det. Använd en mäklare på ett betrott lokalt nätverk, eller ett dedikerat MQTT-konto med begränsad behörighet.</p>
+      </div>
+      <div class="card">
+        <h3>Policy för kodsignering</h3>
+        <p>Windows-appens nedladdning är för närvarande osignerad. AkvaLinks plan är gratis Authenticode-signering via <a href="https://about.signpath.io" target="_blank" rel="noopener">SignPath.io</a> (certifikat från SignPath Foundation) — se hela <a href="https://github.com/stenmo/AkvaLink/blob/main/CODESIGNING.md">policyn för kodsignering</a> för vad som signeras, av vem, och hur man verifierar det.</p>
       </div>
     </div>
   </div>
@@ -1367,6 +1434,56 @@
       });
     })
     .catch(function () { /* behåll reserv-länkar till release-sidan */ });
+})();
+</script>
+
+<script>
+// Variantväljare: ett par snabba frågor som resulterar i ett rekommenderat
+// nedladdningskort, som scrollas fram och markeras. Helt klientsidan —
+// inga svar spåras.
+(function () {
+  var names = { thread: 'Thread', wifi: 'Wi-Fi', ble: 'Endast BLE', esphome: 'ESPHome', station: 'Wi-Fi station', ap: 'Wi-Fi AP' };
+  var advancedVariants = ['ap', 'station', 'espnow'];
+  var steps = document.querySelectorAll('#variantPicker .picker-step');
+  var resultEl = document.getElementById('pickerResult');
+  if (!steps.length || !resultEl) return;
+
+  function showStep(id) {
+    steps.forEach(function (s) { s.hidden = s.getAttribute('data-step') !== id; });
+  }
+
+  function showResult(variant) {
+    steps.forEach(function (s) { s.hidden = true; });
+    resultEl.hidden = false;
+    document.getElementById('pickerResultName').textContent = names[variant] || variant;
+    var link = document.getElementById('pickerResultLink');
+    link.setAttribute('href', '#card-' + variant);
+    if (advancedVariants.indexOf(variant) !== -1) {
+      var details = document.getElementById('advancedVariants');
+      if (details) details.open = true;
+    }
+    document.querySelectorAll('.dl-card.recommended').forEach(function (c) { c.classList.remove('recommended'); });
+    var card = document.getElementById('card-' + variant);
+    if (card) card.classList.add('recommended');
+    link.onclick = function (e) {
+      e.preventDefault();
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+  }
+
+  document.querySelectorAll('#variantPicker .picker-opt[data-goto]').forEach(function (btn) {
+    btn.addEventListener('click', function () { showStep(btn.getAttribute('data-goto')); });
+  });
+  document.querySelectorAll('#variantPicker .picker-opt[data-result]').forEach(function (btn) {
+    btn.addEventListener('click', function () { showResult(btn.getAttribute('data-result')); });
+  });
+  var restartBtn = document.getElementById('pickerRestart');
+  if (restartBtn) {
+    restartBtn.addEventListener('click', function () {
+      document.querySelectorAll('.dl-card.recommended').forEach(function (c) { c.classList.remove('recommended'); });
+      showStep('1');
+    });
+  }
 })();
 </script>
 
