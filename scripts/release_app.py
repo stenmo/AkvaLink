@@ -43,6 +43,13 @@ WINDOWS_RELEASE_DIR = APP_DIR / "build" / "windows" / "x64" / "runner" / "Releas
 
 ALL_TARGETS = ("apk", "windows")
 
+# Authenticode signing for the Windows build is opt-in via env vars -- no cert
+# configured (the common case today) means it's a silent no-op and the zip
+# keeps its "-unsigned" name. A real cert can come from the free SignPath.org
+# OSS program or a purchased one; point AKVALINK_WIN_CERT_PFX at the .pfx.
+WIN_CERT_PFX_ENV = "AKVALINK_WIN_CERT_PFX"
+WIN_CERT_PASSWORD_ENV = "AKVALINK_WIN_CERT_PASSWORD"
+
 
 # ---- pure helpers -----------------------------------------------------------
 
@@ -67,7 +74,9 @@ def apk_asset_name(version: str) -> str:
     return f"akvalink-app-android-v{version}.apk"
 
 
-def windows_asset_name(version: str) -> str:
+def windows_asset_name(version: str, signed: bool = False) -> str:
+    if signed:
+        return f"akvalink-app-windows-v{version}.zip"
     # "-unsigned" stays in the filename: no code-signing cert, Windows
     # SmartScreen will warn on first run. Don't hide that.
     return f"akvalink-app-windows-v{version}-unsigned.zip"
@@ -116,6 +125,44 @@ def _zip_dir(src_dir: Path, dst_zip: Path, dry_run: bool) -> None:
     Path(str(dst_zip) + ".sha256").write_text(f"{digest}  {dst_zip.name}\n", encoding="utf-8")
 
 
+def _find_signtool() -> Path | None:
+    """Locate the newest signtool.exe from an installed Windows SDK, if any."""
+    for env_var in ("ProgramFiles(x86)", "ProgramFiles"):
+        root = Path(os.environ.get(env_var, "")) / "Windows Kits" / "10" / "bin"
+        if not root.is_dir():
+            continue
+        candidates = sorted(root.glob("*/x64/signtool.exe"), reverse=True)
+        if candidates:
+            return candidates[0]
+    return None
+
+
+def sign_windows_exe(dry_run: bool) -> bool:
+    """Authenticode-sign AkvaLink.exe if AKVALINK_WIN_CERT_PFX is configured.
+
+    No-op (returns False) when the env var isn't set -- the common case until
+    a certificate exists (e.g. via the free SignPath.org OSS program, or a
+    purchased one). Returns True if signing actually ran.
+    """
+    pfx = os.environ.get(WIN_CERT_PFX_ENV)
+    if not pfx:
+        return False
+    signtool = _find_signtool()
+    if signtool is None:
+        print("    (AKVALINK_WIN_CERT_PFX set but no signtool.exe found \u2014 skipping signing)")
+        return False
+    exe = WINDOWS_RELEASE_DIR / "AkvaLink.exe"
+    print("\u2022 sign: AkvaLink.exe (Authenticode)")
+    cmd = [str(signtool), "sign", "/f", pfx, "/fd", "SHA256",
+           "/tr", "http://timestamp.digicert.com", "/td", "SHA256"]
+    password = os.environ.get(WIN_CERT_PASSWORD_ENV)
+    if password:
+        cmd += ["/p", password]
+    cmd.append(str(exe))
+    _run(cmd, dry_run, cwd=WINDOWS_RELEASE_DIR)
+    return True
+
+
 # ---- pipeline ----------------------------------------------------------------
 
 def build_apk(version: str, code: int, dry_run: bool) -> None:
@@ -129,10 +176,11 @@ def build_windows(version: str, code: int, dry_run: bool) -> None:
     if os.name != "nt":
         print("\u2022 build: Windows \u2014 skipped (only builds on a Windows host)")
         return
-    print("\u2022 build: Windows (unsigned)")
+    print("\u2022 build: Windows")
     _run(_flutter_cmd(["build", "windows", "--release",
                        f"--build-name={version}", f"--build-number={code}"]), dry_run)
-    _zip_dir(WINDOWS_RELEASE_DIR, DIST_APP_DIR / windows_asset_name(version), dry_run)
+    signed = sign_windows_exe(dry_run)
+    _zip_dir(WINDOWS_RELEASE_DIR, DIST_APP_DIR / windows_asset_name(version, signed), dry_run)
 
 
 def main(argv: list[str] | None = None) -> int:

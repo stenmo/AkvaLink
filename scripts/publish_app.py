@@ -40,7 +40,12 @@ def collect_assets(version: str) -> list[Path]:
     from release_app import apk_asset_name, windows_asset_name  # local import: avoid a hard Flutter dep at module load
 
     assets: list[Path] = []
-    for name in (apk_asset_name(version), windows_asset_name(version)):
+    names = [apk_asset_name(version)]
+    # Prefer the signed Windows zip if it was built; fall back to unsigned.
+    signed_name = windows_asset_name(version, signed=True)
+    unsigned_name = windows_asset_name(version, signed=False)
+    names.append(signed_name if (DIST_APP_DIR / signed_name).is_file() else unsigned_name)
+    for name in names:
         image = DIST_APP_DIR / name
         if image.is_file():
             assets.append(image)

@@ -1,0 +1,110 @@
+name: Windows signed build
+
+# Builds the Windows companion app from the released tag on a fresh
+# GitHub-hosted runner and submits it to SignPath Foundation for free
+# Authenticode signing (see CODESIGNING.md). SignPath's origin verification
+# requires the build to come from a Trusted Build System (GitHub Actions),
+# so this is the *only* path that produces the signed .exe that ships on
+# the release — scripts/release_app.py's local Windows build stays for
+# quick local testing only and is never submitted for signing.
+#
+# Needs these repo secrets/variables (from the SignPath dashboard, only
+# available once the https://signpath.org/apply application is approved):
+#   secrets.SIGNPATH_API_TOKEN        - API token for a SignPath CI user
+#   vars.SIGNPATH_ORGANIZATION_ID     - organization ID
+#   vars.SIGNPATH_PROJECT_SLUG        - project slug
+#   vars.SIGNPATH_SIGNING_POLICY_SLUG - signing policy slug
+# Until those are set, this workflow fails harmlessly at the signing step
+# and never touches the local build/release process.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build+sign (e.g. v0.4.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-sign:
+    runs-on: windows-latest
+    steps:
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: app_flutter
+        run: flutter pub get
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: echo "version=$(cat version.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Build Windows release
+        working-directory: app_flutter
+        run: >
+          flutter build windows --release
+          --build-name=${{ steps.version.outputs.version }}
+          --build-number=${{ github.run_number }}
+
+      - name: Zip unsigned build
+        shell: bash
+        run: |
+          cd app_flutter/build/windows/x64/runner/Release
+          7z a -tzip "$GITHUB_WORKSPACE/unsigned.zip" .
+
+      - name: Upload unsigned artifact
+        id: upload-unsigned-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-unsigned
+          path: unsigned.zip
+
+      - name: Submit signing request
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: '${{ vars.SIGNPATH_ORGANIZATION_ID }}'
+          project-slug: '${{ vars.SIGNPATH_PROJECT_SLUG }}'
+          signing-policy-slug: '${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}'
+          github-artifact-id: '${{ steps.upload-unsigned-artifact.outputs.artifact-id }}'
+          wait-for-completion: true
+          output-artifact-directory: 'signed'
+
+      - name: Package signed zip
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          zip_name="akvalink-app-windows-v${version}.zip"
+          (cd signed && 7z a -tzip "$GITHUB_WORKSPACE/$zip_name" .)
+          sha256sum "$zip_name" > "$zip_name.sha256"
+
+      - name: Replace unsigned asset on the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          version="${{ steps.version.outputs.version }}"
+          gh release delete-asset "$tag" "akvalink-app-windows-v${version}-unsigned.zip" --repo "$GITHUB_REPOSITORY" --yes || true
+          gh release delete-asset "$tag" "akvalink-app-windows-v${version}-unsigned.zip.sha256" --repo "$GITHUB_REPOSITORY" --yes || true
+          gh release upload "$tag" "akvalink-app-windows-v${version}.zip" "akvalink-app-windows-v${version}.zip.sha256" --repo "$GITHUB_REPOSITORY" --clobber
