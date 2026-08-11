@@ -4,6 +4,15 @@
 > Everything else lives in *Future ideas* below — that's the parking lot,
 > not the work list.
 
+> **Product focus (decided after the Aug 2026 external review — see
+> [docs/EXTERNAL_REVIEW_2026-08.md](docs/EXTERNAL_REVIEW_2026-08.md)):**
+> the *product* is **Matter over Thread + BLE** — battery-powered,
+> waterproof, multi-year. Wi-Fi station/AP and ESPHome are *supported
+> alternative builds*; ESP-NOW, `--display`, Wi-Fi TWT and NORA-B2 are
+> *experimental*. New features land on the core variants first, and the
+> headline (README, landing page) leads with Thread + BLE.
+> **Theme for everything below: replace breadth with evidence.**
+
 ---
 
 ## Now — pick ONE and finish it
@@ -80,15 +89,50 @@ gets started.
       service the connected device exposes. Feature, not a bug — BLE OTA ↔ BLE
       firmware is correct today.
 
-## Next — first measurement
+## Next — first measurement (the gate for everything else)
 
-After the EVK works, **one** small step. No new features yet.
+After the EVK works, **one** small step. No new features yet. The external
+review was blunt and right: *"the best next deliverable is a graph showing
+a 24-hour current trace from the real hardware."*
 
-- [ ] **Measure the actual average current** in the default Thread SED
-      build. PPK2, Joulescope, Otii, or a 10 Ω shunt + scope on the
-      EVK 3V3 rail. One number. Compare to the model in
-      [docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md).
-      Whatever the number is, that decides the next move.
+- [ ] **Measure the actual current profile** of the default Thread SED
+      build (PPK2, Joulescope, Otii, or 10 Ω shunt + scope on the EVK 3V3
+      rail). Not just one average — measure the **states separately**:
+      1. Cold boot · 2. Matter commissioning · 3. Thread attached + idle ·
+      4. Thread poll event · 5. DS18B20 conversion · 6. Matter attribute
+      report · 7. **Failed attach / border-router loss** · 8. Reconnection ·
+      9. Steady state ≥ 12–24 h.
+      Capture average, min sleep current, TX peaks, energy per
+      sample/report/day. **The failure states may set the real worst-case
+      battery life** — a sensor that hunts for a missing Thread network all
+      winter drains fast. Compare against the model in
+      [docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md); whatever
+      the numbers say decides the next move.
+- [ ] **Then: publish measured vs modeled separately** — update the web
+      battery table + README to the review's presentation ("Measured on
+      EVK: … / Modeled: … / Expected practical: 5–7 y / assumptions").
+      Never show the modeled 12 y without the practical qualifier beside it.
+
+## External review follow-ups (Aug 2026) — quick doc/web wins
+
+From [docs/EXTERNAL_REVIEW_2026-08.md](docs/EXTERNAL_REVIEW_2026-08.md).
+Small, no-hardware-needed items; each is a candidate for "Now", one at a time.
+
+- [ ] **Landing page status strip + maturity wording** — replace "Available
+      now" with "Working EVK prototype / firmware available"; add a one-line
+      project-status strip near the top (EN + SV).
+- [ ] **Download decision tree** — "Which build do I want?" five-line
+      chooser; mark **Matter/Thread as Recommended**; group Wi-Fi/AP/ESPHome
+      as alternatives and ESP-NOW as experimental.
+- [ ] **Consistent status vocabulary** — Implemented / Hardware-verified /
+      Measured / Experimental / Planned, used identically on web, README and
+      docs; convert the roadmap checklist into a feature matrix with those
+      labels.
+- [ ] **Real prototype photo** above the conceptual renders on the landing
+      page (EVK + probe, labeled).
+- [ ] **Release variant maturity matrix** — per released binary: built-in-CI /
+      boot-tested / hardware-tested / connectivity-tested / OTA-tested /
+      power-measured. Don't say "supported" for "compiles".
 
 ## Done / shipped
 
@@ -143,9 +187,44 @@ above has happened.
 - Deep sleep cycles (5–10 min between full samples).
 - Power DS18B20 from a switched GPIO + move 1-Wire pull-up to the
   switched rail.
+- **Battery divider must be switched on the custom PCB** — the planned
+  390 kΩ + 100 kΩ divider draws ~6.7 µA ≈ 59 mAh/year if permanently
+  connected (external review §5). MOSFET-switch it or drive the top from a
+  GPIO only during measurement; cap at the ADC input + settling time.
+- **Battery reporting: broad states beat fake precision** — alkaline
+  terminal voltage depends on temperature/load/chemistry/recovery; consider
+  Good / Replace soon / Critical instead of a % (review §5).
 - Audit hidden leaks (LDO Iq, stray pull-ups, floating GPIOs,
   e-ink driver standby). Use `rtc_gpio_isolate()` before deep sleep.
 - **Target: < 50 µA average** in normal mode, **< 15 µA** in storage.
+
+## Robustness & testing (external review, Aug 2026)
+> Full context in [docs/EXTERNAL_REVIEW_2026-08.md](docs/EXTERNAL_REVIEW_2026-08.md).
+
+- **Design explicitly for network failure** — exponential backoff, capped
+  immediate retries, reduced scanning after prolonged failure, persistent
+  failed-attach counter, low-power orphaned mode, button-triggered fast
+  recovery, distinct "not commissioned" vs "commissioned but network
+  unavailable". Deserves its own power test — may set the real worst-case
+  battery life.
+- **Stateful, observable adaptive sampling** — formalise fast/slow into a
+  named state machine (Stable / Changing / Alert / Network-recovery /
+  Low-battery / Storage) and expose the current state in logs + BLE
+  diagnostics so power traces are interpretable.
+- **Versioned NVS configuration** — schema version, defaults, migration
+  function, CRC/validity marker, factory-reset policy, separate network vs
+  application reset. Do this before settings sprawl further.
+- **Host-CI tests at the logic boundary** — extract threshold/hysteresis,
+  sampling transitions, keepalive timing, alert crossings, battery mapping
+  and history rollover into platform-neutral modules; run them in CI like
+  the Python suite. Don't unit-test ESP-IDF/Matter itself.
+- **Minimal HIL smoke test** — one EVK on a test machine: build-flash-boot,
+  BLE adv discovery, temperature sanity, factory-reset. Even manually
+  triggered nightly beats nothing.
+- **Probe & connector hardening (custom PCB)** — load switch for the probe
+  rail, ESD/TVS at the connector, series R on DQ, replaceable probe
+  connector outside the sealed compartment, accelerated soak tests in
+  chlorinated + salt water, drift logging vs a reference thermometer.
 
 ## Winter Storage Mode
 > See [docs/WINTER_STORAGE_MODE.md](docs/WINTER_STORAGE_MODE.md).
@@ -170,6 +249,12 @@ above has happened.
 > See [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md).
 
 - Pick panel (recommendation: Waveshare 2.9" or 4.2" SPI).
+- [x] **Data path for the `--display` receiver — ESP-NOW** ✓ (Aug 2026) —
+  `main/espnow_display.cpp`: Wi-Fi STA (never associates) on
+  `CONFIG_AKVALINK_ESPNOW_CHANNEL`, receives + validates
+  `akvalink_espnow_payload_t` broadcasts from `--espnow` sensors, logs with
+  the ↑red/↓blue colour language and keeps the latest reading for the
+  future panel driver. Radio stays in RX — mains/USB demo target like `--ap`.
 - Wire on EVK MikroBUS 2; native ESP-IDF SPI driver in
   `main/eink_display.{cpp,h}`.
 - Layout: big digit + battery + trend + relative timestamp.
@@ -316,9 +401,27 @@ above has happened.
     characteristics (see [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)).
     **Not yet done:** the `/history` 24 h/7 d sparkline chart — smallest
     viable next step if wanted.
+- **Temperature history sparkline, end-to-end** — firmware half ✓ already
+  shipped: `web_page.cpp` keeps 24 h × 5-min + 7 d × 1-h ring buffers and
+  serves `/history` JSON; the device's own page draws a sparkline from it.
+  Remaining: the **app** chart (poll `/history` like `/trend`/`/stats`)
+  and, later, a GATT characteristic for the `--ble` variant.
+- [x] **Rate-of-change display ("heating +0.8 °C/h")** ✓ (Aug 2026) —
+  `/trend` already carried `delta_c_per_min`; now surfaced as °C/h (or °F/h)
+  on the device's own page and in the app's temperature card, shown only
+  while actually rising/falling, in the ↑red/↓blue colour language.
+- [x] **App demo mode ("Try without hardware")** ✓ (Aug 2026) —
+  `app_flutter/lib/net/demo_controller.dart`: a home-screen toggle feeds a
+  simulated pool day (time-compressed, 1 s = 2 demo minutes) through the
+  normal temperature/trend/rate/history UI. Deterministic, no network, no
+  permissions — screenshots and store listings for free.
 - **Home Assistant integration** — works today over Matter; also evaluate a
   native path (local HTTP/JSON REST or MQTT-over-LAN) for users who want
   richer history/automation without a Matter controller.
+  - **MQTT discovery** ✓ — already shipped: `station_web.cpp`
+    `mqtt_publish_discovery()` publishes the retained
+    `homeassistant/sensor/.../config` message + availability topic on
+    connect; device auto-appears in HA with zero YAML.
 - Keep every path **local and private** — reuse the same threshold/report
   logic; no new cloud dependency.
 

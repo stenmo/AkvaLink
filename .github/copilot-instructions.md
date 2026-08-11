@@ -17,6 +17,52 @@ AkvaLink is the productised, demo-focused clean-room version.
 - Real product trajectory (waterproof probe, battery enclosure, multi-year life)
 - Optional non-Matter direct-to-app path (BLE or local Wi-Fi, no cloud)
 
+## Product focus — three tiers (decided Aug 2026)
+
+After the external review (see
+[docs/EXTERNAL_REVIEW_2026-08.md](../docs/EXTERNAL_REVIEW_2026-08.md) —
+its theme: **"replace breadth with evidence"**), the variants are tiered:
+
+- **Core (the product):** Matter over Thread (`thread`, default) + BLE-only
+  (`--ble`). Battery-powered, multi-year, no hub required for BLE.
+- **Alternative builds (supported):** Wi-Fi station (`--station`), SoftAP
+  (`--ap`), Matter-over-Wi-Fi (`--wifi`), ESPHome.
+- **Experimental:** ESP-NOW (`--espnow`), display receiver (`--display`),
+  Wi-Fi TWT, NORA-B2 port.
+
+Rules that follow from this:
+- **New features land on the core variants first** (or with a stated reason
+  why not). Never ship a feature to an experimental variant that the core
+  lacks.
+- **Headline surfaces (README top, landing-page hero) lead with Thread + BLE.**
+  The other variants are listed, not promoted.
+- **Experimental variants must never gate a release** — if one breaks, drop
+  it from the release rather than delay the core.
+- Don't call a variant "supported" because it compiles. Maturity labels
+  below.
+
+## Status vocabulary — use everywhere, identically
+
+Five labels, no synonyms: **Implemented / Hardware-verified / Measured /
+Experimental / Planned.** Applies to web pages, README, docs and release
+notes. "Works" without a label is banned; if unsure which label is true,
+it's *Implemented* at most.
+
+## Battery-life claims — measured vs modeled, always separated
+
+The battery numbers are the product's identity — treat them as claims that
+need evidence:
+- **Never publish the modeled "~12 years" without the practical qualifier
+  (≈5–7 y from self-discharge, temperature, network conditions) immediately
+  beside it.** README table, web pages, app — everywhere.
+- Present as: *Measured on EVK* (pending until the PPK2 run) / *Modeled* /
+  *Expected practical* — three separate rows, with test assumptions stated.
+- Any change to power-related code or claims: check web (EN+SV), README and
+  docs/POWER_AND_HARDWARE.md stay consistent in the same commit.
+- The single most important open task is the 24-hour measured current trace
+  (see TODO "Next — first measurement"). Don't start new power *claims* or
+  power *features* before it exists — measure, then optimise.
+
 ## Architecture
 
 ```
@@ -143,9 +189,11 @@ confirmed compatible:
   (see `main/app_main.cpp`) unless there's a specific, documented reason not
   to — pass `false` for DFS-only if full light sleep isn't confirmed safe yet.
 
-**Target battery life on 2× AA in pool monitoring (28-29 °C, 0.25 °C threshold):**
-- Thread SED: ~12 years
-- Wi-Fi disconnect mode: ~9 years
+**Target battery life on 2× AA in pool monitoring (28-29 °C, 0.25 °C threshold)
+— all MODELED, not measured (see "Battery-life claims" above); practical
+expectation ≈5–7 years for the Thread number:**
+- Thread SED: ~12 years (draw-limited model)
+- Wi-Fi disconnect mode: ~9 years (model; mode not implemented yet)
 - Wi-Fi TWT @ 60 s: ~1.8 years (always reachable, requires Wi-Fi 6 AP)
 
 ## Code conventions
