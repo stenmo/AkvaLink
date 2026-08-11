@@ -178,6 +178,14 @@ Small, no-hardware-needed items; each is a candidate for "Now", one at a time.
   assets aren't CORS-fetchable). `ble-note` text also gained proper `pip install
   esptool` / prebuilt-binary instructions and the v4→v5 hyphenated-subcommand
   heads-up (`write_flash` → `write-flash`).
+- **Serial terminal card** on the web page (`id="serial"`, both EN/SV) — Web
+  Serial log viewer at 115200 8-N-1, ANSI colours preserved, copy/save/clear,
+  and a **Reset board** button that pulses DTR/RTS like esptool so the boot log
+  can be re-triggered without unplugging. Scrapes the half-block QR art from
+  `qr_console.c` out of the log and redraws it dark-on-white (the log pane
+  renders it inverted, hence unscannable), plus the manual pairing code and
+  `MT:` payload. Covers the old "web-based commissioning helper" nice-to-have.
+  **Read-only by design — see the note below before adding serial commands.**
 
 ---
 
@@ -524,5 +532,31 @@ Remaining (not yet done): CI via `esphome/build-action`.
 ## Nice-to-haves
 - Multi-probe support (DS2482-800 already gives 8 channels).
 - Cold-storage / freezer alarm endpoint (Boolean State cluster).
-- Web-based commissioning helper page (renders QR + PIN — for demo videos).
 - Swedish localisation of the boot banner. *Tack Micke.* 🇸🇪
+
+## Serial console stays read-only — decided Aug 2026, don't re-open
+
+A firmware-side keypress handler on the console (`q` reprint QR, `i` info,
+`p` open commissioning window, `f` factory reset) was considered and
+**rejected**. Reasons, in order of weight:
+
+- **Power.** The Thread SED default powers down peripherals *and* flash in
+  light sleep (`CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP=y`,
+  `CONFIG_ESP_SLEEP_POWER_DOWN_FLASH=y`, tickless idle). A task waiting on
+  stdin needs the console peripheral clocked and a runnable task — either a
+  banned busy-poll or a PM lock. Both invalidate the multi-year claim.
+- **Flash.** Commands are only useful on the Matter builds, and `--wifi`
+  already overflowed its OTA partition by 0x810 bytes; `thread` is at ~2%
+  free. The variants that want it are the ones that can't afford it.
+- **Already solved.** "Reprint the QR" was the headline command; the web
+  page's **Reset board** button does it with zero firmware and zero power.
+- **Third control plane.** BLE GATT and the AP/station HTTP UI already exist,
+  plus the GPIO9 escape hatch and station's 5 s long-press. A serial command
+  set would be one more contract to keep in sync (see the GATT drift warning
+  in copilot-instructions.md).
+- **Footgun.** Single-keypress factory reset un-commissions a deployed device
+  on stray bytes or line noise.
+
+If it ever comes back: Kconfig-gated, default **off**, `--ap`/`--station`
+only (mains-powered, already no full light sleep), nothing destructive
+without a two-step confirm. Measure on the PPK2 first.

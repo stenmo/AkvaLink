@@ -22,7 +22,7 @@ VOID = {
 }
 
 # The sections both pages must have, in either language.
-SECTION_IDS = {"live", "why", "hardware", "battery", "how", "variants", "download", "status"}
+SECTION_IDS = {"live", "serial", "why", "hardware", "battery", "how", "variants", "download", "status"}
 
 
 class _BalanceChecker(HTMLParser):

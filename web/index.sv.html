@@ -155,6 +155,34 @@
   .progress { height: 8px; background: var(--foam); border-radius: 999px; overflow: hidden; margin: 4px 0 10px; display: none; }
   .progress .bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--water), var(--water-2)); transition: width .2s; }
 
+  /* Serial terminal card */
+  .term-card { max-width: 880px; text-align: left; padding: 22px 24px; }
+  .term-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .term-bar .file-btn { padding: 6px 15px; font-size: .85rem; }
+  .term-bar .file-btn[aria-disabled="true"] { opacity: .35; pointer-events: none; }
+  .term-state { color: var(--muted); font-size: .84rem; margin-left: auto; }
+  .term-state.on { color: var(--ok); font-weight: 600; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+  .term-log {
+    margin: 0; padding: 14px 16px; border-radius: 10px; height: 330px; overflow: auto;
+    background: #06232f; color: #b9d4de; white-space: pre; font-size: .78rem; line-height: 1.5;
+  }
+  .term-log .ln { display: block; }
+  .term-hint { color: #5e8494; }
+  .term-out { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .term-out h3 { margin: 0 0 4px; color: var(--deep); font-size: 1.05rem; }
+  /* Halvblocks-QR:en radar bara ihop sig när radhöjden är exakt lika med em-rutan. */
+  .qr-art {
+    display: inline-block; margin: 12px 0 0; padding: 12px; border-radius: 8px;
+    background: #fff; color: #000; border: 1px solid var(--line);
+    font-size: 10px; line-height: 10px; white-space: pre; overflow-x: auto; max-width: 100%;
+  }
+  .pair-code {
+    display: inline-block; margin-top: 12px; padding: 6px 14px; border-radius: 8px;
+    background: var(--foam); color: var(--deep); font-weight: 700;
+    letter-spacing: .08em; font-size: 1.05rem;
+  }
+
   /* Tables */
   .tbl-scroll { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
@@ -830,6 +858,36 @@
   </div>
 </section>
 
+<section id="serial">
+  <div class="wrap">
+    <h2>Serieterminal</h2>
+    <p class="lead">Koppla in kortet med USB och läs loggen direkt här — ingen PuTTY, ingen <code>idf.py monitor</code>, inget att installera. Låst till <strong>115200 baud, 8-N-1, ingen flödeskontroll</strong>, vilket är vad alla AkvaLink-byggen använder.</p>
+    <p class="lead">Den håller också utkik efter <strong>Matter-kopplingskoden</strong> i loggen och ritar om den nedan, stor och mörk mot vitt, så att mobilkameran faktiskt kan läsa den.</p>
+    <div class="live-card term-card" id="serialCard">
+      <div class="term-bar">
+        <span class="file-btn" id="serBtn" role="button">Anslut serieport</span>
+        <span class="file-btn" id="serReset" role="button" aria-disabled="true" title="Pulsar DTR/RTS för att starta om kortet">Starta om kortet</span>
+        <span class="file-btn" id="serCopy" role="button">Kopiera</span>
+        <span class="file-btn" id="serSave" role="button">Spara .txt</span>
+        <span class="file-btn" id="serClear" role="button">Rensa</span>
+        <span class="term-state" id="serState">Inte ansluten</span>
+      </div>
+      <pre class="term-log mono" id="serLog"><span class="ln term-hint">Anslut ett kort och tryck sedan på Starta om kortet — QR-koden skrivs bara ut vid uppstart.</span></pre>
+      <div class="term-out" id="serOut" hidden>
+        <h3>Matter-kopplingskod</h3>
+        <p class="ota-hint" style="margin:0">Skanna den med Apple Home, Google Home eller Alexa för att lägga till sensorn i ditt hem.</p>
+        <pre class="qr-art mono" id="serQr" hidden></pre>
+        <div><span class="pair-code mono" id="serManual" hidden></span></div>
+        <p class="ble-note mono" id="serPayload"></p>
+      </div>
+      <p class="ble-note" id="serNote"></p>
+    </div>
+    <p class="ble-note"><strong>Ett program per port.</strong> Koppla ner här innan du använder <a href="#download">Flasha via USB</a> eller <code>idf.py monitor</code> — operativsystemet låter bara ett av dem hålla serieporten åt gången.</p>
+    <p class="ble-note"><strong>Starta om kortet</strong> pulsar DTR/RTS-linjerna på samma sätt som esptool gör, vilket startar om modulen utan att du drar ur sladden. QR-koden, firmwareversionen och sensorns ID skrivs alla ut under de första två sekunderna, så det är oftast snabbaste sättet att se dem.</p>
+    <p class="ble-note"><strong>Terminalen bara lyssnar.</strong> Den skickar aldrig något till enheten, och det är med flit: att ta emot kommandon skulle kräva en uppgift som ligger vaken på serieporten, vilket är precis vad den fleråriga batteritiden bygger på att slippa. Använd <a href="#live">Bluetooth</a> eller enhetens egen webbsida för att ändra inställningar. Kräver <strong>Chrome, Edge eller Opera</strong> (dator, v89+) — Firefox och Safari har inte Web Serial-API:et, så kortet döljer sina knappar där.</p>
+  </div>
+</section>
+
 <section id="security">
   <div class="wrap">
     <h2>Säkerhet</h2>
@@ -1497,6 +1555,266 @@
       statusEl.className = 'status';
     }
   })();
+})();
+</script>
+
+<script>
+// Serieterminal (Web Serial API) — läser bara loggen, men plockar också ut
+// Matter-kopplingskoden ur uppstartsutskriften och ritar om den skannbar.
+(function () {
+  var T = {
+    connect:     'Anslut serieport',
+    disconnect:  'Koppla ner',
+    notConn:     'Inte ansluten',
+    connected:   'Ansluten \u00b7 115200 8-N-1',
+    denied:      'Ingen port vald',
+    failed:      'Kunde inte öppna porten — används den av något annat?',
+    lost:        'Anslutningen bröts',
+    resetting:   'Startar om kortet\u2026',
+    resetFailed: 'Omstarten misslyckades — adaptern kanske saknar DTR/RTS',
+    copied:      'Loggen kopierad till urklipp',
+    unsupported: 'Den här webbläsaren saknar Web Serial-API:et. Öppna sidan i Chrome, Edge eller Opera på en dator (v89+) för att använda terminalen.',
+    payload:     'Nyttolast: '
+  };
+
+  var logEl     = document.getElementById('serLog');
+  var btn       = document.getElementById('serBtn');
+  var resetBtn  = document.getElementById('serReset');
+  var copyBtn   = document.getElementById('serCopy');
+  var saveBtn   = document.getElementById('serSave');
+  var clearBtn  = document.getElementById('serClear');
+  var stateEl   = document.getElementById('serState');
+  var noteEl    = document.getElementById('serNote');
+  var outEl     = document.getElementById('serOut');
+  var qrEl      = document.getElementById('serQr');
+  var manualEl  = document.getElementById('serManual');
+  var payloadEl = document.getElementById('serPayload');
+
+  // Web Serial finns bara i Chromium (och bara på dator) — samma stödyta som
+  // "Flasha via USB"-knappen ovan.
+  if (typeof navigator === 'undefined' || !('serial' in navigator)) {
+    [btn, resetBtn, copyBtn, saveBtn, clearBtn].forEach(function (b) { b.style.display = 'none'; });
+    stateEl.textContent = '';
+    noteEl.textContent = T.unsupported;
+    return;
+  }
+
+  var MAX_LINES = 1500;
+  var port = null, reader = null, closing = false;
+  var decoder = new TextDecoder();
+  var pending = '';   // avhuggen rad mellan två datablock
+  var plain = [];     // ANSI-fri kopia, för Kopiera / Spara
+  var qrRows = [];    // halvblocksrader som samlas till aktuell QR-kod
+
+  // Firmwarens ANSI-palett, justerad för kortets mörkt turkosa bakgrund.
+  var ANSI = {
+    30: '#41606e', 31: '#ff6f6f', 32: '#5fd38d', 33: '#ffd166',
+    34: '#7bb0ff', 35: '#d99bff', 36: '#4fd3e8', 37: '#c7dfe8',
+    90: '#5e8494', 91: '#ff8f8f', 92: '#84e2ab', 93: '#ffe08a',
+    94: '#9cc6ff', 95: '#e6b8ff', 96: '#7fe3f2', 97: '#ffffff'
+  };
+
+  function setState(text, ok) {
+    stateEl.textContent = text;
+    stateEl.className = ok ? 'term-state on' : 'term-state';
+  }
+
+  // Behåll SGR-sekvenser (färg), släng markörflytt och skärmrensning.
+  function tidy(line) {
+    return line.replace(/\r/g, '').replace(/\x1b\[[0-9;?]*[A-Za-z]/g, function (seq) {
+      return seq.slice(-1) === 'm' ? seq : '';
+    });
+  }
+
+  function stripAnsi(line) { return line.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, ''); }
+
+  // Bygger raden som DOM-noder (aldrig innerHTML) så att enhetens utskrifter
+  // inte kan injicera markup i sidan.
+  function appendLine(line) {
+    var hint = logEl.querySelector('.term-hint');
+    if (hint) hint.remove();
+
+    var row = document.createElement('span');
+    row.className = 'ln';
+    var colour = null, bold = false;
+    var parts = line.split(/\x1b\[([0-9;]*)m/);
+    for (var i = 0; i < parts.length; i++) {
+      if (i % 2) {   // udda element är de fångade SGR-parametrarna
+        (parts[i] || '0').split(';').forEach(function (n) {
+          var code = parseInt(n, 10) || 0;
+          if (code === 0) { colour = null; bold = false; }
+          else if (code === 1) bold = true;
+          else if (code === 22) bold = false;
+          else if (code === 39) colour = null;
+          else if (ANSI[code]) colour = ANSI[code];
+        });
+        continue;
+      }
+      if (!parts[i]) continue;
+      var span = document.createElement('span');
+      span.textContent = parts[i];
+      if (colour) span.style.color = colour;
+      if (bold) span.style.fontWeight = '700';
+      row.appendChild(span);
+    }
+    if (!row.childNodes.length) row.appendChild(document.createTextNode(' '));
+
+    var atBottom = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 24;
+    logEl.appendChild(row);
+    while (logEl.childElementCount > MAX_LINES) logEl.removeChild(logEl.firstElementChild);
+    if (atBottom) logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  // En QR-rad består bara av mellanslag och de tre halvblockstecken som
+  // firmwaren ritar med (qr_console.c). Loggrader ser aldrig ut så.
+  var QR_ROW = /^[ \u2580\u2584\u2588]+$/;
+
+  function flushQr() {
+    var rows = qrRows;
+    qrRows = [];
+    var solid = rows.filter(function (r) { return /[\u2580\u2584\u2588]/.test(r); });
+    if (solid.length < 8) return;   // för liten för att vara en riktig kod — troligen brus
+    qrEl.textContent = rows.join('\n');
+    qrEl.hidden = false;
+    outEl.hidden = false;
+  }
+
+  function scanForCodes(bare) {
+    var q = bare.match(/(MT:[0-9A-Z.\-]{10,})/);
+    if (q) {
+      payloadEl.textContent = T.payload + q[1];
+      outEl.hidden = false;
+    }
+    var m = bare.match(/pairing code:\s*\[?([\d\s-]{11,})/i);
+    if (m) {
+      var digits = m[1].replace(/\D/g, '');
+      manualEl.textContent = digits.length === 11
+        ? digits.slice(0, 4) + '-' + digits.slice(4, 7) + '-' + digits.slice(7)
+        : digits;
+      manualEl.hidden = false;
+      outEl.hidden = false;
+    }
+  }
+
+  function handleLine(raw) {
+    var line = tidy(raw);
+    var bare = stripAnsi(line);
+    plain.push(bare);
+    if (plain.length > MAX_LINES) plain.splice(0, plain.length - MAX_LINES);
+
+    if (QR_ROW.test(bare)) {
+      qrRows.push(bare);
+    } else {
+      if (qrRows.length) flushQr();
+      scanForCodes(bare);
+    }
+    appendLine(line);
+  }
+
+  function feed(chunk) {
+    pending += chunk;
+    var lines = pending.split('\n');
+    pending = lines.pop();
+    lines.forEach(handleLine);
+    if (pending.length > 4096) { handleLine(pending); pending = ''; }   // ingen radbrytning i sikte
+  }
+
+  async function readLoop() {
+    while (port && port.readable && !closing) {
+      reader = port.readable.getReader();
+      try {
+        for (;;) {
+          var chunk = await reader.read();
+          if (chunk.done) break;
+          feed(decoder.decode(chunk.value, { stream: true }));
+        }
+      } catch (e) {
+        if (!closing) setState(T.lost);
+      } finally {
+        try { reader.releaseLock(); } catch (e) { /* redan släppt */ }
+        reader = null;
+      }
+    }
+  }
+
+  async function connect() {
+    var chosen;
+    try {
+      chosen = await navigator.serial.requestPort();
+    } catch (e) {
+      setState(T.denied);   // användaren stängde dialogen
+      return;
+    }
+    try {
+      await chosen.open({ baudRate: 115200, dataBits: 8, stopBits: 1, parity: 'none', flowControl: 'none' });
+    } catch (e) {
+      setState(T.failed);
+      return;
+    }
+    port = chosen;
+    closing = false;
+    pending = '';
+    btn.textContent = T.disconnect;
+    resetBtn.setAttribute('aria-disabled', 'false');
+    setState(T.connected, true);
+    readLoop();
+  }
+
+  async function disconnect() {
+    closing = true;
+    if (reader) { try { await reader.cancel(); } catch (e) { /* redan borta */ } }
+    if (port) { try { await port.close(); } catch (e) { /* redan borta */ } }
+    port = null;
+    btn.textContent = T.connect;
+    resetBtn.setAttribute('aria-disabled', 'true');
+    setState(T.notConn);
+  }
+
+  // esptools omstartssekvens: håll EN låg via RTS, låt IO0 (DTR) vara hög så
+  // att chippet startar applikationen i stället för ROM-laddaren.
+  async function resetBoard() {
+    if (!port) return;
+    try {
+      await port.setSignals({ dataTerminalReady: false, requestToSend: true });
+      await new Promise(function (done) { setTimeout(done, 120); });
+      await port.setSignals({ dataTerminalReady: false, requestToSend: false });
+      setState(T.resetting, true);
+    } catch (e) {
+      setState(T.resetFailed);
+    }
+  }
+
+  btn.addEventListener('click', function () { port ? disconnect() : connect(); });
+  resetBtn.addEventListener('click', resetBoard);
+
+  copyBtn.addEventListener('click', function () {
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(plain.join('\n')).then(function () { setState(T.copied, true); });
+  });
+
+  saveBtn.addEventListener('click', function () {
+    var blob = new Blob([plain.join('\n')], { type: 'text/plain' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'akvalink-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '') + '.log';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  clearBtn.addEventListener('click', function () {
+    logEl.textContent = '';
+    plain = [];
+    qrRows = [];
+    qrEl.hidden = true;
+    manualEl.hidden = true;
+    outEl.hidden = true;
+  });
+
+  // Att dra ur kabeln avslutar inte läsloopen av sig själv.
+  navigator.serial.addEventListener('disconnect', function (e) {
+    if (port && e.target === port) disconnect();
+  });
 })();
 </script>
 
