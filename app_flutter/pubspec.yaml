@@ -3,7 +3,7 @@ description: "AkvaLink — battery-powered Matter pool & aquatic temperature sen
 publish_to: 'none'
 
 # Kept in lock-step with the firmware version (../version.txt).
-version: 0.3.5+1
+version: 0.4.0+1
 
 environment:
   sdk: ^3.11.4

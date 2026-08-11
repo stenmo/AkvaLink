@@ -30,6 +30,31 @@ def test_pyserial_available():
     from serial.tools import list_ports  # noqa: F401
 
 
+def test_app_version_stamps_match_version_txt():
+    # Three stamps must agree: version.txt (release source of truth),
+    # pubspec.yaml `version:` and lib/app_version.dart kAppVersion (the value
+    # the app SHOWS in its UI). v0.4.0 shipped with the latter two stale —
+    # the exe metadata was right (release_app.py overrides at build time)
+    # but the app displayed 0.3.5 in the hero header.
+    import re
+
+    version = (REPO_ROOT / "version.txt").read_text(encoding="utf-8").strip()
+
+    pubspec = (REPO_ROOT / "app_flutter" / "pubspec.yaml").read_text(encoding="utf-8")
+    m = re.search(r"^version:\s*([0-9.]+)\+\d+\s*$", pubspec, re.MULTILINE)
+    assert m, "no version: line in pubspec.yaml"
+    assert m.group(1) == version, (
+        f"app_flutter/pubspec.yaml version {m.group(1)} != version.txt {version}"
+    )
+
+    dart = (REPO_ROOT / "app_flutter" / "lib" / "app_version.dart").read_text(encoding="utf-8")
+    m = re.search(r"kAppVersion\s*=\s*'([0-9.]+)'", dart)
+    assert m, "no kAppVersion in app_version.dart"
+    assert m.group(1) == version, (
+        f"app_version.dart kAppVersion {m.group(1)} != version.txt {version}"
+    )
+
+
 def _partition_rows():
     rows = []
     for line in (REPO_ROOT / "config" / "partitions.csv").read_text(encoding="utf-8").splitlines():
