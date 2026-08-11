@@ -33,6 +33,19 @@ menu "AkvaLink"
             temperature. Use it to verify probe wiring and the sensor before
             building the full app.
 
+    config AKVALINK_DISPLAY
+        bool "Build the e-ink display receiver scaffold (boot-only stub)"
+        default n
+        help
+            Build the --display AkvaLink variant: the NORA-W40-based e-ink
+            display receiver, boot-only for now. No sensor task, no Matter,
+            no BLE, no e-ink driver yet — just the build/Kconfig plumbing so
+            this second physical device (see docs/EINK_DISPLAY_PLAN.md and
+            the "Product design" section on the web page) has somewhere to
+            grow into. How it receives a temperature reading (BLE central,
+            Matter subscriber, ...) is a deliberately open decision — don't
+            wire one up here without being asked.
+
     config AKVALINK_AP
         bool "Build the Wi-Fi AP variant (SoftAP + web page, no Matter/BLE)"
         default n

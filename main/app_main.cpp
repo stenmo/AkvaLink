@@ -27,7 +27,8 @@
 #include "freertos/task.h"
 
 #if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && \
-    !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW
+    !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW && \
+    !CONFIG_AKVALINK_DISPLAY
 #include <esp_matter.h>
 #include <esp_matter_console.h>
 #include <esp_matter_ota.h>
@@ -129,7 +130,8 @@ static void __attribute__((unused)) configure_light_sleep(bool light_sleep_enabl
 #endif
 
 #if !CONFIG_AKVALINK_BLE_ONLY && !CONFIG_AKVALINK_SENSOR_TEST && \
-    !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW
+    !CONFIG_AKVALINK_AP && !CONFIG_AKVALINK_STATION && !CONFIG_AKVALINK_ESPNOW && \
+    !CONFIG_AKVALINK_DISPLAY
 
 // ---------------------------------------------------------------------------
 // Matter event callback. Mostly informational — we just log lifecycle events
@@ -226,6 +228,8 @@ extern "C" void app_main()
             "ap"
 #elif CONFIG_AKVALINK_ESPNOW
             "espnow"
+#elif CONFIG_AKVALINK_DISPLAY
+            "display"
 #else
             "matter"   // both thread and wifi use Matter/chip NVS namespaces
 #endif
@@ -255,9 +259,15 @@ extern "C" void app_main()
 #if CONFIG_AKVALINK_SENSOR_TEST
     // --- DS18B20 test variant: read the 1-Wire sensor and log it. No Matter,
     // no BLE, no networking — for verifying probe wiring / the sensor.
-    ESP_LOGI(TAG, "🌡 DS18B20 test — reading sensor only (no Matter/BLE)");
+    ESP_LOGI(TAG, "\U0001F321 DS18B20 test — reading sensor only (no Matter/BLE)");
     ds18b20_task_start();
-    ESP_LOGI(TAG, "✨ Sensor test up — watch the log for temperature");
+    ESP_LOGI(TAG, "\u2728 Sensor test up — watch the log for temperature");
+#elif CONFIG_AKVALINK_DISPLAY
+    // --- E-ink display receiver: boot-only scaffold, no driver yet. Separate
+    // physical device from the DS18B20 probe (see docs/EINK_DISPLAY_PLAN.md) —
+    // no sensor task, no Matter, no BLE. How it receives a reading is still
+    // an open decision; don't wire one up here without being asked.
+    ESP_LOGI(TAG, "\U0001F5A5 AkvaLink display receiver — boot-only scaffold, e-ink driver not implemented yet");
 #elif CONFIG_AKVALINK_BLE_ONLY
     // --- BLE-only variant: no Matter, no Thread, no Wi-Fi. Just a standalone
     // NimBLE GATT server + the sensor task feeding it. For homes with no hub.

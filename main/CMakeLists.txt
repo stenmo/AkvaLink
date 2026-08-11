@@ -2,9 +2,15 @@
 
 set(SRCS
     "app_main.cpp"
-    "ds18b20_task.cpp"
     "battery.cpp"
 )
+
+# Every variant except the display receiver has a DS18B20 on 1-Wire. The
+# display is a separate physical device (no probe) — see
+# docs/EINK_DISPLAY_PLAN.md — so it skips the sensor task entirely.
+if(NOT DEFINED ENV{AKVALINK_DISPLAY})
+    list(APPEND SRCS "ds18b20_task.cpp")
+endif()
 
 # DS2482 Click board support (I2C-to-1-Wire bridge on MikroBUS 1).
 # Activated by: idf.py -DAPP_USE_DS2482=1 build
@@ -65,8 +71,10 @@ endif()
 # The --ble / --sensor variants drop the whole Matter stack (with no
 # Thread/Wi-Fi transport esp-matter's NetworkCommissioning static_assert fails).
 # Gate on env vars for the same expansion-timing reason as above.
-set(AQ_PRIV_REQ nvs_flash driver esp_timer esp_adc
-    espressif__ds18b20 espressif__onewire_bus)
+set(AQ_PRIV_REQ nvs_flash driver esp_timer esp_adc)
+if(NOT DEFINED ENV{AKVALINK_DISPLAY})
+    list(APPEND AQ_PRIV_REQ espressif__ds18b20 espressif__onewire_bus)
+endif()
 if(DEFINED ENV{AKVALINK_BLE})
     list(APPEND AQ_PRIV_REQ bt esp_app_format app_update)
 elseif(DEFINED ENV{AKVALINK_AP})

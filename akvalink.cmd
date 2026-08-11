@@ -11,7 +11,7 @@ REM   --rebuild            --clean then --build
 REM   --erase    [COM<N>]  Erase NVS via esptool (autodetect if no port)
 REM   --flash    [COM<N>]  Flash 4 partitions via esptool (autodetect if no port)
 REM   --log      [COM<N>]  Serial monitor (autodetect if no port)
-REM   Variant flags: --wifi --ble --ap --station --espnow --sensor --clickboard
+REM   Variant flags: --wifi --ble --ap --station --espnow --sensor --clickboard --display
 REM
 REM   App (Flutter companion):
 REM   --app [--windows]    Build the Windows app (default)
@@ -71,6 +71,7 @@ set "DO_AP=0"
 set "DO_STATION=0"
 set "DO_ESPNOW=0"
 set "DO_CLICKBOARD=0"
+set "DO_DISPLAY=0"
 set "DO_SETUP=0"
 set "DO_MENUCONFIG=0"
 set "PORT_ERASE="
@@ -98,6 +99,7 @@ if /I "%A%"=="--ap"         ( set "DO_AP=1"         & set "ANY_FLAG=1" & shift &
 if /I "%A%"=="--station"    ( set "DO_STATION=1"    & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--espnow"     ( set "DO_ESPNOW=1"     & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="--clickboard" ( set "DO_CLICKBOARD=1" & set "ANY_FLAG=1" & shift & goto parse_args )
+if /I "%A%"=="--display"    ( set "DO_DISPLAY=1"    & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="setup"        ( set "DO_SETUP=1"      & set "ANY_FLAG=1" & shift & goto parse_args )
 if /I "%A%"=="menuconfig"   ( set "DO_MENUCONFIG=1" & set "ANY_FLAG=1" & shift & goto parse_args )
 
@@ -164,6 +166,11 @@ if "%DO_SENSOR%"=="1" (
     set "ROLE_TXT=DS18B20 bench read test -- no Matter or BLE"
     set "NET_TXT=none, serial console only"
 )
+if "%DO_DISPLAY%"=="1" (
+    set "ROLE_TXT=E-ink display receiver -- boot-only stub, no driver yet"
+    set "NET_TXT=none yet, serial console only"
+    set "SENSOR_TXT=none -- separate device from the DS18B20 probe"
+)
 if "%DO_CLICKBOARD%"=="1" set "SENSOR_TXT=I2C 1-Wire via DS2482-800 Click board (MikroBUS 1)"
 echo   Platform: u-blox NORA-W40 (Espressif ESP32-C6) -- WSL2 build
 echo   Role:     !ROLE_TXT!
@@ -202,10 +209,13 @@ if "%DO_BUILD%"=="1" (
     if "%DO_STATION%"=="1"    set "BUILD_ARGS=!BUILD_ARGS! --station"
     if "%DO_ESPNOW%"=="1"     set "BUILD_ARGS=!BUILD_ARGS! --espnow"
     if "%DO_CLICKBOARD%"=="1" set "BUILD_ARGS=!BUILD_ARGS! --clickboard"
+    if "%DO_DISPLAY%"=="1"    set "BUILD_ARGS=!BUILD_ARGS! --display"
     if "%DO_CLICKBOARD%"=="1" (
         echo === --build --clickboard: DS2482 Click board ^(I2C-to-1-Wire, MikroBUS 1^) ===
     ) else if "%DO_SENSOR%"=="1" (
         echo === --build --sensor: DS18B20 read test ^(no Matter/BLE^) ===
+    ) else if "%DO_DISPLAY%"=="1" (
+        echo === --build --display: e-ink display receiver scaffold ^(boot-only stub^) ===
     ) else if "%DO_AP%"=="1" (
         echo === --build --ap: Wi-Fi SoftAP + web page ^(needs external power^) ===
     ) else if "%DO_STATION%"=="1" (
@@ -266,6 +276,7 @@ if "%DO_FLASH%"=="1" (
     if "!DO_AP!"=="1"      set "VSLUG=ap"
     if "!DO_STATION!"=="1" set "VSLUG=station"
     if "!DO_ESPNOW!"=="1"  set "VSLUG=espnow"
+    if "!DO_DISPLAY!"=="1" set "VSLUG=display"
     if "!DO_CLICKBOARD!"=="1" set "VSLUG=!VSLUG!-ds2482"
     set "BLD=%DEV_DIR%\build\!VSLUG!"
     if not exist "!BLD!\akvalink.bin" (
