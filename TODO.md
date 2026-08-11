@@ -95,9 +95,18 @@ After the EVK works, **one** small step. No new features yet. The external
 review was blunt and right: *"the best next deliverable is a graph showing
 a 24-hour current trace from the real hardware."*
 
-- [ ] **Measure the actual current profile** of the default Thread SED
-      build (PPK2, Joulescope, Otii, or 10 Ω shunt + scope on the EVK 3V3
-      rail). Not just one average — measure the **states separately**:
+**Scope: the two core variants only — `thread` first, then `--ble`.**
+PPK2 is in hand. First attempt gave strange results and was parked —
+almost certainly one of the classic EVK traps (S1 left ON so the onboard
+regulator fed the module in parallel with the meter, and/or USB still
+connected back-feeding the I/O rail through the UART bridge). The full
+step-by-step setup — J3/S1/USB/pull-up placement, verified against the
+EVK-NORA-W40 User Guide §2.4 — is now in
+[docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md#measuring-with-the-nordic-ppk2-on-the-evk-nora-w40).
+
+- [ ] **Thread SED (default build): measure the current profile.** PPK2 in
+      source-meter mode on J3, S1 OFF, USB unplugged. Not just one
+      average — measure the **states separately**:
       1. Cold boot · 2. Matter commissioning · 3. Thread attached + idle ·
       4. Thread poll event · 5. DS18B20 conversion · 6. Matter attribute
       report · 7. **Failed attach / border-router loss** · 8. Reconnection ·
@@ -108,6 +117,12 @@ a 24-hour current trace from the real hardware."*
       winter drains fast. Compare against the model in
       [docs/POWER_AND_HARDWARE.md](docs/POWER_AND_HARDWARE.md); whatever
       the numbers say decides the next move.
+- [ ] **`--ble`: measure twice.** Baseline with the shipped defaults
+      (`CONFIG_AKVALINK_BLE_PM=n`), then flip `CONFIG_AKVALINK_BLE_PM=y`
+      (see `config/sdkconfig.defaults.ble`) and measure again — that flag
+      has been waiting on exactly this measurement before it can default on.
+      States: advertising idle · connected + notifying · sensor conversion ·
+      steady state ≥ 12 h.
 - [ ] **Then: publish measured vs modeled separately** — update the web
       battery table + README to the review's presentation ("Measured on
       EVK: … / Modeled: … / Expected practical: 5–7 y / assumptions").

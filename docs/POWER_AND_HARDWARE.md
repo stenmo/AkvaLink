@@ -236,6 +236,64 @@ At ~35 µA average draw, pool monitoring on 2× AA realistically lands at
 > here — longer cable runs (up to ~30 m) are more reliable over the I2C
 > bridge than direct GPIO 1-Wire.
 
+## Measuring with the Nordic PPK2 on the EVK-NORA-W40
+
+The measurement that gates everything else (see TODO "Next"). Targets, in
+order: **`thread` (default build)**, then **`--ble`** (its light-sleep PM is
+off by default behind `CONFIG_AKVALINK_BLE_PM` *pending exactly this
+measurement* — measure baseline first, then flip it on and measure again).
+
+**EVK facts** (verified against the EVK-NORA-W40 User Guide,
+UBXDOC-465451970-3360, §2.4 + §3):
+
+- **J3** = current header for the module's **VCC** supply; **J4** = same for
+  **VCCIO**. Measure J3 first — CPU + radio dominate. For a total-power
+  number, J4 needs a pass too (I/O pads, pull-ups).
+- **DIP switch S1 must be OFF** — it feeds the module from the onboard 3.3 V
+  regulator. Left ON, the regulator supplies the module *in parallel* with
+  your meter and the trace reads near-zero garbage.
+- The user guide explicitly supports the power-analyzer hookup (§2.4.3,
+  Figure 5): instrument across the EVK pins, module supplied by the
+  instrument. Expect ~100s of nA of leakage wherever a module signal still
+  connects to an EVK peripheral; a second supply channel for the EVK
+  peripherals reduces it.
+
+**PPK2 setup that works:**
+
+1. PPK2 in **source-meter mode**, 3.3 V, feeding the module through J3
+   (source mode auto-ranges cleanly across the ~µA sleep floor ↔ ~130 mA TX
+   peaks; ampere-meter mode + a separate supply invites range/ground trouble).
+2. **S1 OFF.**
+3. **USB unplugged for the actual measurement.** This is the classic
+   "strange results" cause: with J5 connected, the board is powered through
+   the protection diodes and the USB-UART bridge back-feeds I/O pins —
+   offsets of hundreds of µA to mA, plus ground loops through the PC. Flash
+   + verify over USB first, note what the log says, then unplug and measure
+   headless. If serial logs are needed *during* a trace, power the EVK
+   peripherals from a second channel per §2.4.3 and accept the documented
+   leakage.
+4. **Account for the sensor pull-up.** The DS18B20's 4.7 kΩ pull-up must be
+   tied to the module-side rail (after J3) or the sensor's bus current never
+   crosses the meter — readings then disagree with a full-system estimate.
+   Same for the probe's VDD wire. Decide "module only" vs "module + sensor"
+   and note it with the result.
+5. **Trace length matters.** Thread SED polls every 120 s — anything under
+   ~10 min tells you nothing about the average; the headline number needs
+   12–24 h. Mark boot/commissioning on the trace and exclude it from the
+   steady-state average (or report it as its own state).
+6. Thread runs need a **commissioned device with the border router up** —
+   otherwise the trace shows attach-retry behaviour. That state is worth
+   measuring too (it may set the winter worst case), but label it.
+
+**Record per state** (the TODO "Next" protocol): average, sleep floor, TX
+peak, event duration/frequency, energy per sample / per report / per day —
+for: boot, commissioning, idle attached, poll event, DS18B20 conversion,
+attribute report, failed attach / BR loss, reconnection, ≥ 12 h steady state.
+
+Results land here (replacing the modeled numbers below with a "Measured on
+EVK" row), in the web battery tables (EN + SV), and in
+[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).
+
 ## Low power (Thread SED)
 
 | Feature | Setting | Effect |
