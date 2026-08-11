@@ -87,8 +87,8 @@ supported (`--clickboard` build flag).
 # Or just bench-test the DS18B20 probe (no Matter/BLE — logs temp every 30 s)
 .\akvalink.cmd --sensor build
 
-# Or the e-ink display receiver — boot-only scaffold today (no driver, no
-# sensor, no Matter/BLE yet). See docs/EINK_DISPLAY_PLAN.md.
+# Or the e-ink display receiver — listens for --espnow sensors' broadcasts
+# and logs them (no e-ink panel driver yet). See docs/EINK_DISPLAY_PLAN.md.
 .\akvalink.cmd --display build
 
 # Or the ESP-NOW variant — deep-sleep broadcast, no hub, no provisioning,
@@ -174,7 +174,7 @@ analysis (DTIM strategies, TWT setup, sensor variants, schematic).
 - [x] 24 h / 7 d history — sparkline on the device's own page and in the app (Wi-Fi path; RAM-only, resets on reboot)
 - [x] Matter keepalive report so a dead-flat sensor isn't marked offline
 - [ ] **Real power measurement (Joulescope/PPK2) + deep sleep** — see [TODO.md](TODO.md)
-- [ ] **E-ink display** (big-digit, battery, trend) — `--display` build variant exists as a boot-only scaffold (no driver, no data source yet); see [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md)
+- [ ] **E-ink display** (big-digit, battery, trend) — `--display` build variant receives --espnow sensor broadcasts and logs them; e-ink panel driver still to come; see [docs/EINK_DISPLAY_PLAN.md](docs/EINK_DISPLAY_PLAN.md)
 - [ ] Wi-Fi 6 TWT integration in code (currently DTIM only)
 - [ ] Battery voltage monitoring — firmware side is in (`CONFIG_AKVALINK_BATTERY_ADC`, off by default), but no board has the sense divider fitted, so the level reads as *unknown*
 - [ ] OTA via Matter

@@ -34,6 +34,7 @@ const _brand = {
   'mdns',
   'http',
   'local',
+  'demo',
 };
 
 /// Correctly-spelled English words appearing in the UI.
@@ -178,6 +179,13 @@ const _englishDict = {
   'back',
   'few',
   'minutes',
+  'app',
+  'without',
+  'hardware',
+  'simulated',
+  'data',
+  'heating',
+  'cooling',
 };
 
 /// Correctly-spelled Swedish words appearing in the UI.
@@ -327,6 +335,15 @@ const _swedishDict = {
   'minuter',
   'lägst',
   'högst',
+  'demoläge',
+  'prova',
+  'appen',
+  'utan',
+  'hårdvara',
+  'simulerad',
+  'pooldata',
+  'värms',
+  'svalnar',
 };
 
 /// Split a UI string into lowercase word tokens, dropping punctuation, digits,

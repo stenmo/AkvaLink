@@ -1,4 +1,4 @@
-# AkvaLink e-ink display receiver — boot-only scaffold, no driver yet.
+# AkvaLink e-ink display receiver — ESP-NOW receiver, no panel driver yet.
 # No Matter, no BLE, no sensor task. See docs/EINK_DISPLAY_PLAN.md.
 #
 #   akvalink.cmd --display --rebuild
@@ -9,7 +9,9 @@
 
 CONFIG_AKVALINK_DISPLAY=y
 
-# Strip every radio stack — nothing to commission or provision yet.
+# Thread/BLE off; the plain ESP-IDF Wi-Fi driver stays in (ESP-NOW needs the
+# PHY — station mode, never associates). CONFIG_ENABLE_WIFI_STATION=n only
+# disables the esp-matter Wi-Fi transport, not esp_wifi itself.
 CONFIG_OPENTHREAD_ENABLED=n
 CONFIG_OPENTHREAD_MTD=n
 CONFIG_ENABLE_WIFI_STATION=n

@@ -162,12 +162,19 @@ static volatile bool         s_ota_finish = false;
 static volatile bool         s_ota_abort  = false;
 static uint16_t              s_att_mtu    = 23;   // ATT MTU, updated on negotiation
 
+// adv_configure()/build_adv_data() only exist in the EXT_ADV build — the
+// legacy-adv path (EXT_ADV=n, e.g. --station) has no use for them, and an
+// unguarded declaration there is a -Wunused-function warning.
+#if CONFIG_BT_NIMBLE_EXT_ADV
 static void adv_configure(void);
+#endif
 static void adv_start(void);
 #if CONFIG_AKVALINK_BLE_CODED_PHY
 static void adv_rotate_start(uint8_t instance);
 #endif
+#if CONFIG_BT_NIMBLE_EXT_ADV
 static int  build_adv_data(struct os_mbuf **out);
+#endif
 
 // Shared by the alert high/low characteristics. The length check matters: a
 // short write would otherwise leave the int16 half-updated.

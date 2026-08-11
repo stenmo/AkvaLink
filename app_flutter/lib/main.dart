@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'ble/akvalink_controller.dart';
+import 'net/demo_controller.dart';
 import 'ota/ota_controller.dart';
 import 'ota/wifi_ota_controller.dart';
 import 'screens/home_screen.dart';
@@ -39,6 +40,7 @@ class AkvaLinkApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => WifiOtaController(strings: strings),
         ),
+        ChangeNotifierProvider(create: (_) => DemoController()),
       ],
       child: MaterialApp(
         title: 'AkvaLink',

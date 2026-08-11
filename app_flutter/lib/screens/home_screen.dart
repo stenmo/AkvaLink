@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../net/demo_controller.dart';
 import '../net/station_discovery.dart';
 import '../ota/ota_controller.dart';
 import '../ota/wifi_ota_controller.dart';
@@ -111,6 +112,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const WifiOtaCard(),
                                 const SizedBox(height: 16),
                                 _WifiSetupEntry(onTap: _openWifiSetup),
+                                const SizedBox(height: 16),
+                                const _DemoModeCard(),
                                 const SizedBox(height: 20),
                                 const _FooterNote(),
                                 const SizedBox(height: 10),
@@ -149,6 +152,27 @@ class _WifiSetupEntry extends StatelessWidget {
         subtitle: Text(s.wifiSetupIntro),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// "Try without hardware" — feeds a simulated pool day through the normal
+/// temperature/trend/history UI (net/demo_controller.dart).
+class _DemoModeCard extends StatelessWidget {
+  const _DemoModeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.watch<Strings>();
+    final demo = context.watch<DemoController>();
+    return Card(
+      child: SwitchListTile(
+        secondary: const Icon(Icons.science_outlined, color: AkvaColors.deep),
+        title: Text(s.demoModeTitle),
+        subtitle: Text(s.demoModeSubtitle),
+        value: demo.enabled,
+        onChanged: (v) => demo.setEnabled(v),
       ),
     );
   }

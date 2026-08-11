@@ -159,6 +159,8 @@ static const char PAGE_HTML[] = R"HTML(<!doctype html>
   .u{font-size:1.6rem;color:#28c2d6}
   .arrow{font-size:2rem;line-height:1;transition:color .4s}
   .arrow.up{color:#ff7043}.arrow.dn{color:#64b5f6}.arrow.ok{color:#90a4ae}
+  .rate{margin-top:4px;font-size:.85rem;opacity:.75;min-height:1.1em}
+  .rate.up{color:#ff7043}.rate.dn{color:#64b5f6}
   .s{opacity:.7;margin-top:8px;font-size:.95rem}
   .stats{opacity:.6;margin-top:6px;font-size:.8rem}
   .b{opacity:.5;margin-top:4px;font-size:.8rem}.b.low{color:#ff6b6b;opacity:.85}
@@ -179,6 +181,7 @@ static const char PAGE_HTML[] = R"HTML(<!doctype html>
     <span class="t" id="t">&ndash;</span><span class="u" id="u" role="button" title="Click to switch &deg;C/&deg;F" style="cursor:pointer">&deg;C</span>
     <span class="arrow ok" id="arr">&rarr;</span>
   </div>
+  <div class="rate" id="rate"></div>
   <div class="s" id="s">reading&hellip;</div>
   <div class="stats" id="st"></div>
   <div class="b" id="b"></div>
@@ -209,9 +212,18 @@ var histData={m:[],h:[]},tab=0;
 // re-render everything without waiting on the next poll.
 var useFahrenheit=false;
 var lastCelsius=null,lastMin=null,lastMax=null;
+var lastRate=null,lastDir='stable';
 function conv(c){return useFahrenheit?(c*9/5+32):c;}
 function fmt(v){return v==null?'\u2013':Number(conv(v)).toFixed(1);}
 function renderTemp(){document.getElementById('t').textContent=lastCelsius==null?'\u2013':fmt(lastCelsius);}
+function renderRate(){
+  var el=document.getElementById('rate');
+  if(lastRate==null||lastDir==='stable'){el.textContent='';el.className='rate';return;}
+  var r=Math.abs(useFahrenheit?lastRate*9/5:lastRate);
+  var u=useFahrenheit?'\u00b0F/h':'\u00b0C/h';
+  el.textContent=(lastDir==='rising'?'heating +':'cooling \u2212')+r.toFixed(1)+' '+u;
+  el.className='rate '+(lastDir==='rising'?'up':'dn');
+}
 function renderStats(){
   var s=document.getElementById('st');
   s.textContent=(lastMin==null&&lastMax==null)?'':'\u2193\u00a0'+fmt(lastMin)+'\u00b0 \u00b7 \u2191\u00a0'+fmt(lastMax)+'\u00b0';
@@ -219,7 +231,7 @@ function renderStats(){
 document.getElementById('u').onclick=function(){
   useFahrenheit=!useFahrenheit;
   document.getElementById('u').textContent=useFahrenheit?'\u00b0F':'\u00b0C';
-  renderTemp();renderStats();
+  renderTemp();renderStats();renderRate();
   if(histData.minute||histData.hourly)showTab(tab);
 };
 function u(){fetch('/temp',{cache:'no-store'}).then(r=>r.json()).then(d=>{
@@ -234,6 +246,9 @@ function trend(){fetch('/trend',{cache:'no-store'}).then(function(r){return r.ok
   if(d.direction==='rising'){a.textContent='\u2191';a.className='arrow up';}
   else if(d.direction==='falling'){a.textContent='\u2193';a.className='arrow dn';}
   else{a.textContent='\u2192';a.className='arrow ok';}
+  lastDir=d.direction;
+  lastRate=typeof d.delta_c_per_min==='number'?d.delta_c_per_min*60:null;
+  renderRate();
 }).catch(function(){});}
 function stats(){fetch('/stats',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
   if(!d)return;

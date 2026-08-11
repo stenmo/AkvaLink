@@ -89,6 +89,10 @@ class Strings {
     required this.history24h,
     required this.history7d,
     required this.historyBuilding,
+    // Demo mode (simulated pool data, no hardware needed).
+    required this.demoModeTitle,
+    required this.demoModeSubtitle,
+    required this.demoModeLive,
   });
 
   final String tagline;
@@ -161,6 +165,9 @@ class Strings {
   final String historyTitle;
   final String history24h;
   final String history7d;
+  final String demoModeTitle;
+  final String demoModeSubtitle;
+  final String demoModeLive;
   final String historyBuilding;
 
   // ---- Parameterised helpers (kept out of the constructor) ----------------
@@ -214,6 +221,13 @@ class Strings {
   String historyRange(String min, String max) => isSwedish
       ? 'Lägst $min °C · högst $max °C'
       : 'Low $min °C · high $max °C';
+
+  /// Rate-of-change line under the reading, e.g. "heating +0.8 °C/h".
+  String heatingRate(String rate) =>
+      isSwedish ? 'värms +$rate' : 'heating +$rate';
+
+  String coolingRate(String rate) =>
+      isSwedish ? 'svalnar −$rate' : 'cooling −$rate';
 
   bool get isSwedish => this == sv;
 
@@ -307,6 +321,11 @@ class Strings {
     history7d,
     historyBuilding,
     historyRange('26.1', '29.8'),
+    demoModeTitle,
+    demoModeSubtitle,
+    demoModeLive,
+    heatingRate('0.8 °C/h'),
+    coolingRate('0.4 °C/h'),
   ];
 
   // ---- The two locales ----------------------------------------------------
@@ -388,6 +407,9 @@ class Strings {
     history24h: '24 h',
     history7d: '7 d',
     historyBuilding: 'Building history — check back in a few minutes.',
+    demoModeTitle: 'Demo mode',
+    demoModeSubtitle: 'Try the app without hardware — simulated pool data.',
+    demoModeLive: 'Demo — simulated pool data',
   );
 
   static const sv = Strings(
@@ -468,6 +490,9 @@ class Strings {
     history24h: '24 h',
     history7d: '7 d',
     historyBuilding: 'Bygger historik — kom tillbaka om några minuter.',
+    demoModeTitle: 'Demoläge',
+    demoModeSubtitle: 'Prova appen utan hårdvara — simulerad pooldata.',
+    demoModeLive: 'Demo — simulerad pooldata',
   );
 
   /// Pick a locale's strings from a [Locale] (falls back to English).

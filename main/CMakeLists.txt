@@ -49,6 +49,12 @@ if(DEFINED ENV{AKVALINK_ESPNOW})
     list(APPEND SRCS "espnow_sensor.cpp")
 endif()
 
+# Display receiver (build.sh --display): ESP-NOW receiver half — catches the
+# --espnow sensors' broadcasts. E-ink driver itself not implemented yet.
+if(DEFINED ENV{AKVALINK_DISPLAY})
+    list(APPEND SRCS "espnow_display.cpp")
+endif()
+
 # QR-in-console for Matter commissioning: renders the "MT:..." setup payload as
 # a scannable ASCII QR (Nayuki qrcodegen, MIT). Needs CHIP's GetQRCode, so it's
 # Matter-only — i.e. neither the BLE nor the no-Matter env var is set.
@@ -84,6 +90,8 @@ elseif(DEFINED ENV{AKVALINK_STATION})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif esp_http_server lwip
         wifi_provisioning mdns bt mqtt esp_timer esp_app_format app_update)
 elseif(DEFINED ENV{AKVALINK_ESPNOW})
+    list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif)
+elseif(DEFINED ENV{AKVALINK_DISPLAY})
     list(APPEND AQ_PRIV_REQ esp_wifi esp_event esp_netif)
 elseif(NOT DEFINED ENV{AKVALINK_NO_MATTER})
     list(APPEND AQ_PRIV_REQ esp_matter esp_matter_console chip openthread mbedtls)

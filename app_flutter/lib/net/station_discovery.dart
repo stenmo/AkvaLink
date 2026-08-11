@@ -91,6 +91,28 @@ TrendDirection? parseTrendJson(String body) {
   }
 }
 
+/// Direction plus the rate of change (`delta_c_per_min`) from `/trend`.
+class TrendInfo {
+  const TrendInfo({required this.direction, this.deltaCPerMin});
+  final TrendDirection direction;
+  final double? deltaCPerMin;
+
+  /// °C per hour — what a pool owner actually thinks in.
+  double? get deltaCPerHour => deltaCPerMin == null ? null : deltaCPerMin! * 60;
+}
+
+/// Parses `/trend` into [TrendInfo]. Returns null on a malformed body.
+TrendInfo? parseTrendInfoJson(String body) {
+  final dir = parseTrendJson(body);
+  if (dir == null) return null;
+  double? rate;
+  try {
+    final v = (jsonDecode(body) as Map<String, dynamic>)['delta_c_per_min'];
+    if (v is num) rate = v.toDouble();
+  } catch (_) {}
+  return TrendInfo(direction: dir, deltaCPerMin: rate);
+}
+
 /// Min/max since boot, from main/web_page.cpp's `/stats` endpoint.
 class TempStats {
   const TempStats({this.min, this.max});
@@ -275,13 +297,13 @@ class StationDiscoveryController extends ChangeNotifier {
     return parseTempJson(r.body);
   }
 
-  /// Fetch the rising/stable/falling direction from the station's `/trend`.
-  Future<TrendDirection?> fetchTrend() async {
+  /// Fetch the direction + rate of change from the station's `/trend`.
+  Future<TrendInfo?> fetchTrend() async {
     final ip = _ip;
     if (ip == null) return null;
     final r = await _client.get(Uri.parse('http://$ip/trend'));
     if (r.statusCode != 200) return null;
-    return parseTrendJson(r.body);
+    return parseTrendInfoJson(r.body);
   }
 
   /// Fetch the min/max since boot from the station's `/stats`.

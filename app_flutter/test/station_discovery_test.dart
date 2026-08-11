@@ -79,6 +79,28 @@ void main() {
     });
   });
 
+  group('parseTrendInfoJson', () {
+    test('parses direction + rate, converts to °C/h', () {
+      final info = parseTrendInfoJson(
+        '{"direction":"rising","delta_c_per_min":0.02}',
+      );
+      expect(info!.direction, TrendDirection.rising);
+      expect(info.deltaCPerMin, closeTo(0.02, 1e-9));
+      expect(info.deltaCPerHour, closeTo(1.2, 1e-9));
+    });
+
+    test('missing rate leaves deltaCPerMin null', () {
+      final info = parseTrendInfoJson('{"direction":"stable"}');
+      expect(info!.direction, TrendDirection.stable);
+      expect(info.deltaCPerMin, isNull);
+      expect(info.deltaCPerHour, isNull);
+    });
+
+    test('returns null for malformed body', () {
+      expect(parseTrendInfoJson('not json'), isNull);
+    });
+  });
+
   group('parseStatsJson', () {
     test('parses min and max', () {
       final stats = parseStatsJson('{"min":26.10,"max":29.80,"since_s":3600}');

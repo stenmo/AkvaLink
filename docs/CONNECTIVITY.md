@@ -386,7 +386,7 @@ they pick BLE-only or Wi-Fi-standalone in the app.
 | Wi-Fi AP | `--ap` | Wi-Fi SoftAP, LwIP, HTTP (captive page), no Matter, no BLE |
 | Wi-Fi station | `--station` | Wi-Fi STA, LwIP, mDNS, HTTP, MQTT, NimBLE (provisioning), no Matter |
 | Sensor test | `--sensor` | 1-Wire only, no radio stacks (bench probe check) |
-| Display receiver (scaffold) | `--display` | Boot-only stub, no radio stacks, no sensor task — see [EINK_DISPLAY_PLAN.md](EINK_DISPLAY_PLAN.md) |
+| Display receiver | `--display` | ESP-NOW receiver — catches `--espnow` sensors' broadcasts and logs them; no e-ink panel driver yet — see [EINK_DISPLAY_PLAN.md](EINK_DISPLAY_PLAN.md) |
 | **Universal** (eventual goal) | `--all` *(stretch)* | All of the above, runtime mode select. Larger flash, but one SKU. |
 
 The `--all` build is the right end state for a polished product (one

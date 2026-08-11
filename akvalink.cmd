@@ -167,8 +167,8 @@ if "%DO_SENSOR%"=="1" (
     set "NET_TXT=none, serial console only"
 )
 if "%DO_DISPLAY%"=="1" (
-    set "ROLE_TXT=E-ink display receiver -- boot-only stub, no driver yet"
-    set "NET_TXT=none yet, serial console only"
+    set "ROLE_TXT=E-ink display receiver -- ESP-NOW listener, no panel driver yet"
+    set "NET_TXT=ESP-NOW receive (broadcast, no pairing)"
     set "SENSOR_TXT=none -- separate device from the DS18B20 probe"
 )
 if "%DO_CLICKBOARD%"=="1" set "SENSOR_TXT=I2C 1-Wire via DS2482-800 Click board (MikroBUS 1)"
@@ -215,7 +215,7 @@ if "%DO_BUILD%"=="1" (
     ) else if "%DO_SENSOR%"=="1" (
         echo === --build --sensor: DS18B20 read test ^(no Matter/BLE^) ===
     ) else if "%DO_DISPLAY%"=="1" (
-        echo === --build --display: e-ink display receiver scaffold ^(boot-only stub^) ===
+        echo === --build --display: e-ink display receiver ^(ESP-NOW listener^) ===
     ) else if "%DO_AP%"=="1" (
         echo === --build --ap: Wi-Fi SoftAP + web page ^(needs external power^) ===
     ) else if "%DO_STATION%"=="1" (

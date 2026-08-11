@@ -34,17 +34,16 @@ menu "AkvaLink"
             building the full app.
 
     config AKVALINK_DISPLAY
-        bool "Build the e-ink display receiver scaffold (boot-only stub)"
+        bool "Build the e-ink display receiver (ESP-NOW receiver, no panel driver yet)"
         default n
         help
             Build the --display AkvaLink variant: the NORA-W40-based e-ink
-            display receiver, boot-only for now. No sensor task, no Matter,
-            no BLE, no e-ink driver yet — just the build/Kconfig plumbing so
-            this second physical device (see docs/EINK_DISPLAY_PLAN.md and
-            the "Product design" section on the web page) has somewhere to
-            grow into. How it receives a temperature reading (BLE central,
-            Matter subscriber, ...) is a deliberately open decision — don't
-            wire one up here without being asked.
+            display receiver. Listens for --espnow sensors' broadcast
+            readings on CONFIG_AKVALINK_ESPNOW_CHANNEL and logs them; the
+            e-ink panel driver itself is not implemented yet (see
+            docs/EINK_DISPLAY_PLAN.md and the "Product design" section on
+            the web page). No sensor task, no Matter, no BLE. The radio
+            stays in RX — mains/USB-powered demo target, like --ap.
 
     config AKVALINK_AP
         bool "Build the Wi-Fi AP variant (SoftAP + web page, no Matter/BLE)"
@@ -73,7 +72,7 @@ menu "AkvaLink"
 
     config AKVALINK_ESPNOW_CHANNEL
         int "ESP-NOW Wi-Fi channel (1-13, must match receivers)"
-        depends on AKVALINK_ESPNOW
+        depends on AKVALINK_ESPNOW || AKVALINK_DISPLAY
         default 1
         range 1 13
         help

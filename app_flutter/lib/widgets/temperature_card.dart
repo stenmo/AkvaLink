@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../ble/akvalink_controller.dart';
+import '../net/demo_controller.dart';
 import '../net/station_discovery.dart';
 import '../strings.dart';
 import '../theme.dart';
@@ -25,7 +26,7 @@ class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
   Timer? _statsTimer;
   StationDiscoveryController? _pollDiscovery;
   double? _lanCelsius;
-  TrendDirection? _lanTrend;
+  TrendInfo? _lanTrend;
   TempStats? _lanStats;
   bool _useFahrenheit = false;
 
@@ -93,6 +94,7 @@ class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
   Widget build(BuildContext context) {
     final ble = context.watch<AkvaLinkController>();
     final discovery = context.watch<StationDiscoveryController>();
+    final demo = context.watch<DemoController>();
     final s = context.watch<Strings>();
 
     final bleConnected = ble.isConnected;
@@ -101,7 +103,11 @@ class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
     final double? celsius;
     final String subtitle;
     final Color subtitleColor;
-    if (bleConnected) {
+    if (demo.enabled) {
+      celsius = demo.celsius;
+      subtitle = s.demoModeLive;
+      subtitleColor = AkvaColors.water2;
+    } else if (bleConnected) {
       celsius = ble.temperatureC;
       subtitle = s.connectedTo(ble.deviceName);
       subtitleColor = AkvaColors.ok;
@@ -131,10 +137,11 @@ class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
 
     // Trend/min-max only exist on the Wi-Fi (/trend, /stats) path — the BLE
     // GATT contract has no equivalent characteristics.
+    final trendInfo = demo.enabled ? demo.trend : (lanFound ? _lanTrend : null);
     String? trendSymbol;
     var trendColor = AkvaColors.muted;
-    if (lanFound && _lanTrend != null) {
-      switch (_lanTrend!) {
+    if (trendInfo != null) {
+      switch (trendInfo.direction) {
         case TrendDirection.rising:
           trendSymbol = '↑';
           trendColor = const Color(0xFFFF7043);
@@ -147,9 +154,24 @@ class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
       }
     }
 
+    // "heating +0.8 °C/h" — shown only while actually rising/falling.
+    String? rateText;
+    final perHour = trendInfo?.deltaCPerHour;
+    if (trendInfo != null &&
+        trendInfo.direction != TrendDirection.stable &&
+        perHour != null) {
+      final v = _useFahrenheit ? perHour.abs() * 9 / 5 : perHour.abs();
+      final rate = '${v.toStringAsFixed(1)} °${_useFahrenheit ? 'F' : 'C'}/h';
+      rateText = trendInfo.direction == TrendDirection.rising
+          ? s.heatingRate(rate)
+          : s.coolingRate(rate);
+    }
+
     String? minMaxText;
-    final stats = _lanStats;
-    if (lanFound && stats != null && (stats.min != null || stats.max != null)) {
+    final stats = demo.enabled ? demo.stats : _lanStats;
+    if ((demo.enabled || lanFound) &&
+        stats != null &&
+        (stats.min != null || stats.max != null)) {
       final parts = <String>[];
       if (stats.min != null) {
         final v = _useFahrenheit ? stats.min! * 9 / 5 + 32 : stats.min!;
@@ -221,6 +243,18 @@ class _TemperatureReadoutCardState extends State<TemperatureReadoutCard> {
                 ],
               ],
             ),
+            if (rateText != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  rateText,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: trendColor,
+                  ),
+                ),
+              ),
             const SizedBox(height: 12),
             Text(
               subtitle,

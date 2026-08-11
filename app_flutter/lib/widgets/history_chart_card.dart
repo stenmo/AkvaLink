@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../net/demo_controller.dart';
 import '../net/station_discovery.dart';
 import '../strings.dart';
 import '../theme.dart';
@@ -69,10 +70,12 @@ class _HistoryChartCardState extends State<HistoryChartCard> {
   @override
   Widget build(BuildContext context) {
     final discovery = context.watch<StationDiscoveryController>();
+    final demo = context.watch<DemoController>();
     final s = context.watch<Strings>();
 
-    final h = _history;
-    if (discovery.phase != DiscoveryPhase.found || h == null || h.isEmpty) {
+    final h = demo.enabled ? demo.history : _history;
+    final available = demo.enabled || discovery.phase == DiscoveryPhase.found;
+    if (!available || h == null || h.isEmpty) {
       return const SizedBox.shrink();
     }
     final series = _weekView ? h.hourly : h.minute;

@@ -15,6 +15,7 @@
 #endif
 #include "station_web.h"
 #include "espnow_sensor.h"
+#include "espnow_display.h"
 #include "qr_console.h"
 
 #include "esp_log.h"
@@ -263,11 +264,13 @@ extern "C" void app_main()
     ds18b20_task_start();
     ESP_LOGI(TAG, "\u2728 Sensor test up — watch the log for temperature");
 #elif CONFIG_AKVALINK_DISPLAY
-    // --- E-ink display receiver: boot-only scaffold, no driver yet. Separate
-    // physical device from the DS18B20 probe (see docs/EINK_DISPLAY_PLAN.md) —
-    // no sensor task, no Matter, no BLE. How it receives a reading is still
-    // an open decision; don't wire one up here without being asked.
-    ESP_LOGI(TAG, "\U0001F5A5 AkvaLink display receiver — boot-only scaffold, e-ink driver not implemented yet");
+    // --- E-ink display receiver: catches --espnow sensors' broadcasts and
+    // logs them. Separate physical device from the DS18B20 probe (see
+    // docs/EINK_DISPLAY_PLAN.md) — no sensor task, no Matter, no BLE. The
+    // e-ink panel driver itself is still to come.
+    ESP_LOGI(TAG, "\U0001F5A5 AkvaLink display receiver — ESP-NOW listener (e-ink driver not implemented yet)");
+    akvalink_espnow_display_start();
+    ESP_LOGI(TAG, "\u2728 Display receiver up — waiting for --espnow sensor broadcasts");
 #elif CONFIG_AKVALINK_BLE_ONLY
     // --- BLE-only variant: no Matter, no Thread, no Wi-Fi. Just a standalone
     // NimBLE GATT server + the sensor task feeding it. For homes with no hub.

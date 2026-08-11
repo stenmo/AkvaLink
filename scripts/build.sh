@@ -155,7 +155,7 @@ case "$cmd" in
         case "$VARIANT" in
             ble*)    echo "=== Network: BLE-only (standalone NimBLE GATT, no Matter) ==" ;;
             sensor*) echo "=== Sensor-only test: read the sensor, no Matter/BLE ===" ;;
-            display*) echo "=== Display receiver: boot-only stub, no sensor/Matter/BLE yet ===" ;;
+            display*) echo "=== Display receiver: ESP-NOW listener, no e-ink driver yet ===" ;;
             ap*)     echo "=== Network: Wi-Fi SoftAP + captive web page (needs external power) ===" ;;
             station*) echo "=== Network: Wi-Fi client (BLE-provisioned) + akvalink.local web page ===" ;;
             espnow*) echo "=== Network: ESP-NOW broadcast (deep sleep, no hub) ===" ;;
@@ -223,7 +223,7 @@ Commands:
   build --wifi              Build the Matter-over-Wi-Fi variant
   build --ble               Build the standalone BLE GATT variant (no Matter)
   build --sensor            Build the sensor read test (no Matter/BLE)
-  build --display           Build the e-ink display receiver scaffold (boot-only stub)
+  build --display           Build the e-ink display receiver (ESP-NOW listener)
   build --clickboard        Build with DS2482 I2C-to-1-Wire Click board (MikroBUS 1)
   build --clickboard --wifi Combine both options
   menuconfig [--wifi|...]   Open idf.py menuconfig for a variant
