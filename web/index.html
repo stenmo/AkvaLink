@@ -332,20 +332,6 @@
   </div>
 </section>
 
-<section id="platforms">
-  <div class="wrap">
-    <h2>One firmware family, more silicon</h2>
-    <p class="lead">Same Matter/BLE app, same web &amp; app frontend — AkvaLink isn't tied to one chip.
-      Everything on this page is the NORA-W40 build; other modules are landing over time.</p>
-    <div class="grid">
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></div><h3>NORA-W40 <span class="chip-status available">Available now</span></h3>
-        <p>Espressif ESP32-C6 — Wi-Fi 6, Thread, BLE 5.3. The flagship build documented below.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15 9l-2 6-6 2 2-6z" fill="currentColor" stroke="none"/></svg></div><h3>NORA-B2 <span class="chip-status dev">In development</span></h3>
-        <p>Nordic nRF54L — BLE, Thread, Matter. A non-Espressif option, for teams that need a second silicon source or specific supply-chain sourcing requirements.</p></div>
-    </div>
-  </div>
-</section>
-
 <section id="app">
   <div class="wrap">
     <h2>Companion app</h2>
@@ -374,6 +360,258 @@
     <p class="cta"><a class="ghost" href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">App source &amp; build guide</a></p>
     <p class="ble-note">Windows and Android are prebuilt and attached to every <a href="https://github.com/stenmo/AkvaLink/releases/latest">GitHub release</a>. The Windows build is unsigned (SmartScreen will warn on first run) and the APK needs "install from unknown sources" — no app-store distribution yet. iOS, macOS and Linux still build from source; there's no Apple or Linux CI to sign/package them.</p>
     <p class="ble-note">Apple, Android, Windows and Linux/Tux are trademarks or symbols of their respective owners, named here only to show platform support — the icons above are our own monochrome glyphs, not the official logos.</p>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <h2>Download firmware</h2>
+    <p class="lead">Prebuilt single-image binaries for the NORA-W40 (ESP32-C6) — always the latest release.</p>
+    <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=latest&amp;logo=github"></a></p>
+
+    <div class="picker" id="variantPicker">
+      <h3 class="picker-title">Not sure which? Answer a couple of quick questions</h3>
+      <div class="picker-step" data-step="1">
+        <p class="picker-q">How do you want to reach it day to day?</p>
+        <div class="picker-opts">
+          <button type="button" class="picker-opt" data-goto="2-matter">A smart home app — Apple Home, Google Home, Alexa</button>
+          <button type="button" class="picker-opt" data-goto="2-ha">Home Assistant</button>
+          <button type="button" class="picker-opt" data-result="ble">Just my phone, directly — no hub</button>
+          <button type="button" class="picker-opt" data-goto="2-browser">Just a browser — no app at all</button>
+        </div>
+      </div>
+      <div class="picker-step" data-step="2-matter" hidden>
+        <p class="picker-q">Do you already have a Thread border router — HomePod mini/2, Apple TV 4K, Nest Hub (2nd gen+), or Echo (4th gen+)?</p>
+        <div class="picker-opts">
+          <button type="button" class="picker-opt" data-result="thread">Yes</button>
+          <button type="button" class="picker-opt" data-result="wifi">No / not sure</button>
+        </div>
+      </div>
+      <div class="picker-step" data-step="2-ha" hidden>
+        <p class="picker-q">Want zero extra setup, or do you already run MQTT?</p>
+        <div class="picker-opts">
+          <button type="button" class="picker-opt" data-result="esphome">Zero extra setup (ESPHome)</button>
+          <button type="button" class="picker-opt" data-result="station">I already use MQTT</button>
+        </div>
+      </div>
+      <div class="picker-step" data-step="2-browser" hidden>
+        <p class="picker-q">Do you have Wi-Fi to give it, or want a standalone hotspot with no router?</p>
+        <div class="picker-opts">
+          <button type="button" class="picker-opt" data-result="station">Join my Wi-Fi</button>
+          <button type="button" class="picker-opt" data-result="ap">Standalone hotspot, no router</button>
+        </div>
+      </div>
+      <div class="picker-step" data-step="result" id="pickerResult" hidden>
+        <p class="picker-q">Recommended: <strong id="pickerResultName"></strong> — <a href="#" id="pickerResultLink" class="dl-btn dl-ota">Jump to it ↓</a></p>
+        <button type="button" class="picker-restart" id="pickerRestart">Start over</button>
+      </div>
+    </div>
+
+    <h3 class="dl-subhead"><span class="dl-num">1</span>Flash it</h3>
+    <p class="ota-hint">Pick a variant, then flash the full image — command line, or straight from the browser over USB.</p>
+    <div class="grid">
+      <div class="dl-card" id="card-thread">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 5 17h14z"/><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="17" r="1.6" fill="currentColor" stroke="none"/></svg></span><h3>Thread</h3><p>Matter over Thread · best battery. Needs a hub — HomePod, Apple TV, Nest or Echo.</p>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlThread" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlThreadApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/thread.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
+      </div>
+      <div class="dl-card" id="card-wifi">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8.5a12 12 0 0 1 16 0"/><path d="M7 12a7.5 7.5 0 0 1 10 0"/><path d="M10 15.5a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg></span><h3>Wi-Fi</h3><p>Matter over Wi-Fi · no Thread hub. Runs on battery too — just fewer years. Your router + any Matter app.</p>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlWifi" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlWifiApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/wifi.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
+      </div>
+      <div class="dl-card" id="card-ble">
+        <span class="ico"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg></span><h3>BLE-only</h3><p>No hub, no cloud · straight to your phone over Bluetooth.</p>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlBle" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlBleApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/ble.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
+      </div>
+      <div class="dl-card" id="card-esphome">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></span><h3>ESPHome</h3><p>Native <strong>Home Assistant</strong> API — no MQTT broker needed. Flash once, adopt in the ESPHome dashboard, OTA-update from Home Assistant. Provisioned with Improv over USB serial.</p>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlEsphome" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+            <a id="dlEsphomeApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+          </div>
+          <span class="dl-or">or flash directly</span>
+          <esp-web-install-button manifest="manifests/esphome.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+        </div>
+      </div>
+    </div>
+
+    <details class="advanced-variants" id="advancedVariants">
+      <summary>Show 3 more variants — Wi-Fi AP, Wi-Fi station, ESP-NOW (local web page or a custom receiver, no hub required)</summary>
+      <div class="grid">
+        <div class="dl-card" id="card-ap">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4"/><path d="M8 9a6 6 0 0 1 8 0"/><path d="M5.5 6.5a10 10 0 0 1 13 0"/><path d="M9 21h6l-1-8h-4z"/></svg></span><h3>Wi-Fi AP</h3><p>Open hotspot “AkvaLink” · join it, the page opens automatically. No router, no app, any phone. <em>Needs mains/USB power.</em></p>
+          <div class="dl-btns">
+            <div class="dl-btns-row">
+              <a id="dlAp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+              <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+            </div>
+            <span class="dl-or">or flash directly</span>
+            <esp-web-install-button manifest="manifests/ap.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+          </div>
+        </div>
+        <div class="dl-card" id="card-station">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg></span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink-&lt;last4mac&gt;.local</strong> in any browser on your LAN. Auto-discovered by <strong>Home Assistant</strong> via MQTT. Multiple devices get unique hostnames. <em>Needs mains/USB power.</em></p>
+          <div class="dl-btns">
+            <div class="dl-btns-row">
+              <a id="dlStation" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+              <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+            </div>
+            <span class="dl-or">or flash directly</span>
+            <esp-web-install-button manifest="manifests/station.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+          </div>
+        </div>
+        <div class="dl-card" id="card-espnow">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></span><h3>ESP-NOW</h3><p>Deep-sleep broadcast — wakes, reads DS18B20, sends one packet to any ESP32 on the same Wi-Fi channel, sleeps. No hub, no provisioning, maximum battery life. <em>Receiver needs an ESP32 sketch.</em></p>
+          <div class="dl-btns">
+            <div class="dl-btns-row">
+              <a id="dlEspnow" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
+              <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
+            </div>
+            <span class="dl-or">or flash directly</span>
+            <esp-web-install-button manifest="manifests/espnow.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
+          </div>
+        </div>
+      </div>
+    </details>
+    <p class="ble-note"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>&nbsp;Flash via USB</strong> — click it, pick the serial port, done. No install, no drivers: it flashes straight from the browser over the <strong>Web Serial API</strong>. Needs <strong>Chrome, Edge, or Opera</strong> (desktop, v89+) — Firefox and Safari don't support Web Serial, so the button hides itself there.</p>
+    <p class="ble-note"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg>&nbsp;esptool&nbsp;.bin</strong> — the same full merged image, flashed from the command line instead: <code>pip install esptool</code> (a small standalone PyPI package — no full ESP-IDF needed), then <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code>. Rather not touch Python? Grab a prebuilt binary from the <a href="https://github.com/espressif/esptool/releases" target="_blank" rel="noopener">esptool releases page</a> instead. Note: esptool v5 renamed subcommands with hyphens (<code>write-flash</code>, <code>merge-bin</code>) — v4 used underscores (<code>write_flash</code>); if a copied command errors, that's usually why.</p>
+    <p class="ble-note"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg>&nbsp;OTA&nbsp;.bin</strong> — app partition only. Use for updating <em>within the same variant</em> (BLE→BLE, Thread→Thread, etc.) without touching NVS or commissioning data. Cross-variant OTA is possible but requires a factory reset after. · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>
+    <p class="ble-note">Wi-Fi®, Bluetooth®, Thread® and Matter™ are trademarks of the Wi-Fi Alliance, Bluetooth SIG, Thread Group and Connectivity Standards Alliance — named here only to describe compatibility. AkvaLink is not officially certified by any of them; the icons above are drawn in our own monochrome style, not the organizations' official colored certification logos.</p>
+
+    <hr class="dl-divider">
+
+    <h3 class="dl-subhead"><span class="dl-num">2</span>Update it wirelessly</h3>
+    <p class="ota-hint">Already flashed the <strong>BLE-only</strong> variant? Update it again with no cable at all — this page can fetch and flash new firmware straight over Bluetooth.</p>
+    <div class="live-card ota-card" id="otaCard">
+      <h3 class="ota-title">Firmware update over Bluetooth</h3>
+      <p class="ota-hint">Only works if the device is <strong>currently running the BLE-only firmware</strong> — it's the only variant with this update service built in. Flashing a brand-new device for the first time? Use <a href="#download">USB flash or esptool</a> instead.</p>
+      <div id="otaFwLine" class="file-name"></div>
+      <p class="ota-option-label">Option A — one click</p>
+      <p class="cta"><a id="otaLatestBtn" class="primary" role="button">Flash latest firmware</a></p>
+      <p class="ota-or">— or —</p>
+      <p class="ota-option-label">Option B — pick a specific file</p>
+      <p class="ota-hint" style="margin:0 0 10px">Reinstall an older version, or cross-flash to a different variant (needs a factory reset after).</p>
+      <label class="file-btn" for="otaFile">Choose .bin file</label>
+      <input type="file" id="otaFile" accept=".bin" hidden />
+      <span id="otaFileName" class="file-name">No file chosen</span>
+      <p class="cta"><a id="otaBtn" class="primary" role="button">Update firmware</a></p>
+      <div class="progress"><div id="otaBar" class="bar"></div></div>
+      <div id="otaStatus" class="status"></div>
+    </div>
+
+    <hr class="dl-divider">
+
+    <h3 class="dl-subhead" id="get-app"><span class="dl-num">3</span>Or use the app</h3>
+    <p class="ota-hint">Prefer a native app over the browser? Same live temperature and one-click OTA, no Web Bluetooth required.</p>
+    <div class="grid">
+      <div class="dl-card">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span><h3>Windows</h3><p>Prebuilt .zip (unsigned) — extract and run.</p>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlAppWindowsFw" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> Download .zip</a>
+          </div>
+        </div>
+      </div>
+      <div class="dl-card">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 9.5v6.2c0 .5.4.9.9.9H8.6v2.7a1.3 1.3 0 0 0 2.6 0V16.6h1.6v2.7a1.3 1.3 0 0 0 2.6 0V16.6h.7c.5 0 .9-.4.9-.9V9.5H7z"/><path d="M16.9 9c-.25-1.55-1.15-2.85-2.4-3.7l1-1.4a.55.55 0 1 0-.9-.65l-1.05 1.45a5.5 5.5 0 0 0-3.1 0L9.4 3.25a.55.55 0 1 0-.9.65l1 1.4C8.25 6.15 7.35 7.45 7.1 9h9.8z"/><circle cx="10" cy="7.5" r=".6" fill="var(--card)"/><circle cx="14" cy="7.5" r=".6" fill="var(--card)"/></svg></span><h3>Android</h3><p>Prebuilt APK — enable "install from unknown sources" to run it.</p>
+        <div class="dl-btns">
+          <div class="dl-btns-row">
+            <a id="dlAppApkFw" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> Download APK</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="ble-note">iOS, macOS and Linux still build from source — see the <a href="#app">companion app section</a> above for details.</p>
+  </div>
+</section>
+
+<section id="live">
+  <div class="wrap">
+    <h2>See it live</h2>
+    <p class="lead">Connect straight to a nearby AkvaLink over Bluetooth — no app, right in your browser.</p>
+    <p class="lead">Needs a device already flashed with the <strong>BLE-only</strong> variant (see downloads above) — the other variants don't expose this.</p>
+    <div class="live-card">
+      <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit" id="tempUnit" role="button" title="Click to switch °C/°F">°C</span></div>
+      <div id="bleAge" class="age"></div>
+      <div id="bleStatus" class="status">Not connected</div>
+      <div id="bleFw" class="age"></div>
+      <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
+      <p id="bleNote" class="ble-note"></p>
+      <div id="alertBox" class="alert-box" hidden>
+        <p class="alert-title">Temperature alerts</p>
+        <p class="ble-note" style="margin-top:0">Stored on the device itself, in °C. It flags a warning when the water crosses a limit — leave a field blank to switch that one off.</p>
+        <div class="alert-row">
+          <label for="alertHigh">High</label>
+          <input id="alertHigh" type="number" step="0.1" min="-55" max="125" inputmode="decimal">
+          <label for="alertLow">Low</label>
+          <input id="alertLow" type="number" step="0.1" min="-55" max="125" inputmode="decimal">
+          <span id="alertSave" class="file-btn" role="button">Save</span>
+        </div>
+        <p id="alertMsg" class="ble-note"></p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:22px">What's actually on the wire — the full GATT service table exposed by the <strong>BLE-only</strong> firmware, UUIDs and all, if you want to build your own client:</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Service</th><th>Characteristic</th><th>UUID</th><th>Properties</th><th>Payload</th></tr></thead>
+        <tbody>
+          <tr><td>Environmental Sensing<br><code>0x181A</code></td><td>Temperature</td><td><code>0x2A6E</code></td><td>Read, Notify</td><td>sint16, 0.01 °C, little-endian — the card above subscribes to this</td></tr>
+          <tr><td rowspan="3">Device Information<br><code>0x180A</code></td><td>Manufacturer</td><td><code>0x2A29</code></td><td>Read</td><td>"u-blox"</td></tr>
+          <tr><td>Model</td><td><code>0x2A24</code></td><td>Read</td><td>"AkvaLink NORA-W40"</td></tr>
+          <tr><td>Firmware Revision</td><td><code>0x2A26</code></td><td>Read</td><td>"{version}-{variant}" — what "Flash latest firmware" compares against</td></tr>
+          <tr><td>Battery<br><code>0x180F</code></td><td>Battery Level</td><td><code>0x2A19</code></td><td>Read</td><td>uint8, 0–100 % — the read <em>fails</em> until a real measurement exists, so clients show "unknown" instead of a made-up level. No battery-sense divider is fitted yet; enable <code>CONFIG_AKVALINK_BATTERY_ADC</code> once one is.</td></tr>
+          <tr><td rowspan="4">AkvaLink <em>(custom)</em><br><code>…6c0001</code></td><td>Uptime</td><td><code>…6c0002</code></td><td>Read</td><td>uint32, seconds since boot</td></tr>
+          <tr><td>Device name</td><td><code>…6c0003</code></td><td>Read, Write</td><td>UTF-8 string, saved to NVS, takes effect next reboot</td></tr>
+          <tr><td>Alert high</td><td><code>…6c0004</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
+          <tr><td>Alert low</td><td><code>…6c0005</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
+          <tr><td rowspan="2">AkvaLink OTA <em>(custom)</em><br><code>…6c0010</code></td><td>Control</td><td><code>…6c0011</code></td><td>Write, Notify</td><td><code>0x01</code> BEGIN / <code>0x02</code> END / <code>0x03</code> ABORT; notifies <code>[opcode, result]</code></td></tr>
+          <tr><td>Data</td><td><code>…6c0012</code></td><td>Write, Write-no-rsp</td><td>Raw firmware chunks, in order — used by "Update firmware over Bluetooth" above</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="ble-note">The custom AkvaLink and AkvaLink OTA services share one 128-bit base UUID, <code>f0a00001-6e40-4a71-9b2c-6b6e696c00XX</code> — only the last byte (shown above as <code>…6cXX</code>) changes per service/characteristic. Full contract in <a href="https://github.com/stenmo/AkvaLink/blob/main/docs/CONNECTIVITY.md">docs/CONNECTIVITY.md</a>.</p>
+  </div>
+</section>
+
+<section class="band" id="deep-dive">
+  <div class="wrap">
+    <h2>Under the hood</h2>
+    <p class="lead">Curious how it actually works? Silicon options, wiring, battery math, the protocol flow and every build variant &mdash; the deep technical detail starts here.</p>
+  </div>
+</section>
+
+<section id="platforms">
+  <div class="wrap">
+    <h2>One firmware family, more silicon</h2>
+    <p class="lead">Same Matter/BLE app, same web &amp; app frontend — AkvaLink isn't tied to one chip.
+      Everything on this page is the NORA-W40 build; other modules are landing over time.</p>
+    <div class="grid">
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></div><h3>NORA-W40 <span class="chip-status available">Available now</span></h3>
+        <p>Espressif ESP32-C6 — Wi-Fi 6, Thread, BLE 5.3. The flagship build documented below.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15 9l-2 6-6 2 2-6z" fill="currentColor" stroke="none"/></svg></div><h3>NORA-B2 <span class="chip-status dev">In development</span></h3>
+        <p>Nordic nRF54L — BLE, Thread, Matter. A non-Espressif option, for teams that need a second silicon source or specific supply-chain sourcing requirements.</p></div>
+    </div>
   </div>
 </section>
 
@@ -561,239 +799,6 @@
   </div>
 </section>
 
-<section id="download">
-  <div class="wrap">
-    <h2>Download firmware</h2>
-    <p class="lead">Prebuilt single-image binaries for the NORA-W40 (ESP32-C6) — always the latest release.</p>
-    <p><a href="https://github.com/stenmo/AkvaLink/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/stenmo/AkvaLink?color=0aa2c0&amp;label=latest&amp;logo=github"></a></p>
-
-    <div class="picker" id="variantPicker">
-      <h3 class="picker-title">Not sure which? Answer a couple of quick questions</h3>
-      <div class="picker-step" data-step="1">
-        <p class="picker-q">How do you want to reach it day to day?</p>
-        <div class="picker-opts">
-          <button type="button" class="picker-opt" data-goto="2-matter">A smart home app — Apple Home, Google Home, Alexa</button>
-          <button type="button" class="picker-opt" data-goto="2-ha">Home Assistant</button>
-          <button type="button" class="picker-opt" data-result="ble">Just my phone, directly — no hub</button>
-          <button type="button" class="picker-opt" data-goto="2-browser">Just a browser — no app at all</button>
-        </div>
-      </div>
-      <div class="picker-step" data-step="2-matter" hidden>
-        <p class="picker-q">Do you already have a Thread border router — HomePod mini/2, Apple TV 4K, Nest Hub (2nd gen+), or Echo (4th gen+)?</p>
-        <div class="picker-opts">
-          <button type="button" class="picker-opt" data-result="thread">Yes</button>
-          <button type="button" class="picker-opt" data-result="wifi">No / not sure</button>
-        </div>
-      </div>
-      <div class="picker-step" data-step="2-ha" hidden>
-        <p class="picker-q">Want zero extra setup, or do you already run MQTT?</p>
-        <div class="picker-opts">
-          <button type="button" class="picker-opt" data-result="esphome">Zero extra setup (ESPHome)</button>
-          <button type="button" class="picker-opt" data-result="station">I already use MQTT</button>
-        </div>
-      </div>
-      <div class="picker-step" data-step="2-browser" hidden>
-        <p class="picker-q">Do you have Wi-Fi to give it, or want a standalone hotspot with no router?</p>
-        <div class="picker-opts">
-          <button type="button" class="picker-opt" data-result="station">Join my Wi-Fi</button>
-          <button type="button" class="picker-opt" data-result="ap">Standalone hotspot, no router</button>
-        </div>
-      </div>
-      <div class="picker-step" data-step="result" id="pickerResult" hidden>
-        <p class="picker-q">Recommended: <strong id="pickerResultName"></strong> — <a href="#" id="pickerResultLink" class="dl-btn dl-ota">Jump to it ↓</a></p>
-        <button type="button" class="picker-restart" id="pickerRestart">Start over</button>
-      </div>
-    </div>
-
-    <h3 class="dl-subhead"><span class="dl-num">1</span>Flash it</h3>
-    <p class="ota-hint">Pick a variant, then flash the full image — command line, or straight from the browser over USB.</p>
-    <div class="grid">
-      <div class="dl-card" id="card-thread">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 5 17h14z"/><circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="17" r="1.6" fill="currentColor" stroke="none"/></svg></span><h3>Thread</h3><p>Matter over Thread · best battery. Needs a hub — HomePod, Apple TV, Nest or Echo.</p>
-        <div class="dl-btns">
-          <div class="dl-btns-row">
-            <a id="dlThread" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-            <a id="dlThreadApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-          </div>
-          <span class="dl-or">or flash directly</span>
-          <esp-web-install-button manifest="manifests/thread.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-        </div>
-      </div>
-      <div class="dl-card" id="card-wifi">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8.5a12 12 0 0 1 16 0"/><path d="M7 12a7.5 7.5 0 0 1 10 0"/><path d="M10 15.5a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg></span><h3>Wi-Fi</h3><p>Matter over Wi-Fi · no Thread hub. Runs on battery too — just fewer years. Your router + any Matter app.</p>
-        <div class="dl-btns">
-          <div class="dl-btns-row">
-            <a id="dlWifi" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-            <a id="dlWifiApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-          </div>
-          <span class="dl-or">or flash directly</span>
-          <esp-web-install-button manifest="manifests/wifi.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-        </div>
-      </div>
-      <div class="dl-card" id="card-ble">
-        <span class="ico"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg></span><h3>BLE-only</h3><p>No hub, no cloud · straight to your phone over Bluetooth.</p>
-        <div class="dl-btns">
-          <div class="dl-btns-row">
-            <a id="dlBle" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-            <a id="dlBleApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-          </div>
-          <span class="dl-or">or flash directly</span>
-          <esp-web-install-button manifest="manifests/ble.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-        </div>
-      </div>
-      <div class="dl-card" id="card-esphome">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></span><h3>ESPHome</h3><p>Native <strong>Home Assistant</strong> API — no MQTT broker needed. Flash once, adopt in the ESPHome dashboard, OTA-update from Home Assistant. Provisioned with Improv over USB serial.</p>
-        <div class="dl-btns">
-          <div class="dl-btns-row">
-            <a id="dlEsphome" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-            <a id="dlEsphomeApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-          </div>
-          <span class="dl-or">or flash directly</span>
-          <esp-web-install-button manifest="manifests/esphome.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-        </div>
-      </div>
-    </div>
-
-    <details class="advanced-variants" id="advancedVariants">
-      <summary>Show 3 more variants — Wi-Fi AP, Wi-Fi station, ESP-NOW (local web page or a custom receiver, no hub required)</summary>
-      <div class="grid">
-        <div class="dl-card" id="card-ap">
-          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4"/><path d="M8 9a6 6 0 0 1 8 0"/><path d="M5.5 6.5a10 10 0 0 1 13 0"/><path d="M9 21h6l-1-8h-4z"/></svg></span><h3>Wi-Fi AP</h3><p>Open hotspot “AkvaLink” · join it, the page opens automatically. No router, no app, any phone. <em>Needs mains/USB power.</em></p>
-          <div class="dl-btns">
-            <div class="dl-btns-row">
-              <a id="dlAp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-              <a id="dlApApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-            </div>
-            <span class="dl-or">or flash directly</span>
-            <esp-web-install-button manifest="manifests/ap.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-          </div>
-        </div>
-        <div class="dl-card" id="card-station">
-          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg></span><h3>Wi-Fi station</h3><p>Joins your home Wi-Fi (provisioned once over BLE). Open <strong>akvalink-&lt;last4mac&gt;.local</strong> in any browser on your LAN. Auto-discovered by <strong>Home Assistant</strong> via MQTT. Multiple devices get unique hostnames. <em>Needs mains/USB power.</em></p>
-          <div class="dl-btns">
-            <div class="dl-btns-row">
-              <a id="dlStation" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-              <a id="dlStationApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-            </div>
-            <span class="dl-or">or flash directly</span>
-            <esp-web-install-button manifest="manifests/station.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-          </div>
-        </div>
-        <div class="dl-card" id="card-espnow">
-          <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></span><h3>ESP-NOW</h3><p>Deep-sleep broadcast — wakes, reads DS18B20, sends one packet to any ESP32 on the same Wi-Fi channel, sleeps. No hub, no provisioning, maximum battery life. <em>Receiver needs an ESP32 sketch.</em></p>
-          <div class="dl-btns">
-            <div class="dl-btns-row">
-              <a id="dlEspnow" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> esptool .bin</a>
-              <a id="dlEspnowApp" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> OTA .bin</a>
-            </div>
-            <span class="dl-or">or flash directly</span>
-            <esp-web-install-button manifest="manifests/espnow.json"><a slot="activate" class="dl-btn dl-flash" role="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> Flash via USB</a><span slot="unsupported"></span><span slot="not-allowed"></span></esp-web-install-button>
-          </div>
-        </div>
-      </div>
-    </details>
-    <p class="ble-note"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>&nbsp;Flash via USB</strong> — click it, pick the serial port, done. No install, no drivers: it flashes straight from the browser over the <strong>Web Serial API</strong>. Needs <strong>Chrome, Edge, or Opera</strong> (desktop, v89+) — Firefox and Safari don't support Web Serial, so the button hides itself there.</p>
-    <p class="ble-note"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg>&nbsp;esptool&nbsp;.bin</strong> — the same full merged image, flashed from the command line instead: <code>pip install esptool</code> (a small standalone PyPI package — no full ESP-IDF needed), then <code>esptool --chip esp32c6 write-flash 0x0 &lt;file&gt;.bin</code>. Rather not touch Python? Grab a prebuilt binary from the <a href="https://github.com/espressif/esptool/releases" target="_blank" rel="noopener">esptool releases page</a> instead. Note: esptool v5 renamed subcommands with hyphens (<code>write-flash</code>, <code>merge-bin</code>) — v4 used underscores (<code>write_flash</code>); if a copied command errors, that's usually why.</p>
-    <p class="ble-note"><strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg>&nbsp;OTA&nbsp;.bin</strong> — app partition only. Use for updating <em>within the same variant</em> (BLE→BLE, Thread→Thread, etc.) without touching NVS or commissioning data. Cross-variant OTA is possible but requires a factory reset after. · <a href="https://github.com/stenmo/AkvaLink/releases">All releases &amp; changelog</a></p>
-    <p class="ble-note">Wi-Fi®, Bluetooth®, Thread® and Matter™ are trademarks of the Wi-Fi Alliance, Bluetooth SIG, Thread Group and Connectivity Standards Alliance — named here only to describe compatibility. AkvaLink is not officially certified by any of them; the icons above are drawn in our own monochrome style, not the organizations' official colored certification logos.</p>
-
-    <hr class="dl-divider">
-
-    <h3 class="dl-subhead"><span class="dl-num">2</span>Update it wirelessly</h3>
-    <p class="ota-hint">Already flashed the <strong>BLE-only</strong> variant? Update it again with no cable at all — this page can fetch and flash new firmware straight over Bluetooth.</p>
-    <div class="live-card ota-card" id="otaCard">
-      <h3 class="ota-title">Firmware update over Bluetooth</h3>
-      <p class="ota-hint">Only works if the device is <strong>currently running the BLE-only firmware</strong> — it's the only variant with this update service built in. Flashing a brand-new device for the first time? Use <a href="#download">USB flash or esptool</a> instead.</p>
-      <div id="otaFwLine" class="file-name"></div>
-      <p class="ota-option-label">Option A — one click</p>
-      <p class="cta"><a id="otaLatestBtn" class="primary" role="button">Flash latest firmware</a></p>
-      <p class="ota-or">— or —</p>
-      <p class="ota-option-label">Option B — pick a specific file</p>
-      <p class="ota-hint" style="margin:0 0 10px">Reinstall an older version, or cross-flash to a different variant (needs a factory reset after).</p>
-      <label class="file-btn" for="otaFile">Choose .bin file</label>
-      <input type="file" id="otaFile" accept=".bin" hidden />
-      <span id="otaFileName" class="file-name">No file chosen</span>
-      <p class="cta"><a id="otaBtn" class="primary" role="button">Update firmware</a></p>
-      <div class="progress"><div id="otaBar" class="bar"></div></div>
-      <div id="otaStatus" class="status"></div>
-    </div>
-
-    <hr class="dl-divider">
-
-    <h3 class="dl-subhead" id="get-app"><span class="dl-num">3</span>Or use the app</h3>
-    <p class="ota-hint">Prefer a native app over the browser? Same live temperature and one-click OTA, no Web Bluetooth required.</p>
-    <div class="grid">
-      <div class="dl-card">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span><h3>Windows</h3><p>Prebuilt .zip (unsigned) — extract and run.</p>
-        <div class="dl-btns">
-          <div class="dl-btns-row">
-            <a id="dlAppWindowsFw" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> Download .zip</a>
-          </div>
-        </div>
-      </div>
-      <div class="dl-card">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 9.5v6.2c0 .5.4.9.9.9H8.6v2.7a1.3 1.3 0 0 0 2.6 0V16.6h1.6v2.7a1.3 1.3 0 0 0 2.6 0V16.6h.7c.5 0 .9-.4.9-.9V9.5H7z"/><path d="M16.9 9c-.25-1.55-1.15-2.85-2.4-3.7l1-1.4a.55.55 0 1 0-.9-.65l-1.05 1.45a5.5 5.5 0 0 0-3.1 0L9.4 3.25a.55.55 0 1 0-.9.65l1 1.4C8.25 6.15 7.35 7.45 7.1 9h9.8z"/><circle cx="10" cy="7.5" r=".6" fill="var(--card)"/><circle cx="14" cy="7.5" r=".6" fill="var(--card)"/></svg></span><h3>Android</h3><p>Prebuilt APK — enable "install from unknown sources" to run it.</p>
-        <div class="dl-btns">
-          <div class="dl-btns-row">
-            <a id="dlAppApkFw" class="dl-btn dl-ota" href="https://github.com/stenmo/AkvaLink/releases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.5"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/></svg> Download APK</a>
-          </div>
-        </div>
-      </div>
-    </div>
-    <p class="ble-note">iOS, macOS and Linux still build from source — see the <a href="#app">companion app section</a> above for details.</p>
-  </div>
-</section>
-
-
-<section id="live">
-  <div class="wrap">
-    <h2>See it live</h2>
-    <p class="lead">Connect straight to a nearby AkvaLink over Bluetooth — no app, right in your browser.</p>
-    <p class="lead">Needs a device already flashed with the <strong>BLE-only</strong> variant (see downloads above) — the other variants don't expose this.</p>
-    <div class="live-card">
-      <div class="temp-readout"><span id="tempVal" class="idle">—</span><span class="unit" id="tempUnit" role="button" title="Click to switch °C/°F">°C</span></div>
-      <div id="bleAge" class="age"></div>
-      <div id="bleStatus" class="status">Not connected</div>
-      <div id="bleFw" class="age"></div>
-      <p class="cta"><a id="bleBtn" class="primary" role="button">Connect via Bluetooth</a></p>
-      <p id="bleNote" class="ble-note"></p>
-      <div id="alertBox" class="alert-box" hidden>
-        <p class="alert-title">Temperature alerts</p>
-        <p class="ble-note" style="margin-top:0">Stored on the device itself, in °C. It flags a warning when the water crosses a limit — leave a field blank to switch that one off.</p>
-        <div class="alert-row">
-          <label for="alertHigh">High</label>
-          <input id="alertHigh" type="number" step="0.1" min="-55" max="125" inputmode="decimal">
-          <label for="alertLow">Low</label>
-          <input id="alertLow" type="number" step="0.1" min="-55" max="125" inputmode="decimal">
-          <span id="alertSave" class="file-btn" role="button">Save</span>
-        </div>
-        <p id="alertMsg" class="ble-note"></p>
-      </div>
-    </div>
-    <p class="lead" style="margin-top:22px">What's actually on the wire — the full GATT service table exposed by the <strong>BLE-only</strong> firmware, UUIDs and all, if you want to build your own client:</p>
-    <div class="tbl-scroll">
-      <table>
-        <thead><tr><th>Service</th><th>Characteristic</th><th>UUID</th><th>Properties</th><th>Payload</th></tr></thead>
-        <tbody>
-          <tr><td>Environmental Sensing<br><code>0x181A</code></td><td>Temperature</td><td><code>0x2A6E</code></td><td>Read, Notify</td><td>sint16, 0.01 °C, little-endian — the card above subscribes to this</td></tr>
-          <tr><td rowspan="3">Device Information<br><code>0x180A</code></td><td>Manufacturer</td><td><code>0x2A29</code></td><td>Read</td><td>"u-blox"</td></tr>
-          <tr><td>Model</td><td><code>0x2A24</code></td><td>Read</td><td>"AkvaLink NORA-W40"</td></tr>
-          <tr><td>Firmware Revision</td><td><code>0x2A26</code></td><td>Read</td><td>"{version}-{variant}" — what "Flash latest firmware" compares against</td></tr>
-          <tr><td>Battery<br><code>0x180F</code></td><td>Battery Level</td><td><code>0x2A19</code></td><td>Read</td><td>uint8, 0–100 % — the read <em>fails</em> until a real measurement exists, so clients show "unknown" instead of a made-up level. No battery-sense divider is fitted yet; enable <code>CONFIG_AKVALINK_BATTERY_ADC</code> once one is.</td></tr>
-          <tr><td rowspan="4">AkvaLink <em>(custom)</em><br><code>…6c0001</code></td><td>Uptime</td><td><code>…6c0002</code></td><td>Read</td><td>uint32, seconds since boot</td></tr>
-          <tr><td>Device name</td><td><code>…6c0003</code></td><td>Read, Write</td><td>UTF-8 string, saved to NVS, takes effect next reboot</td></tr>
-          <tr><td>Alert high</td><td><code>…6c0004</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
-          <tr><td>Alert low</td><td><code>…6c0005</code></td><td>Read, Write</td><td>sint16, 0.01 °C, saved to NVS, 0 = disabled</td></tr>
-          <tr><td rowspan="2">AkvaLink OTA <em>(custom)</em><br><code>…6c0010</code></td><td>Control</td><td><code>…6c0011</code></td><td>Write, Notify</td><td><code>0x01</code> BEGIN / <code>0x02</code> END / <code>0x03</code> ABORT; notifies <code>[opcode, result]</code></td></tr>
-          <tr><td>Data</td><td><code>…6c0012</code></td><td>Write, Write-no-rsp</td><td>Raw firmware chunks, in order — used by "Update firmware over Bluetooth" above</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="ble-note">The custom AkvaLink and AkvaLink OTA services share one 128-bit base UUID, <code>f0a00001-6e40-4a71-9b2c-6b6e696c00XX</code> — only the last byte (shown above as <code>…6cXX</code>) changes per service/characteristic. Full contract in <a href="https://github.com/stenmo/AkvaLink/blob/main/docs/CONNECTIVITY.md">docs/CONNECTIVITY.md</a>.</p>
-  </div>
-</section>
-
-
 <section id="security">
   <div class="wrap">
     <h2>Security</h2>
@@ -831,7 +836,6 @@
   </div>
 </section>
 
-
 <section id="bom">
   <div class="wrap">
     <h2>Software bill of materials</h2>
@@ -852,7 +856,6 @@
     <p class="lead" style="margin-top:14px">Versions are pinned per firmware release. See the exact release tag on <a href="https://github.com/stenmo/AkvaLink/releases">GitHub</a>, or read the Firmware Revision characteristic (Device Information service, see the GATT table above) off a running device.</p>
   </div>
 </section>
-
 
 <section class="band" id="status">
   <div class="wrap">

@@ -332,20 +332,6 @@
   </div>
 </section>
 
-<section id="platforms">
-  <div class="wrap">
-    <h2>En firmware-familj, mer kisel</h2>
-    <p class="lead">Samma Matter/BLE-app, samma webb- och app-gränssnitt — AkvaLink är inte bundet till ett chip.
-      Allt på den här sidan är NORA-W40-bygget; fler moduler kommer efter hand.</p>
-    <div class="grid">
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></div><h3>NORA-W40 <span class="chip-status available">Tillgänglig nu</span></h3>
-        <p>Espressif ESP32-C6 — Wi-Fi 6, Thread, BLE 5.3. Flaggskeppsbygget som dokumenteras nedan.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15 9l-2 6-6 2 2-6z" fill="currentColor" stroke="none"/></svg></div><h3>NORA-B2 <span class="chip-status dev">Under utveckling</span></h3>
-        <p>Nordic nRF54L — BLE, Thread, Matter. Ett alternativ utan Espressif-kisel, för team som behöver en andra kiselkälla eller har särskilda krav på leverantörskedjan.</p></div>
-    </div>
-  </div>
-</section>
-
 <section id="app">
   <div class="wrap">
     <h2>Följarapp</h2>
@@ -374,175 +360,6 @@
     <p class="cta"><a class="ghost" href="https://github.com/stenmo/AkvaLink/tree/main/app_flutter">Källkod &amp; byggguide</a></p>
     <p class="ble-note">Windows och Android är färdigbyggda och bifogas varje <a href="https://github.com/stenmo/AkvaLink/releases/latest">GitHub-release</a>. Windows-bygget är osignerat (SmartScreen varnar vid första körning) och APK:n kräver "installera från okända källor" — ingen appbutik ännu. iOS, macOS och Linux byggs fortfarande från källkod; det finns ingen Apple- eller Linux-CI att signera/paketera dem med.</p>
     <p class="ble-note">Apple, Android, Windows och Linux/Tux är varumärken eller symboler som tillhör respektive ägare, nämnda här enbart för att visa plattformsstöd — ikonerna ovan är våra egna enfärgade glyfer, inte de officiella logotyperna.</p>
-  </div>
-</section>
-
-<section class="band" id="hardware">
-  <div class="wrap">
-    <h2>Hårdvara</h2>
-    <p class="lead">En liten modul, en sensor, ett pull-up-motstånd.</p>
-    <div class="tbl-scroll">
-      <table>
-        <thead><tr><th>Komponent</th><th>Del</th><th>Varför</th></tr></thead>
-        <tbody>
-          <tr><td>Modul</td><td>NORA-W401 / NORA-W406</td><td>Wi-Fi 6 + Thread + BLE i en modul</td></tr>
-          <tr><td>MCU</td><td>ESP32-C6 (RISC-V @ 160 MHz)</td><td>Inuti NORA-W40</td></tr>
-          <tr><td>Sensor</td><td>DS18B20 (rostfri givare)</td><td>±0,5 °C, 12-bit (0,0625 °C), 1-Wire, ~$3</td></tr>
-          <tr><td>Strömförsörjning</td><td>2× AA alkaline (eller 18650 Li)</td><td>~5–7 år realistiskt på 2× AA (Thread SED, poolförhållanden)<sup>*</sup></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="schematic">
-      <svg viewBox="0 0 620 345" role="img"
-           aria-label="Koppling: NORA-W40 GPIO15 till DS18B20 med 4,7 kΩ pull-up; GPIO9 BOOT-knapp till GND för ominställning (håll 5 s); framtida batteri-ADC-spänningsdelare (R1 390 kΩ / R2 100 kΩ)."
-           xmlns="http://www.w3.org/2000/svg">
-
-        <!-- ── 3V3 / GPIO15 / GND och 4,7 kΩ pull-up (oförändrat) ── -->
-        <line x1="200" y1="70"  x2="420" y2="70"  stroke="#e05a5a" stroke-width="3" />
-        <line x1="200" y1="130" x2="420" y2="130" stroke="#0aa2c0" stroke-width="3" />
-        <line x1="200" y1="175" x2="420" y2="175" stroke="#16323f" stroke-width="3" />
-        <line x1="310" y1="130" x2="310" y2="112" stroke="#0aa2c0" stroke-width="3" />
-        <polyline points="310,112 299,107 321,99 299,91 321,83 310,78" fill="none" stroke="#5b7280" stroke-width="3" stroke-linejoin="round" />
-        <line x1="310" y1="78"  x2="310" y2="70"  stroke="#e05a5a" stroke-width="3" />
-        <circle cx="310" cy="70"  r="4.5" fill="#e05a5a" />
-        <circle cx="310" cy="130" r="4.5" fill="#0aa2c0" />
-        <text x="332" y="99" font-size="13" font-weight="700" fill="#033f63">4,7 kΩ</text>
-
-        <!-- ── NORA-W40-box (utökad) ── -->
-        <rect x="40" y="35" width="160" height="270" rx="16" fill="#ffffff" stroke="#d9e6ec" stroke-width="2" />
-        <text x="120" y="26"  text-anchor="middle" font-size="14" font-weight="700" fill="#033f63">NORA-W40</text>
-        <text x="120" y="185" text-anchor="middle" font-size="12" fill="#5b7280">ESP32-C6</text>
-        <circle cx="200" cy="70"  r="4.5" fill="#e05a5a" />
-        <text x="192" y="74"  text-anchor="end" font-size="12" fill="#16323f">3V3</text>
-        <circle cx="200" cy="130" r="4.5" fill="#0aa2c0" />
-        <text x="192" y="134" text-anchor="end" font-size="12" fill="#16323f">GPIO15</text>
-        <circle cx="200" cy="175" r="4.5" fill="#16323f" />
-        <text x="192" y="179" text-anchor="end" font-size="12" fill="#16323f">GND</text>
-        <circle cx="200" cy="228" r="4.5" fill="#d97706" />
-        <text x="192" y="232" text-anchor="end" font-size="12" fill="#16323f">GPIO9</text>
-        <circle cx="200" cy="288" r="4.5" fill="#16a34a" opacity="0.55" />
-        <text x="192" y="292" text-anchor="end" font-size="12" fill="#16323f" opacity="0.6">ADCx</text>
-
-        <!-- ── DS18B20-box ── -->
-        <rect x="420" y="35" width="160" height="170" rx="16" fill="#ffffff" stroke="#d9e6ec" stroke-width="2" />
-        <text x="500" y="26"  text-anchor="middle" font-size="14" font-weight="700" fill="#033f63">DS18B20</text>
-        <text x="500" y="126" text-anchor="middle" font-size="11" fill="#5b7280">one wire sensor</text>
-        <circle cx="420" cy="70"  r="4.5" fill="#e05a5a" />
-        <text x="428" y="74"  font-size="12" fill="#16323f">VDD</text>
-        <circle cx="420" cy="130" r="4.5" fill="#0aa2c0" />
-        <text x="428" y="134" font-size="12" fill="#16323f">DQ</text>
-        <circle cx="420" cy="175" r="4.5" fill="#16323f" />
-        <text x="428" y="179" font-size="12" fill="#16323f">GND</text>
-
-        <!-- ── GPIO9 / BOOT-knapp för ominställning ── -->
-        <line x1="200" y1="228" x2="276" y2="228" stroke="#d97706" stroke-width="3" />
-        <line x1="276" y1="220" x2="276" y2="236" stroke="#d97706" stroke-width="3" />
-        <line x1="276" y1="220" x2="328" y2="213" stroke="#5b7280" stroke-width="2.5" />
-        <line x1="328" y1="220" x2="328" y2="236" stroke="#16323f" stroke-width="3" />
-        <text x="299" y="208" text-anchor="middle" font-size="10" font-weight="700" fill="#d97706">BOOT</text>
-        <line x1="328" y1="228" x2="392" y2="228" stroke="#16323f" stroke-width="3" />
-        <line x1="392" y1="228" x2="392" y2="248" stroke="#16323f" stroke-width="3" />
-        <line x1="383" y1="248" x2="401" y2="248" stroke="#16323f" stroke-width="2.5" />
-        <line x1="386" y1="254" x2="398" y2="254" stroke="#16323f" stroke-width="2.5" />
-        <line x1="389" y1="260" x2="395" y2="260" stroke="#16323f" stroke-width="2.5" />
-        <text x="215" y="248" font-size="10" fill="#d97706" font-style="italic">håll 5 s → radera Wi-Fi · ominställning</text>
-
-        <!-- ── ADC-spänningsdelare (framtida krets) ── -->
-        <rect x="395" y="228" width="218" height="112" rx="7"
-              fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.65"/>
-        <text x="607" y="243" text-anchor="end" font-size="10" fill="#16a34a" font-style="italic" opacity="0.85">framtida · ej monterad</text>
-        <line x1="460" y1="228" x2="460" y2="235" stroke="#5b7280" stroke-width="2.5" opacity="0.7"/>
-        <line x1="450" y1="235" x2="470" y2="235" stroke="#5b7280" stroke-width="3" opacity="0.7"/>
-        <line x1="455" y1="241" x2="465" y2="241" stroke="#5b7280" stroke-width="1.5" opacity="0.7"/>
-        <line x1="460" y1="241" x2="460" y2="247" stroke="#5b7280" stroke-width="2.5" opacity="0.7"/>
-        <text x="473" y="241" font-size="10" fill="#5b7280" opacity="0.85">BAT+</text>
-        <rect x="451" y="247" width="18" height="24" rx="3"
-              fill="#ffffff" stroke="#5b7280" stroke-width="1.8" opacity="0.8"/>
-        <text x="460" y="262" text-anchor="middle" font-size="9" fill="#5b7280">R1</text>
-        <text x="473" y="262" font-size="9" fill="#5b7280">390 kΩ</text>
-        <line x1="460" y1="271" x2="460" y2="288" stroke="#5b7280" stroke-width="2.5" opacity="0.7"/>
-        <circle cx="460" cy="288" r="4" fill="#16a34a" opacity="0.65"/>
-        <line x1="200" y1="288" x2="460" y2="288" stroke="#16a34a" stroke-width="2.5"
-              stroke-dasharray="6,3" opacity="0.65"/>
-        <line x1="460" y1="288" x2="460" y2="294" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
-        <rect x="451" y="294" width="18" height="24" rx="3"
-              fill="#ffffff" stroke="#5b7280" stroke-width="1.8" opacity="0.8"/>
-        <text x="460" y="309" text-anchor="middle" font-size="9" fill="#5b7280">R2</text>
-        <text x="473" y="309" font-size="9" fill="#5b7280">100 kΩ</text>
-        <line x1="460" y1="318" x2="460" y2="324" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
-        <line x1="451" y1="324" x2="469" y2="324" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
-        <line x1="454" y1="330" x2="466" y2="330" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
-        <line x1="457" y1="336" x2="463" y2="336" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
-      </svg>
-      <p class="cap"><strong>GPIO15 → DS18B20.</strong> Ett 4,7 kΩ pull-up. GPIO9 (BOOT) dubblar som ominställningsknapp. Streckad ruta = framtida batteri-ADC-krets (R1/R2 spänningsdelare, 390 kΩ / 100 kΩ).</p>
-    </div>
-    <div class="schematic">
-      <div class="grid">
-        <div>
-          <img src="assets/overview.jpg" alt="EVK-NORA-W40-utvecklingskortet kopplat till en DS18B20-sond på verkbänken" style="width:100%;height:auto;border-radius:10px;display:block" loading="lazy">
-          <p class="cap">Skarpt läge: EVK-NORA-W40 med DS18B20-sonden kopplad till GPIO15.</p>
-        </div>
-        <div>
-          <img src="assets/hardware-wiring.jpg" alt="Närbild på 4,7 kΩ pull-up-motståndet inlött i DS18B20-kablaget, krympslangat vid skarven" style="width:100%;height:auto;border-radius:10px;display:block" loading="lazy">
-          <p class="cap">4,7 kΩ pull-up, inlött och krympslangat rakt vid sensorkabelns skarv.</p>
-        </div>
-      </div>
-    </div>
-    <p class="lead" style="margin-top:14px">Var man får tag i det: utvecklingskortet <a href="https://www.u-blox.com/en/product/evk-nora-w40" target="_blank" rel="noopener">EVK-NORA-W40</a> exponerar alla pinnar på en kopplingsdäcksvänlig header — ingen egen PCB-design behövs för att komma igång. DS18B20-sonder i rostfritt stål är en vanlig ~30 kr-del, som säljs brett på Amazon, AliExpress och elektronikdistributörer — för saltklorerade pooler, välj specifikt <strong>316 rostfritt</strong>; 304 gropfräter i klorerat saltvatten över tid. Ingen produktionskapsling eller "köp en färdig sensor"-lösning ännu — se färdplanen nedan.</p>
-    <p class="lead" style="margin-top:10px">Noggrannhetsnotis: DS18B20:s upplösning på 0,0625 °C är inte samma sak som en noggrannhet på 0,0625 °C — databladets specifikation är ±0,5 °C. Placeringen betyder mer än upplösningen: en sond på en solvärmd kabel, nära ytan, eller grunt i vattnet reagerar snabbare och driver högre än bulkvattnets temperatur; sänk ner den på ett representativt djup, borta från direkt sol och munstycken/retur, för en mätning du kan lita på.</p>
-  </div>
-</section>
-
-<section id="battery">
-  <div class="wrap">
-    <h2>Batteritid</h2>
-    <p class="lead">Uppvärmd pool vid 28–29 °C med 0,25 °C rapporteringströskel. Vi leder med den <strong>realistiska</strong> siffran för varje cell: alkaliska (AAA/AA) självurladdas och litiumjon (18650) åldras kalendariskt, vilket begränsar den verkliga livslängden till ungefär 5–7 år oavsett vad den förbrukningsberoende modellen ensam förutspår — den gränsen visas där modellen överskrider den. CR2477 (litium primärcell) har bäst hållbarhet av de fyra och behöver ingen sådan gräns — dess modellsiffra <em>är</em> redan den realistiska.</p>
-    <div class="tbl-scroll">
-      <table>
-        <thead><tr><th>Batteri</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (frånkopplad)</th></tr></thead>
-        <tbody>
-          <tr><td>CR2477 (1000 mAh)</td><td>~5 år</td><td>~6 månader</td><td>~3,3 år</td></tr>
-          <tr><td>2× AAA (1200 mAh)</td><td>~5–6 år</td><td>~8 månader</td><td>~4 år</td></tr>
-          <tr><td class="hi">2× AA (2800 mAh)</td><td class="hi">~5–7 år <em>(modell: ~12 år)</em></td><td class="hi">~1,8 år</td><td class="hi">~5–7 år <em>(modell: ~9 år)</em></td></tr>
-          <tr><td>18650 litiumjon (3400 mAh)</td><td>år, inte decennier <em>(modell: ~15+ år)</em></td><td>~2,2 år</td><td>år, inte decennier <em>(modell: ~11 år)</em></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="lead" style="margin-top:14px">Den kursiverade <em>(modell: ...)</em>-siffran är det teoretiska, förbrukningsberoende taket — visas bara där den är märkbart högre än den realistiska siffran. Alkaliska celler självurladdas oavsett belastning; litiumjon åldras kalendariskt och självurladdas ännu snabbare, så "år, inte decennier" ersätter en exakt siffra tills en riktig PPK2/Joulescope-mätning finns. Riktig mätning finns på färdplanen.</p>
-    <p class="lead" style="margin-top:10px">Myntcellsbygge (CR2477): myntceller går sönder på toppström, inte kapacitet. En Wi-Fi- eller Thread-sändningsburst kan dra några hundra mA, mer än en CR2477:s inre impedans gillar — lägg till en bulkkondensator (några hundra µF) över modulens matningsskena, annars faller regulatorn ur vid sändningsbursterna.</p>
-  </div>
-</section>
-
-<section class="band" id="how">
-  <div class="wrap">
-    <h2>Hur det fungerar</h2>
-    <p class="lead">Allt körs på en ESP32-C6 inuti NORA-W40 — ingen kompanjon-MCU.</p>
-    <div class="flow">
-      <div class="step"><span class="n">1</span><h3>Mät</h3><p>Läs DS18B20 via 1-Wire med adaptiv sampling — snabbt vid förändring, långsamt vid stabilitet.</p></div>
-      <div class="step"><span class="n">2</span><h3>Filtrera</h3><p>Rapportera bara när temperaturen passerar ett tröskelvärde, så radion förblir i viloläge.</p></div>
-      <div class="step"><span class="n">3</span><h3>Rapportera</h3><p>Skicka mätvärdet via Matter — Thread (Sleepy End Device) eller Wi-Fi (TWT).</p></div>
-      <div class="step"><span class="n">4</span><h3>Visa</h3><p>Det visas i Apple Home, Google Home eller Alexa som en standard-temperatursensor.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="variants">
-  <div class="wrap">
-    <h2>Byggvarianter</h2>
-    <p class="lead">En kodbas, en SoC — välj nätverk vid byggtid.</p>
-    <div class="tbl-scroll">
-      <table>
-        <thead><tr><th>Variant</th><th>Flagga</th><th>Stack</th></tr></thead>
-        <tbody>
-          <tr><td>Matter / Thread <em>(standard)</em></td><td><code>(ingen)</code></td><td>esp-matter, OpenThread, BLE-driftsättning</td></tr>
-          <tr><td>Matter / Wi-Fi</td><td><code>--wifi</code></td><td>esp-matter, Wi-Fi, BLE-driftsättning</td></tr>
-          <tr><td>Endast BLE</td><td><code>--ble</code></td><td>NimBLE GATT — ingen hub, ingen router</td></tr>
-          <tr><td>Wi-Fi AP <em>(nät/USB)</em></td><td><code>--ap</code></td><td>SoftAP "AkvaLink" + webbsida, vilken telefon som helst; ingen router</td></tr>
-          <tr><td>Wi-Fi station <em>(nät/USB)</em></td><td><code>--station</code></td><td>Ansluter till hemma-Wi-Fi (BLE-driftsätts), unik sida på akvalink-&lt;sista4mac&gt;.local + HA MQTT; ingen hub</td></tr>
-          <tr><td>Sensortest</td><td><code>--sensor</code></td><td>Läs &amp; logga givaren enbart</td></tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 </section>
 
@@ -774,6 +591,196 @@
       </table>
     </div>
     <p class="ble-note">De egna tjänsterna AkvaLink och AkvaLink OTA delar en 128-bitars bas-UUID, <code>f0a00001-6e40-4a71-9b2c-6b6e696c00XX</code> — bara sista byten (visas ovan som <code>…6cXX</code>) ändras per tjänst/karakteristik. Fullständigt kontrakt i <a href="https://github.com/stenmo/AkvaLink/blob/main/docs/CONNECTIVITY.md">docs/CONNECTIVITY.md</a>.</p>
+  </div>
+</section>
+
+<section class="band" id="deep-dive">
+  <div class="wrap">
+    <h2>Under huven</h2>
+    <p class="lead">Nyfiken p&aring; hur det faktiskt fungerar? Kiselval, koppling, batterimatematik, protokollfl&ouml;det och alla byggvarianter &mdash; den djupa tekniska detaljen b&ouml;rjar h&auml;r.</p>
+  </div>
+</section>
+
+<section id="platforms">
+  <div class="wrap">
+    <h2>En firmware-familj, mer kisel</h2>
+    <p class="lead">Samma Matter/BLE-app, samma webb- och app-gränssnitt — AkvaLink är inte bundet till ett chip.
+      Allt på den här sidan är NORA-W40-bygget; fler moduler kommer efter hand.</p>
+    <div class="grid">
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.4"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/></svg></div><h3>NORA-W40 <span class="chip-status available">Tillgänglig nu</span></h3>
+        <p>Espressif ESP32-C6 — Wi-Fi 6, Thread, BLE 5.3. Flaggskeppsbygget som dokumenteras nedan.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15 9l-2 6-6 2 2-6z" fill="currentColor" stroke="none"/></svg></div><h3>NORA-B2 <span class="chip-status dev">Under utveckling</span></h3>
+        <p>Nordic nRF54L — BLE, Thread, Matter. Ett alternativ utan Espressif-kisel, för team som behöver en andra kiselkälla eller har särskilda krav på leverantörskedjan.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="hardware">
+  <div class="wrap">
+    <h2>Hårdvara</h2>
+    <p class="lead">En liten modul, en sensor, ett pull-up-motstånd.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Komponent</th><th>Del</th><th>Varför</th></tr></thead>
+        <tbody>
+          <tr><td>Modul</td><td>NORA-W401 / NORA-W406</td><td>Wi-Fi 6 + Thread + BLE i en modul</td></tr>
+          <tr><td>MCU</td><td>ESP32-C6 (RISC-V @ 160 MHz)</td><td>Inuti NORA-W40</td></tr>
+          <tr><td>Sensor</td><td>DS18B20 (rostfri givare)</td><td>±0,5 °C, 12-bit (0,0625 °C), 1-Wire, ~$3</td></tr>
+          <tr><td>Strömförsörjning</td><td>2× AA alkaline (eller 18650 Li)</td><td>~5–7 år realistiskt på 2× AA (Thread SED, poolförhållanden)<sup>*</sup></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="schematic">
+      <svg viewBox="0 0 620 345" role="img"
+           aria-label="Koppling: NORA-W40 GPIO15 till DS18B20 med 4,7 kΩ pull-up; GPIO9 BOOT-knapp till GND för ominställning (håll 5 s); framtida batteri-ADC-spänningsdelare (R1 390 kΩ / R2 100 kΩ)."
+           xmlns="http://www.w3.org/2000/svg">
+
+        <!-- ── 3V3 / GPIO15 / GND och 4,7 kΩ pull-up (oförändrat) ── -->
+        <line x1="200" y1="70"  x2="420" y2="70"  stroke="#e05a5a" stroke-width="3" />
+        <line x1="200" y1="130" x2="420" y2="130" stroke="#0aa2c0" stroke-width="3" />
+        <line x1="200" y1="175" x2="420" y2="175" stroke="#16323f" stroke-width="3" />
+        <line x1="310" y1="130" x2="310" y2="112" stroke="#0aa2c0" stroke-width="3" />
+        <polyline points="310,112 299,107 321,99 299,91 321,83 310,78" fill="none" stroke="#5b7280" stroke-width="3" stroke-linejoin="round" />
+        <line x1="310" y1="78"  x2="310" y2="70"  stroke="#e05a5a" stroke-width="3" />
+        <circle cx="310" cy="70"  r="4.5" fill="#e05a5a" />
+        <circle cx="310" cy="130" r="4.5" fill="#0aa2c0" />
+        <text x="332" y="99" font-size="13" font-weight="700" fill="#033f63">4,7 kΩ</text>
+
+        <!-- ── NORA-W40-box (utökad) ── -->
+        <rect x="40" y="35" width="160" height="270" rx="16" fill="#ffffff" stroke="#d9e6ec" stroke-width="2" />
+        <text x="120" y="26"  text-anchor="middle" font-size="14" font-weight="700" fill="#033f63">NORA-W40</text>
+        <text x="120" y="185" text-anchor="middle" font-size="12" fill="#5b7280">ESP32-C6</text>
+        <circle cx="200" cy="70"  r="4.5" fill="#e05a5a" />
+        <text x="192" y="74"  text-anchor="end" font-size="12" fill="#16323f">3V3</text>
+        <circle cx="200" cy="130" r="4.5" fill="#0aa2c0" />
+        <text x="192" y="134" text-anchor="end" font-size="12" fill="#16323f">GPIO15</text>
+        <circle cx="200" cy="175" r="4.5" fill="#16323f" />
+        <text x="192" y="179" text-anchor="end" font-size="12" fill="#16323f">GND</text>
+        <circle cx="200" cy="228" r="4.5" fill="#d97706" />
+        <text x="192" y="232" text-anchor="end" font-size="12" fill="#16323f">GPIO9</text>
+        <circle cx="200" cy="288" r="4.5" fill="#16a34a" opacity="0.55" />
+        <text x="192" y="292" text-anchor="end" font-size="12" fill="#16323f" opacity="0.6">ADCx</text>
+
+        <!-- ── DS18B20-box ── -->
+        <rect x="420" y="35" width="160" height="170" rx="16" fill="#ffffff" stroke="#d9e6ec" stroke-width="2" />
+        <text x="500" y="26"  text-anchor="middle" font-size="14" font-weight="700" fill="#033f63">DS18B20</text>
+        <text x="500" y="126" text-anchor="middle" font-size="11" fill="#5b7280">one wire sensor</text>
+        <circle cx="420" cy="70"  r="4.5" fill="#e05a5a" />
+        <text x="428" y="74"  font-size="12" fill="#16323f">VDD</text>
+        <circle cx="420" cy="130" r="4.5" fill="#0aa2c0" />
+        <text x="428" y="134" font-size="12" fill="#16323f">DQ</text>
+        <circle cx="420" cy="175" r="4.5" fill="#16323f" />
+        <text x="428" y="179" font-size="12" fill="#16323f">GND</text>
+
+        <!-- ── GPIO9 / BOOT-knapp för ominställning ── -->
+        <line x1="200" y1="228" x2="276" y2="228" stroke="#d97706" stroke-width="3" />
+        <line x1="276" y1="220" x2="276" y2="236" stroke="#d97706" stroke-width="3" />
+        <line x1="276" y1="220" x2="328" y2="213" stroke="#5b7280" stroke-width="2.5" />
+        <line x1="328" y1="220" x2="328" y2="236" stroke="#16323f" stroke-width="3" />
+        <text x="299" y="208" text-anchor="middle" font-size="10" font-weight="700" fill="#d97706">BOOT</text>
+        <line x1="328" y1="228" x2="392" y2="228" stroke="#16323f" stroke-width="3" />
+        <line x1="392" y1="228" x2="392" y2="248" stroke="#16323f" stroke-width="3" />
+        <line x1="383" y1="248" x2="401" y2="248" stroke="#16323f" stroke-width="2.5" />
+        <line x1="386" y1="254" x2="398" y2="254" stroke="#16323f" stroke-width="2.5" />
+        <line x1="389" y1="260" x2="395" y2="260" stroke="#16323f" stroke-width="2.5" />
+        <text x="215" y="248" font-size="10" fill="#d97706" font-style="italic">håll 5 s → radera Wi-Fi · ominställning</text>
+
+        <!-- ── ADC-spänningsdelare (framtida krets) ── -->
+        <rect x="395" y="228" width="218" height="112" rx="7"
+              fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.65"/>
+        <text x="607" y="243" text-anchor="end" font-size="10" fill="#16a34a" font-style="italic" opacity="0.85">framtida · ej monterad</text>
+        <line x1="460" y1="228" x2="460" y2="235" stroke="#5b7280" stroke-width="2.5" opacity="0.7"/>
+        <line x1="450" y1="235" x2="470" y2="235" stroke="#5b7280" stroke-width="3" opacity="0.7"/>
+        <line x1="455" y1="241" x2="465" y2="241" stroke="#5b7280" stroke-width="1.5" opacity="0.7"/>
+        <line x1="460" y1="241" x2="460" y2="247" stroke="#5b7280" stroke-width="2.5" opacity="0.7"/>
+        <text x="473" y="241" font-size="10" fill="#5b7280" opacity="0.85">BAT+</text>
+        <rect x="451" y="247" width="18" height="24" rx="3"
+              fill="#ffffff" stroke="#5b7280" stroke-width="1.8" opacity="0.8"/>
+        <text x="460" y="262" text-anchor="middle" font-size="9" fill="#5b7280">R1</text>
+        <text x="473" y="262" font-size="9" fill="#5b7280">390 kΩ</text>
+        <line x1="460" y1="271" x2="460" y2="288" stroke="#5b7280" stroke-width="2.5" opacity="0.7"/>
+        <circle cx="460" cy="288" r="4" fill="#16a34a" opacity="0.65"/>
+        <line x1="200" y1="288" x2="460" y2="288" stroke="#16a34a" stroke-width="2.5"
+              stroke-dasharray="6,3" opacity="0.65"/>
+        <line x1="460" y1="288" x2="460" y2="294" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
+        <rect x="451" y="294" width="18" height="24" rx="3"
+              fill="#ffffff" stroke="#5b7280" stroke-width="1.8" opacity="0.8"/>
+        <text x="460" y="309" text-anchor="middle" font-size="9" fill="#5b7280">R2</text>
+        <text x="473" y="309" font-size="9" fill="#5b7280">100 kΩ</text>
+        <line x1="460" y1="318" x2="460" y2="324" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
+        <line x1="451" y1="324" x2="469" y2="324" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
+        <line x1="454" y1="330" x2="466" y2="330" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
+        <line x1="457" y1="336" x2="463" y2="336" stroke="#16323f" stroke-width="2.5" opacity="0.7"/>
+      </svg>
+      <p class="cap"><strong>GPIO15 → DS18B20.</strong> Ett 4,7 kΩ pull-up. GPIO9 (BOOT) dubblar som ominställningsknapp. Streckad ruta = framtida batteri-ADC-krets (R1/R2 spänningsdelare, 390 kΩ / 100 kΩ).</p>
+    </div>
+    <div class="schematic">
+      <div class="grid">
+        <div>
+          <img src="assets/overview.jpg" alt="EVK-NORA-W40-utvecklingskortet kopplat till en DS18B20-sond på verkbänken" style="width:100%;height:auto;border-radius:10px;display:block" loading="lazy">
+          <p class="cap">Skarpt läge: EVK-NORA-W40 med DS18B20-sonden kopplad till GPIO15.</p>
+        </div>
+        <div>
+          <img src="assets/hardware-wiring.jpg" alt="Närbild på 4,7 kΩ pull-up-motståndet inlött i DS18B20-kablaget, krympslangat vid skarven" style="width:100%;height:auto;border-radius:10px;display:block" loading="lazy">
+          <p class="cap">4,7 kΩ pull-up, inlött och krympslangat rakt vid sensorkabelns skarv.</p>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:14px">Var man får tag i det: utvecklingskortet <a href="https://www.u-blox.com/en/product/evk-nora-w40" target="_blank" rel="noopener">EVK-NORA-W40</a> exponerar alla pinnar på en kopplingsdäcksvänlig header — ingen egen PCB-design behövs för att komma igång. DS18B20-sonder i rostfritt stål är en vanlig ~30 kr-del, som säljs brett på Amazon, AliExpress och elektronikdistributörer — för saltklorerade pooler, välj specifikt <strong>316 rostfritt</strong>; 304 gropfräter i klorerat saltvatten över tid. Ingen produktionskapsling eller "köp en färdig sensor"-lösning ännu — se färdplanen nedan.</p>
+    <p class="lead" style="margin-top:10px">Noggrannhetsnotis: DS18B20:s upplösning på 0,0625 °C är inte samma sak som en noggrannhet på 0,0625 °C — databladets specifikation är ±0,5 °C. Placeringen betyder mer än upplösningen: en sond på en solvärmd kabel, nära ytan, eller grunt i vattnet reagerar snabbare och driver högre än bulkvattnets temperatur; sänk ner den på ett representativt djup, borta från direkt sol och munstycken/retur, för en mätning du kan lita på.</p>
+  </div>
+</section>
+
+<section id="battery">
+  <div class="wrap">
+    <h2>Batteritid</h2>
+    <p class="lead">Uppvärmd pool vid 28–29 °C med 0,25 °C rapporteringströskel. Vi leder med den <strong>realistiska</strong> siffran för varje cell: alkaliska (AAA/AA) självurladdas och litiumjon (18650) åldras kalendariskt, vilket begränsar den verkliga livslängden till ungefär 5–7 år oavsett vad den förbrukningsberoende modellen ensam förutspår — den gränsen visas där modellen överskrider den. CR2477 (litium primärcell) har bäst hållbarhet av de fyra och behöver ingen sådan gräns — dess modellsiffra <em>är</em> redan den realistiska.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Batteri</th><th>Thread SED</th><th>Wi-Fi (TWT)</th><th>Wi-Fi (frånkopplad)</th></tr></thead>
+        <tbody>
+          <tr><td>CR2477 (1000 mAh)</td><td>~5 år</td><td>~6 månader</td><td>~3,3 år</td></tr>
+          <tr><td>2× AAA (1200 mAh)</td><td>~5–6 år</td><td>~8 månader</td><td>~4 år</td></tr>
+          <tr><td class="hi">2× AA (2800 mAh)</td><td class="hi">~5–7 år <em>(modell: ~12 år)</em></td><td class="hi">~1,8 år</td><td class="hi">~5–7 år <em>(modell: ~9 år)</em></td></tr>
+          <tr><td>18650 litiumjon (3400 mAh)</td><td>år, inte decennier <em>(modell: ~15+ år)</em></td><td>~2,2 år</td><td>år, inte decennier <em>(modell: ~11 år)</em></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lead" style="margin-top:14px">Den kursiverade <em>(modell: ...)</em>-siffran är det teoretiska, förbrukningsberoende taket — visas bara där den är märkbart högre än den realistiska siffran. Alkaliska celler självurladdas oavsett belastning; litiumjon åldras kalendariskt och självurladdas ännu snabbare, så "år, inte decennier" ersätter en exakt siffra tills en riktig PPK2/Joulescope-mätning finns. Riktig mätning finns på färdplanen.</p>
+    <p class="lead" style="margin-top:10px">Myntcellsbygge (CR2477): myntceller går sönder på toppström, inte kapacitet. En Wi-Fi- eller Thread-sändningsburst kan dra några hundra mA, mer än en CR2477:s inre impedans gillar — lägg till en bulkkondensator (några hundra µF) över modulens matningsskena, annars faller regulatorn ur vid sändningsbursterna.</p>
+  </div>
+</section>
+
+<section class="band" id="how">
+  <div class="wrap">
+    <h2>Hur det fungerar</h2>
+    <p class="lead">Allt körs på en ESP32-C6 inuti NORA-W40 — ingen kompanjon-MCU.</p>
+    <div class="flow">
+      <div class="step"><span class="n">1</span><h3>Mät</h3><p>Läs DS18B20 via 1-Wire med adaptiv sampling — snabbt vid förändring, långsamt vid stabilitet.</p></div>
+      <div class="step"><span class="n">2</span><h3>Filtrera</h3><p>Rapportera bara när temperaturen passerar ett tröskelvärde, så radion förblir i viloläge.</p></div>
+      <div class="step"><span class="n">3</span><h3>Rapportera</h3><p>Skicka mätvärdet via Matter — Thread (Sleepy End Device) eller Wi-Fi (TWT).</p></div>
+      <div class="step"><span class="n">4</span><h3>Visa</h3><p>Det visas i Apple Home, Google Home eller Alexa som en standard-temperatursensor.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="variants">
+  <div class="wrap">
+    <h2>Byggvarianter</h2>
+    <p class="lead">En kodbas, en SoC — välj nätverk vid byggtid.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Variant</th><th>Flagga</th><th>Stack</th></tr></thead>
+        <tbody>
+          <tr><td>Matter / Thread <em>(standard)</em></td><td><code>(ingen)</code></td><td>esp-matter, OpenThread, BLE-driftsättning</td></tr>
+          <tr><td>Matter / Wi-Fi</td><td><code>--wifi</code></td><td>esp-matter, Wi-Fi, BLE-driftsättning</td></tr>
+          <tr><td>Endast BLE</td><td><code>--ble</code></td><td>NimBLE GATT — ingen hub, ingen router</td></tr>
+          <tr><td>Wi-Fi AP <em>(nät/USB)</em></td><td><code>--ap</code></td><td>SoftAP "AkvaLink" + webbsida, vilken telefon som helst; ingen router</td></tr>
+          <tr><td>Wi-Fi station <em>(nät/USB)</em></td><td><code>--station</code></td><td>Ansluter till hemma-Wi-Fi (BLE-driftsätts), unik sida på akvalink-&lt;sista4mac&gt;.local + HA MQTT; ingen hub</td></tr>
+          <tr><td>Sensortest</td><td><code>--sensor</code></td><td>Läs &amp; logga givaren enbart</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
 
