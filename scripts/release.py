@@ -177,6 +177,27 @@ def _update_esphome_version(version: str) -> None:
     yaml_path.write_text(txt, encoding="utf-8")
 
 
+def _update_app_version(version: str) -> None:
+    """Patch the two companion-app mirrors of version.txt.
+
+    version.txt is the single source of truth; pubspec.yaml `version:` and
+    lib/app_version.dart `kAppVersion` (the value the app UI shows) must
+    follow it. tests/test_project_layout.py fails if they drift — this keeps
+    them from ever drifting in the first place.
+    """
+    pubspec = REPO_ROOT / "app_flutter" / "pubspec.yaml"
+    txt = pubspec.read_text(encoding="utf-8")
+    txt = re.sub(r"^version:\s*[0-9.]+\+(\d+)\s*$",
+                 rf"version: {version}+\g<1>", txt, flags=re.MULTILINE)
+    pubspec.write_text(txt, encoding="utf-8")
+
+    dart = REPO_ROOT / "app_flutter" / "lib" / "app_version.dart"
+    txt = dart.read_text(encoding="utf-8")
+    txt = re.sub(r"kAppVersion\s*=\s*'[0-9.]+'",
+                 f"kAppVersion = '{version}'", txt)
+    dart.write_text(txt, encoding="utf-8")
+
+
 def _stage_esphome(version: str, dry_run: bool) -> None:
     """Copy ESPHome factory.bin (merged, 0x0-flashable) and ota.bin to dist/."""
     pio = (REPO_ROOT / "esphome" / ".esphome" / "build" / "akvalink"
@@ -300,9 +321,11 @@ def main(argv: list[str] | None = None) -> int:
         _run([sys.executable, "-m", "pytest", "-q"], args.dry_run)
 
     # 2. Bump version.txt (ESP-IDF embeds it as PROJECT_VER in every variant)
-    print(f"• version: write {new_version} to version.txt")
+    # and its two companion-app mirrors (pubspec.yaml, app_version.dart).
+    print(f"• version: write {new_version} to version.txt + app mirrors")
     if not args.dry_run:
         VERSION_FILE.write_text(new_version + "\n", encoding="utf-8")
+        _update_app_version(new_version)
 
     # 3. Build every variant into its own dir, merge each into dist/.
     # (BUILD_DIR/FLASHER_ARGS are module globals so merge_firmware + the tests
@@ -323,7 +346,10 @@ def main(argv: list[str] | None = None) -> int:
                 _run(_build_cmd(variant), args.dry_run)
             except SystemExit:
                 if not args.dry_run:  # roll back the version bump on build failure
-                    _run(["git", "checkout", "--", str(VERSION_FILE)], dry_run=False)
+                    _run(["git", "checkout", "--", str(VERSION_FILE),
+                          str(REPO_ROOT / "app_flutter" / "pubspec.yaml"),
+                          str(REPO_ROOT / "app_flutter" / "lib" / "app_version.dart")],
+                         dry_run=False)
                 raise
             if variant == "esphome":
                 _stage_esphome(new_version, args.dry_run)
@@ -335,7 +361,9 @@ def main(argv: list[str] | None = None) -> int:
     # 4. Commit + tag
     print(f"• commit + tag {tag}")
     _run(["git", "add", str(VERSION_FILE),
-          str(REPO_ROOT / "esphome" / "akvalink.yaml")], args.dry_run)
+          str(REPO_ROOT / "esphome" / "akvalink.yaml"),
+          str(REPO_ROOT / "app_flutter" / "pubspec.yaml"),
+          str(REPO_ROOT / "app_flutter" / "lib" / "app_version.dart")], args.dry_run)
     _run(["git", "commit", "-m", f"release: {tag}"], args.dry_run)
     _run(["git", "tag", "-a", tag, "-m", f"AkvaLink {tag}"], args.dry_run)
 

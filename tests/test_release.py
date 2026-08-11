@@ -38,6 +38,26 @@ def test_bump_version(current, part, expected):
     assert release.bump_version(current, part) == expected
 
 
+def test_update_app_version_patches_both_mirrors(tmp_path, monkeypatch):
+    app = tmp_path / "app_flutter"
+    (app / "lib").mkdir(parents=True)
+    (app / "pubspec.yaml").write_text(
+        "name: akvalink\nversion: 0.4.0+1\nenvironment:\n  sdk: ^3.6.0\n",
+        encoding="utf-8",
+    )
+    (app / "lib" / "app_version.dart").write_text(
+        "const String kAppVersion = '0.4.0';\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(release, "REPO_ROOT", tmp_path)
+
+    release._update_app_version("0.5.0")
+
+    assert "version: 0.5.0+1" in (app / "pubspec.yaml").read_text(encoding="utf-8")
+    assert "kAppVersion = '0.5.0'" in (
+        app / "lib" / "app_version.dart"
+    ).read_text(encoding="utf-8")
+
+
 def test_bump_version_rejects_unknown_part():
     with pytest.raises(ValueError):
         release.bump_version("1.0.0", "build")
