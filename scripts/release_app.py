@@ -62,6 +62,30 @@ def build_number(version: str) -> int:
     return major * 10_000 + minor * 100 + patch
 
 
+def check_version_mirrors(version: str) -> list[str]:
+    """Return mismatches between version.txt and the committed app mirrors.
+
+    --build-name only stamps the binary metadata; the UI shows
+    lib/app_version.dart's kAppVersion. v0.4.0 shipped with a correct exe
+    version and a stale in-app badge — refuse to build that combination.
+    (release.py --bump/--set keeps the mirrors in sync automatically.)
+    """
+    import re
+    problems = []
+
+    pubspec = (APP_DIR / "pubspec.yaml").read_text(encoding="utf-8")
+    m = re.search(r"^version:\s*([0-9.]+)\+\d+\s*$", pubspec, re.MULTILINE)
+    if not m or m.group(1) != version:
+        problems.append(f"app_flutter/pubspec.yaml version: {m.group(1) if m else '?'}")
+
+    dart = (APP_DIR / "lib" / "app_version.dart").read_text(encoding="utf-8")
+    m = re.search(r"kAppVersion\s*=\s*'([0-9.]+)'", dart)
+    if not m or m.group(1) != version:
+        problems.append(f"app_flutter/lib/app_version.dart kAppVersion: {m.group(1) if m else '?'}")
+
+    return problems
+
+
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as fh:
@@ -203,6 +227,14 @@ def main(argv: list[str] | None = None) -> int:
 
     version = VERSION_FILE.read_text(encoding="utf-8").strip()
     code = build_number(version)
+
+    mismatches = check_version_mirrors(version)
+    if mismatches:
+        for p_ in mismatches:
+            print(f"✗ stale version mirror — {p_} != version.txt {version}")
+        raise SystemExit(
+            "run `py -3 scripts/release.py --set " + version +
+            "` (or fix the mirrors by hand) before building the app")
 
     print(f"AkvaLink app build: v{version} (Android versionCode {code})")
     print(f"Targets: {', '.join(targets)}")

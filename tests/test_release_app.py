@@ -23,6 +23,31 @@ def test_build_number_rejects_bad(bad):
         release_app.build_number(bad)
 
 
+def _fake_app_dir(tmp_path, pubspec_version, dart_version):
+    app = tmp_path / "app_flutter"
+    (app / "lib").mkdir(parents=True)
+    (app / "pubspec.yaml").write_text(
+        f"name: akvalink\nversion: {pubspec_version}+1\n", encoding="utf-8"
+    )
+    (app / "lib" / "app_version.dart").write_text(
+        f"const String kAppVersion = '{dart_version}';\n", encoding="utf-8"
+    )
+    return app
+
+
+def test_check_version_mirrors_ok(tmp_path, monkeypatch):
+    monkeypatch.setattr(release_app, "APP_DIR", _fake_app_dir(tmp_path, "0.5.0", "0.5.0"))
+    assert release_app.check_version_mirrors("0.5.0") == []
+
+
+def test_check_version_mirrors_reports_both_stale(tmp_path, monkeypatch):
+    monkeypatch.setattr(release_app, "APP_DIR", _fake_app_dir(tmp_path, "0.4.0", "0.3.5"))
+    problems = release_app.check_version_mirrors("0.5.0")
+    assert len(problems) == 2
+    assert any("pubspec" in p for p in problems)
+    assert any("kAppVersion" in p for p in problems)
+
+
 def test_sha256_file(tmp_path):
     f = tmp_path / "x.apk"
     f.write_bytes(b"hello world")
@@ -129,6 +154,9 @@ def test_main_dry_run_plan(monkeypatch, tmp_path, capsys):
     version_file.write_text("0.1.0\n")
     monkeypatch.setattr(release_app, "VERSION_FILE", version_file)
     monkeypatch.setattr(release_app, "DIST_APP_DIR", tmp_path / "dist_app")
+    # The mirror preflight refuses to build when the app files disagree with
+    # version.txt, so give it a matching fake app tree.
+    monkeypatch.setattr(release_app, "APP_DIR", _fake_app_dir(tmp_path, "0.1.0", "0.1.0"))
 
     rc = release_app.main(["--dry-run"])
 
