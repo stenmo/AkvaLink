@@ -615,6 +615,51 @@
   </div>
 </section>
 
+<section id="architecture">
+  <div class="wrap">
+    <h2>System architecture</h2>
+    <p class="lead">Zoomed out from the wiring diagram below — how a reading gets from the probe to your phone, and why nothing in between is a cloud server.</p>
+    <div class="schematic">
+      <svg viewBox="0 0 720 170" role="img" aria-label="DS18B20 probe to NORA-W40 over 1-Wire; NORA-W40 to Matter over Thread or Wi-Fi, or standalone BLE; then to a hub, app or browser. No cloud at any step." xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="archArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#0aa2c0" />
+          </marker>
+        </defs>
+
+        <rect x="10" y="55" width="130" height="60" rx="12" fill="#ffffff" stroke="#d9e6ec" stroke-width="2"/>
+        <text x="75" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#033f63">DS18B20</text>
+        <text x="75" y="98" text-anchor="middle" font-size="10" fill="#5b7280">probe</text>
+
+        <line x1="140" y1="85" x2="198" y2="85" stroke="#0aa2c0" stroke-width="2.5" marker-end="url(#archArrow)"/>
+        <text x="169" y="76" text-anchor="middle" font-size="10" fill="#5b7280">1-Wire</text>
+
+        <rect x="198" y="45" width="150" height="80" rx="12" fill="#ffffff" stroke="#d9e6ec" stroke-width="2"/>
+        <text x="273" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#033f63">NORA-W40</text>
+        <text x="273" y="98" text-anchor="middle" font-size="10" fill="#5b7280">ESP32-C6, single SoC</text>
+
+        <line x1="348" y1="85" x2="406" y2="85" stroke="#0aa2c0" stroke-width="2.5" marker-end="url(#archArrow)"/>
+        <text x="377" y="76" text-anchor="middle" font-size="10" fill="#5b7280">radio</text>
+
+        <rect x="406" y="35" width="160" height="100" rx="12" fill="#ffffff" stroke="#d9e6ec" stroke-width="2"/>
+        <text x="486" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#033f63">Matter</text>
+        <text x="486" y="85" text-anchor="middle" font-size="10" fill="#5b7280">Thread or Wi-Fi</text>
+        <text x="486" y="101" text-anchor="middle" font-size="10" fill="#5b7280">or standalone BLE</text>
+        <text x="486" y="120" text-anchor="middle" font-size="9" fill="#5b7280" font-style="italic">no hub required for BLE</text>
+
+        <line x1="566" y1="85" x2="624" y2="85" stroke="#0aa2c0" stroke-width="2.5" marker-end="url(#archArrow)"/>
+
+        <rect x="624" y="35" width="90" height="100" rx="12" fill="#ffffff" stroke="#d9e6ec" stroke-width="2"/>
+        <text x="669" y="65" text-anchor="middle" font-size="11" font-weight="700" fill="#033f63">Hub /</text>
+        <text x="669" y="81" text-anchor="middle" font-size="11" font-weight="700" fill="#033f63">app /</text>
+        <text x="669" y="97" text-anchor="middle" font-size="11" font-weight="700" fill="#033f63">browser</text>
+        <text x="669" y="117" text-anchor="middle" font-size="9" fill="#5b7280">no cloud</text>
+      </svg>
+      <p class="cap">Every arrow above stays on your local network or a direct Bluetooth link — the same no-cloud rule as the rest of AkvaLink.</p>
+    </div>
+  </div>
+</section>
+
 <section class="band" id="hardware">
   <div class="wrap">
     <h2>Hardware</h2>
@@ -854,6 +899,47 @@
       </table>
     </div>
     <p class="lead" style="margin-top:14px">Versions are pinned per firmware release. See the exact release tag on <a href="https://github.com/stenmo/AkvaLink/releases">GitHub</a>, or read the Firmware Revision characteristic (Device Information service, see the GATT table above) off a running device.</p>
+  </div>
+</section>
+
+<section class="band" id="product-design">
+  <div class="wrap">
+    <h2>Product design <span class="chip-status soon">Concept</span></h2>
+    <p class="lead">A design language for the physical products AkvaLink doesn't ship yet — a sensor float and an e-ink display receiver. Not the hardware you can buy today; a reference for where it's headed.</p>
+    <div class="grid">
+      <div class="card"><h3>Dieter Rams at Braun</h3><p>As little design as possible, honest about what the device can measure, understandable at a glance, built not to date.</p></div>
+      <div class="card"><h3>Retro Palm Springs style</h3><p>Mid-century desert modernism built around a strong sun and a swimming pool — flat shade planes, breeze-block vents, the pool-turquoise-against-stucco palette.</p></div>
+      <div class="card"><h3>One signal colour</h3><p>Everything is bone, paper and ink — except alerts, deltas and the one physical button, which get a single accent colour and nothing else does.</p></div>
+    </div>
+    <div class="schematic" style="max-width:420px;margin:20px auto 0">
+      <svg width="100%" viewBox="0 0 680 440" role="img" xmlns="http://www.w3.org/2000/svg">
+        <title>AkvaLink e-ink display concept</title>
+        <rect x="100" y="40" width="480" height="380" rx="30" fill="#E9E5DA" stroke="#CBC5B5" stroke-width="0.5"/>
+        <rect x="140" y="60" width="400" height="300" rx="3" fill="#F8F6F0" stroke="#D5D0C2" stroke-width="0.5"/>
+        <text x="170" y="96" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="500" letter-spacing="4" fill="#1C1C1A">POOL</text>
+        <rect x="470" y="85" width="26" height="12" rx="2" fill="none" stroke="#1C1C1A" stroke-width="1.2"/>
+        <rect x="497" y="88" width="3" height="6" rx="1" fill="#1C1C1A"/>
+        <rect x="472.5" y="87.5" width="15" height="7" fill="#1C1C1A"/>
+        <circle cx="446" cy="91" r="2" fill="#1C1C1A"/>
+        <path d="M451 96 A9 9 0 0 0 451 86" fill="none" stroke="#1C1C1A" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M456 100 A15 15 0 0 0 456 82" fill="none" stroke="#1C1C1A" stroke-width="1.2" stroke-linecap="round"/>
+        <text x="168" y="240" font-family="Helvetica Neue, Arial, sans-serif" font-size="132" font-weight="600" letter-spacing="-4" fill="#1C1C1A">27.4</text>
+        <text x="452" y="180" font-family="Helvetica Neue, Arial, sans-serif" font-size="34" font-weight="500" fill="#1C1C1A">°C</text>
+        <line x1="170" y1="272" x2="510" y2="272" stroke="#1C1C1A" stroke-width="0.8"/>
+        <text x="170" y="302" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="500" letter-spacing="2" fill="#77746C">MIN</text>
+        <text x="205" y="302" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="500" letter-spacing="1" fill="#1C1C1A">24.1</text>
+        <text x="248" y="302" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="500" letter-spacing="2" fill="#77746C">MAX</text>
+        <text x="286" y="302" font-family="Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="500" letter-spacing="1" fill="#1C1C1A">28.9</text>
+        <polyline points="382,306 397,304 412,307 427,301 442,296 457,298 472,291 487,289 502,285" fill="none" stroke="#1C1C1A" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="502" cy="285" r="4" fill="#C8462B"/>
+        <text x="170" y="335" font-family="Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="500" letter-spacing="2.5" fill="#8A8781">UPDATED 2 MIN AGO</text>
+        <text x="510" y="335" text-anchor="end" font-family="Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="500" letter-spacing="2.5" fill="#C8462B">+0.6 TODAY</text>
+        <text x="170" y="399" font-family="Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="500" letter-spacing="5" fill="#96918A">AKVALINK</text>
+        <circle cx="508" cy="394" r="11" fill="#C8462B"/>
+      </svg>
+      <p class="cap">E-ink display concept — <strong>the age of the reading (“updated 2 min ago”) is deliberately as prominent as the number itself.</strong> Nothing here is final hardware.</p>
+    </div>
+    <p class="lead" style="margin-top:14px">Full write-up — palette, typography, the honesty rules behind the freshness stamp, and the two enclosures (sensor float vs. display receiver) — in <a href="https://github.com/stenmo/AkvaLink/blob/main/docs/DESIGN_LANGUAGE.md">docs/DESIGN_LANGUAGE.md</a>.</p>
   </div>
 </section>
 
