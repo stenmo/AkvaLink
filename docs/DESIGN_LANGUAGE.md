@@ -268,6 +268,12 @@ Before shipping any surface, check:
 Bezel-and-panel mockup at the proportions described above. Panel content sits at
 x 140–540, y 60–360 in this coordinate space (400 × 300 native).
 
+Editable source files for all the design mockups live in `docs/assets/`:
+`akvalink_eink_display_face_400x300.{svg,png}` (the panel face below),
+plus `akvalink_console_display_industrial_design.svg` and
+`akvalink_float_sensor_industrial_design.svg` — the sources of the PNG
+renders shown in the web page's Product design section (`web/assets/`).
+
 ```svg
 <svg width="100%" viewBox="0 0 680 440" role="img" xmlns="http://www.w3.org/2000/svg">
   <title>AkvaLink e-ink display concept</title>
